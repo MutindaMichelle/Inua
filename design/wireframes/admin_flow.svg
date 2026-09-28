@@ -1,0 +1,126 @@
+<svg viewBox="0 0 1020 620" xmlns="http://www.w3.org/2000/svg">
+<rect x="0" y="0" width="1020" height="620" fill="#FFFFFF"/>
+<text x="510.0" y="34" font-size="20" font-weight="bold" fill="#121D33" text-anchor="middle" font-family="Georgia, serif">Wireframes — Administrator Flow</text>
+<text x="170.0" y="80" font-size="13" font-weight="bold" fill="#121D33" text-anchor="middle" font-family="Georgia, serif">10. Admin Dashboard</text>
+<g transform="translate(20.0,94)"><g>
+<rect x="0" y="0" width="300" height="470" rx="18" fill="#FFFFFF" stroke="#121D33" stroke-width="6"/>
+<clipPath id="clip-140305303595168"><rect x="0" y="0" width="300" height="470" rx="18"/></clipPath>
+<g clip-path="url(#clip-140305303595168)">
+<rect x="0" y="0" width="300" height="42" rx="0" fill="#121D33" stroke="none" stroke-width="1.2"/>
+<circle cx="22" cy="21" r="10" fill="#EDE3CF"/>
+<text x="42" y="19" font-size="11.5" fill="#FFFFFF" text-anchor="start" font-weight="bold" font-family="Helvetica Neue, Arial, sans-serif">Admin Overview</text>
+<rect x="222" y="12" width="62" height="18" rx="9.0" fill="#D9A441"/>
+<text x="253" y="24" font-size="7.5" fill="#121D33" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Arial, sans-serif">Live</text>
+<rect x="15" y="52" width="84" height="56" rx="5" fill="#F4F5F7" stroke="#1B2A4A" stroke-width="1.2"/>
+<text x="25" y="70" font-size="6.5" fill="#5B6472" text-anchor="start" font-family="Helvetica Neue, Arial, sans-serif">Active Mentors</text>
+<text x="25" y="96" font-size="15" fill="#121D33" text-anchor="start" font-weight="bold" font-family="Helvetica Neue, Arial, sans-serif">38</text>
+<rect x="107" y="52" width="84" height="56" rx="5" fill="#F4F5F7" stroke="#1B2A4A" stroke-width="1.2"/>
+<text x="117" y="70" font-size="6.5" fill="#5B6472" text-anchor="start" font-family="Helvetica Neue, Arial, sans-serif">Sessions/Wk</text>
+<text x="117" y="96" font-size="15" fill="#121D33" text-anchor="start" font-weight="bold" font-family="Helvetica Neue, Arial, sans-serif">112</text>
+<rect x="199" y="52" width="84" height="56" rx="5" fill="#F4F5F7" stroke="#1B2A4A" stroke-width="1.2"/>
+<text x="209" y="70" font-size="6.5" fill="#5B6472" text-anchor="start" font-family="Helvetica Neue, Arial, sans-serif">Avg Effect.</text>
+<text x="209" y="96" font-size="15" fill="#121D33" text-anchor="start" font-weight="bold" font-family="Helvetica Neue, Arial, sans-serif">0.77</text>
+<text x="15" y="130" font-size="7" fill="#5B6472" text-anchor="start" font-weight="bold" font-family="Helvetica Neue, Arial, sans-serif">PLATFORM EFFECTIVENESS TREND</text>
+<rect x="15" y="138" width="270" height="90" rx="5" fill="none" stroke="#E3E6EA" stroke-width="1.2"/>
+<polyline points="30,190 75,180 120,195 165,165 210,172 255,150" fill="none" stroke="#1B2A4A" stroke-width="2.5"/>
+<circle cx="30" cy="190" r="3" fill="#1B2A4A"/>
+<circle cx="75" cy="180" r="3" fill="#1B2A4A"/>
+<circle cx="120" cy="195" r="3" fill="#1B2A4A"/>
+<circle cx="165" cy="165" r="3" fill="#1B2A4A"/>
+<circle cx="210" cy="172" r="3" fill="#1B2A4A"/>
+<circle cx="255" cy="150" r="3" fill="#1B2A4A"/>
+<text x="15" y="246" font-size="7" fill="#5B6472" text-anchor="start" font-weight="bold" font-family="Helvetica Neue, Arial, sans-serif">MENTORS NEEDING REVIEW</text>
+<rect x="15" y="254" width="270" height="34" rx="4" fill="none" stroke="#B23A3A" stroke-width="1.2"/>
+<circle cx="35" cy="271" r="10" fill="#B7BDC6"/>
+<rect x="52" y="266" width="110" height="6" rx="2" fill="#1B2A4A"/>
+<rect x="228" y="263" width="42" height="16" rx="8.0" fill="#B23A3A"/>
+<text x="249" y="274" font-size="6.5" fill="#FFFFFF" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif">Low</text>
+<rect x="15" y="294" width="270" height="34" rx="4" fill="none" stroke="#B23A3A" stroke-width="1.2"/>
+<circle cx="35" cy="311" r="10" fill="#B7BDC6"/>
+<rect x="52" y="306" width="110" height="6" rx="2" fill="#1B2A4A"/>
+<rect x="228" y="303" width="42" height="16" rx="8.0" fill="#B23A3A"/>
+<text x="249" y="314" font-size="6.5" fill="#FFFFFF" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif">Low</text>
+<line x1="0" y1="436" x2="300" y2="436" stroke="#E3E6EA" stroke-width="1"/>
+<circle cx="75.0" cy="444" r="5" fill="#1B2A4A"/>
+<circle cx="150.0" cy="444" r="5" fill="#B7BDC6"/>
+<circle cx="225.0" cy="444" r="5" fill="#B7BDC6"/>
+</g>
+</g></g>
+<text x="510.0" y="80" font-size="13" font-weight="bold" fill="#121D33" text-anchor="middle" font-family="Georgia, serif">11. Mentor Analytics (Platform-wide)</text>
+<g transform="translate(360.0,94)"><g>
+<rect x="0" y="0" width="300" height="470" rx="18" fill="#FFFFFF" stroke="#121D33" stroke-width="6"/>
+<clipPath id="clip-140305303595216"><rect x="0" y="0" width="300" height="470" rx="18"/></clipPath>
+<g clip-path="url(#clip-140305303595216)">
+<rect x="0" y="0" width="300" height="42" rx="0" fill="#121D33" stroke="none" stroke-width="1.2"/>
+<circle cx="22" cy="21" r="10" fill="#EDE3CF"/>
+<text x="42" y="19" font-size="11.5" fill="#FFFFFF" text-anchor="start" font-weight="bold" font-family="Helvetica Neue, Arial, sans-serif">Mentor Analytics</text>
+<rect x="15" y="52" width="270" height="26" rx="13" fill="none" stroke="#D9D9D9" stroke-width="1.2"/>
+<text x="30" y="69" font-size="8" fill="#5B6472" text-anchor="start" font-family="Helvetica Neue, Arial, sans-serif">Search mentors...</text>
+<rect x="15" y="86" width="270" height="24" rx="0" fill="#121D33" stroke="#1B2A4A" stroke-width="1.2"/>
+<text x="25" y="102" font-size="7.5" fill="#FFFFFF" text-anchor="start" font-weight="bold" font-family="Helvetica Neue, Arial, sans-serif">Mentor</text>
+<text x="120" y="102" font-size="7.5" fill="#FFFFFF" text-anchor="start" font-weight="bold" font-family="Helvetica Neue, Arial, sans-serif">Sessions</text>
+<text x="215" y="102" font-size="7.5" fill="#FFFFFF" text-anchor="start" font-weight="bold" font-family="Helvetica Neue, Arial, sans-serif">Score</text>
+<rect x="15" y="110" width="270" height="30" rx="0" fill="#F4F5F7" stroke="#E3E6EA" stroke-width="1.2"/>
+<text x="25" y="129" font-size="8" fill="#222222" text-anchor="start" font-family="Helvetica Neue, Arial, sans-serif">Wanjiru K.</text>
+<text x="118" y="129" font-size="8" fill="#222222" text-anchor="start" font-family="Helvetica Neue, Arial, sans-serif">32</text>
+<rect x="195" y="117" width="50" height="16" rx="8.0" fill="#3E7C7C"/>
+<text x="220" y="129" font-size="7.5" fill="#FFFFFF" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Arial, sans-serif">0.74</text>
+<rect x="15" y="140" width="270" height="30" rx="0" fill="#FFFFFF" stroke="#E3E6EA" stroke-width="1.2"/>
+<text x="25" y="159" font-size="8" fill="#222222" text-anchor="start" font-family="Helvetica Neue, Arial, sans-serif">James M.</text>
+<text x="118" y="159" font-size="8" fill="#222222" text-anchor="start" font-family="Helvetica Neue, Arial, sans-serif">47</text>
+<rect x="195" y="147" width="50" height="16" rx="8.0" fill="#3E7C7C"/>
+<text x="220" y="159" font-size="7.5" fill="#FFFFFF" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Arial, sans-serif">0.81</text>
+<rect x="15" y="170" width="270" height="30" rx="0" fill="#F4F5F7" stroke="#E3E6EA" stroke-width="1.2"/>
+<text x="25" y="189" font-size="8" fill="#222222" text-anchor="start" font-family="Helvetica Neue, Arial, sans-serif">David O.</text>
+<text x="118" y="189" font-size="8" fill="#222222" text-anchor="start" font-family="Helvetica Neue, Arial, sans-serif">19</text>
+<rect x="195" y="177" width="50" height="16" rx="8.0" fill="#B23A3A"/>
+<text x="220" y="189" font-size="7.5" fill="#FFFFFF" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Arial, sans-serif">0.58</text>
+<rect x="15" y="200" width="270" height="30" rx="0" fill="#FFFFFF" stroke="#E3E6EA" stroke-width="1.2"/>
+<text x="25" y="219" font-size="8" fill="#222222" text-anchor="start" font-family="Helvetica Neue, Arial, sans-serif">Fatima N.</text>
+<text x="118" y="219" font-size="8" fill="#222222" text-anchor="start" font-family="Helvetica Neue, Arial, sans-serif">28</text>
+<rect x="195" y="207" width="50" height="16" rx="8.0" fill="#D9A441"/>
+<text x="220" y="219" font-size="7.5" fill="#FFFFFF" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Arial, sans-serif">0.69</text>
+<rect x="15" y="260" width="270" height="32" rx="6" fill="#1B2A4A"/>
+<text x="150" y="281" font-size="8.5" fill="#FFFFFF" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Arial, sans-serif">Export Full Table</text>
+<line x1="0" y1="436" x2="300" y2="436" stroke="#E3E6EA" stroke-width="1"/>
+<circle cx="75.0" cy="444" r="5" fill="#1B2A4A"/>
+<circle cx="150.0" cy="444" r="5" fill="#B7BDC6"/>
+<circle cx="225.0" cy="444" r="5" fill="#B7BDC6"/>
+</g>
+</g></g>
+<text x="850.0" y="80" font-size="13" font-weight="bold" fill="#121D33" text-anchor="middle" font-family="Georgia, serif">12. Generate Reports</text>
+<g transform="translate(700.0,94)"><g>
+<rect x="0" y="0" width="300" height="470" rx="18" fill="#FFFFFF" stroke="#121D33" stroke-width="6"/>
+<clipPath id="clip-140305303594976"><rect x="0" y="0" width="300" height="470" rx="18"/></clipPath>
+<g clip-path="url(#clip-140305303594976)">
+<rect x="0" y="0" width="300" height="42" rx="0" fill="#121D33" stroke="none" stroke-width="1.2"/>
+<circle cx="22" cy="21" r="10" fill="#EDE3CF"/>
+<text x="42" y="19" font-size="11.5" fill="#FFFFFF" text-anchor="start" font-weight="bold" font-family="Helvetica Neue, Arial, sans-serif">Generate Reports</text>
+<text x="15" y="66" font-size="8" fill="#5B6472" text-anchor="start" font-weight="bold" font-family="Helvetica Neue, Arial, sans-serif">Report Type</text>
+<rect x="15" y="74" width="270" height="28" rx="5" fill="none" stroke="#1B2A4A" stroke-width="1.6"/>
+<circle cx="30" cy="88" r="6" fill="#1B2A4A" stroke="#1B2A4A" stroke-width="1.2"/>
+<text x="45" y="92" font-size="8.5" fill="#222222" text-anchor="start" font-family="Helvetica Neue, Arial, sans-serif">Program Summary</text>
+<rect x="15" y="108" width="270" height="28" rx="5" fill="none" stroke="#D9D9D9" stroke-width="1"/>
+<circle cx="30" cy="122" r="6" fill="#FFFFFF" stroke="#1B2A4A" stroke-width="1.2"/>
+<text x="45" y="126" font-size="8.5" fill="#222222" text-anchor="start" font-family="Helvetica Neue, Arial, sans-serif">Mentor Comparison</text>
+<text x="15" y="156" font-size="8" fill="#5B6472" text-anchor="start" font-weight="bold" font-family="Helvetica Neue, Arial, sans-serif">Date Range</text>
+<rect x="15" y="164" width="128" height="26" rx="5" fill="none" stroke="#D9D9D9" stroke-width="1.2"/>
+<text x="25" y="181" font-size="7.5" fill="#222222" text-anchor="start" font-family="Helvetica Neue, Arial, sans-serif">Aug 1, 2026</text>
+<rect x="157" y="164" width="128" height="26" rx="5" fill="none" stroke="#D9D9D9" stroke-width="1.2"/>
+<text x="167" y="181" font-size="7.5" fill="#222222" text-anchor="start" font-family="Helvetica Neue, Arial, sans-serif">Aug 31, 2026</text>
+<text x="15" y="216" font-size="8" fill="#5B6472" text-anchor="start" font-weight="bold" font-family="Helvetica Neue, Arial, sans-serif">Include</text>
+<rect x="15" y="224" width="14" height="14" rx="3" fill="#3E7C7C" stroke="#3E7C7C" stroke-width="1.3"/>
+<text x="36" y="235" font-size="8" fill="#222222" text-anchor="start" font-family="Helvetica Neue, Arial, sans-serif">Effectiveness trend</text>
+<rect x="15" y="248" width="14" height="14" rx="3" fill="#3E7C7C" stroke="#3E7C7C" stroke-width="1.3"/>
+<text x="36" y="259" font-size="8" fill="#222222" text-anchor="start" font-family="Helvetica Neue, Arial, sans-serif">Mentor rankings</text>
+<rect x="15" y="272" width="14" height="14" rx="3" fill="#FFFFFF" stroke="#3E7C7C" stroke-width="1.3"/>
+<text x="36" y="283" font-size="8" fill="#222222" text-anchor="start" font-family="Helvetica Neue, Arial, sans-serif">Raw session log</text>
+<rect x="15" y="310" width="270" height="36" rx="6" fill="#1B2A4A"/>
+<text x="150" y="333" font-size="9" fill="#FFFFFF" text-anchor="middle" font-weight="bold" font-family="Helvetica Neue, Arial, sans-serif">Generate PDF Report</text>
+<line x1="0" y1="436" x2="300" y2="436" stroke="#E3E6EA" stroke-width="1"/>
+<circle cx="75.0" cy="444" r="5" fill="#1B2A4A"/>
+<circle cx="150.0" cy="444" r="5" fill="#B7BDC6"/>
+<circle cx="225.0" cy="444" r="5" fill="#B7BDC6"/>
+</g>
+</g></g>
+</svg>
