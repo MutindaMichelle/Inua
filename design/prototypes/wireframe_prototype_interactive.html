@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Interactive Wireframe Prototype — Digital Mentorship System</title>
+<style>
+  :root {
+    --navy: #1B2A4A;
+    --navy-dark: #121D33;
+    --amber: #D9A441;
+    --teal: #3E7C7C;
+    --cream: #EDE3CF;
+    --ink: #222222;
+    --subink: #5B6472;
+    --card-bg: #F4F5F7;
+    --danger: #B23A3A;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    background: #FFFFFF;
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 16px 60px;
+  }
+  h1 { font-size: 22px; color: var(--navy-dark); margin: 0 0 4px; text-align: center; }
+  p.subtitle { color: var(--subink); font-size: 13.5px; margin: 0 0 22px; text-align: center; max-width: 640px; }
+
+  .tabbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 26px;
+    background: var(--card-bg);
+    padding: 6px;
+    border-radius: 10px;
+  }
+  .tabbar button {
+    font-family: Georgia, serif;
+    font-size: 12.5px;
+    padding: 9px 16px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--subink);
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .tabbar button.active { background: var(--navy); color: #fff; font-weight: bold; }
+  .tabbar button:hover:not(.active) { background: #E3E6EA; }
+
+  .device-frame {
+    width: 400px;
+    background: #FFFFFF;
+    border: 10px solid var(--navy-dark);
+    border-radius: 32px;
+    overflow: hidden;
+    box-shadow: 0 18px 40px rgba(18,29,51,0.18);
+    position: relative;
+  }
+  .screen { display: none; font-family: 'Helvetica Neue', Arial, sans-serif; min-height: 680px; position: relative; }
+  .screen.active { display: block; }
+
+  .topbar { background: var(--navy-dark); color: #fff; padding: 16px 18px 14px; display: flex; align-items: center; gap: 10px; }
+  .topbar .avatar { width: 26px; height: 26px; border-radius: 50%; background: var(--cream); }
+  .topbar .title { font-size: 13.5px; font-weight: bold; flex: 1; }
+  .topbar .badge { background: var(--amber); color: var(--navy-dark); font-size: 10.5px; font-weight: bold; padding: 4px 10px; border-radius: 10px; }
+
+  .section-pad { padding: 16px 18px; }
+  .welcome-strip { background: var(--card-bg); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; }
+  .welcome-strip .line1 { font-size: 13px; font-weight: bold; color: var(--navy-dark); margin-bottom: 3px; }
+  .welcome-strip .line2 { font-size: 11px; color: var(--subink); }
+
+  .card-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .mini-card { flex: 1; border: 1px solid var(--navy); border-radius: 6px; padding: 10px; cursor: pointer; transition: box-shadow 0.15s, transform 0.15s; background: #fff; }
+  .mini-card:hover { box-shadow: 0 3px 10px rgba(27,42,74,0.15); transform: translateY(-1px); }
+  .mini-card .mc-title { font-size: 10.5px; font-weight: bold; color: var(--navy-dark); margin-bottom: 4px; }
+  .mini-card .mc-sub { font-size: 9px; color: var(--subink); margin-bottom: 8px; }
+  .mini-card .mc-pill { display: inline-block; font-size: 9px; font-weight: bold; padding: 3px 8px; border-radius: 8px; color: #fff; }
+
+  .section-label { font-size: 11px; color: var(--subink); margin: 4px 0 8px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.4px; }
+
+  .prediction-panel { background: var(--cream); border: 1px solid var(--amber); border-radius: 8px; padding: 14px; margin-bottom: 14px; }
+  .prediction-panel .pp-title { font-size: 11.5px; font-weight: bold; color: var(--navy-dark); margin-bottom: 10px; }
+  .pp-body { display: flex; align-items: center; gap: 14px; }
+  .pp-ring { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; color: #fff; text-align: center; flex-shrink: 0; transition: background 0.3s; }
+  .pp-detail { font-size: 10.5px; color: var(--ink); line-height: 1.5; }
+
+  .mentor-row { display: flex; align-items: center; gap: 10px; border: 1px solid #E3E6EA; border-radius: 6px; padding: 10px; margin-bottom: 8px; cursor: pointer; transition: background 0.15s; }
+  .mentor-row:hover { background: #FAFAFA; }
+  .mentor-avatar { width: 30px; height: 30px; border-radius: 50%; background: #B7BDC6; flex-shrink: 0; }
+  .mentor-info { flex: 1; }
+  .mentor-name { font-size: 11px; font-weight: bold; color: var(--navy-dark); }
+  .mentor-sub { font-size: 9.5px; color: var(--subink); }
+  .connect-btn { background: var(--navy); color: #fff; font-size: 9.5px; font-weight: bold; border: none; border-radius: 10px; padding: 6px 12px; cursor: pointer; }
+  .connect-btn:hover { background: var(--navy-dark); }
+
+  .bottomnav { display: flex; justify-content: space-around; padding: 12px; border-top: 1px solid #E3E6EA; position: absolute; bottom: 0; left: 0; right: 0; background: #fff; }
+  .bottomnav .nav-dot { width: 9px; height: 9px; border-radius: 50%; background: #B7BDC6; cursor: pointer; }
+  .bottomnav .nav-dot.active { background: var(--navy); }
+
+  /* Feedback form */
+  .form-label { font-size: 11.5px; color: var(--subink); margin: 14px 0 8px; font-weight: bold; }
+  .rating-row { display: flex; gap: 8px; margin-bottom: 6px; }
+  .dot-rate { width: 24px; height: 24px; border-radius: 50%; border: 1.5px solid var(--teal); cursor: pointer; transition: background 0.15s; }
+  .dot-rate.filled { background: var(--teal); }
+  .block-rate { width: 32px; height: 26px; border: 1.5px solid var(--amber); cursor: pointer; transition: background 0.15s; }
+  .block-rate.filled { background: var(--amber); }
+
+  .slider-wrap { margin: 8px 0 4px; }
+  input[type=range] { width: 100%; accent-color: var(--teal); }
+  .slider-val { font-size: 10px; color: var(--subink); text-align: right; }
+
+  textarea { width: 100%; height: 60px; border: 1px solid #D9D9D9; border-radius: 6px; padding: 8px; font-family: inherit; font-size: 10.5px; resize: none; }
+
+  .submit-btn { width: 100%; background: var(--navy); color: #fff; border: none; border-radius: 6px; padding: 12px; font-size: 12.5px; font-weight: bold; cursor: pointer; margin-top: 16px; }
+  .submit-btn:hover { background: var(--navy-dark); }
+  .form-note { font-size: 9px; color: #B7BDC6; margin-top: 10px; text-align: center; }
+
+  .toast { position: absolute; bottom: 70px; left: 18px; right: 18px; background: var(--navy-dark); color: #fff; font-size: 11px; padding: 12px 14px; border-radius: 8px; opacity: 0; transform: translateY(10px); transition: opacity 0.3s, transform 0.3s; pointer-events: none; text-align: center; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  /* Admin report */
+  .stat-row { display: flex; gap: 8px; margin-bottom: 14px; }
+  .stat-card { flex: 1; border-radius: 6px; padding: 12px; }
+  .stat-card.a { background: var(--cream); border: 1px solid var(--amber); }
+  .stat-card.b { background: #E7EEF0; border: 1px solid var(--teal); }
+  .stat-label { font-size: 9.5px; color: var(--navy-dark); margin-bottom: 6px; }
+  .stat-value { font-size: 22px; font-weight: bold; color: var(--navy-dark); }
+
+  select.mentor-select { width: 100%; font-family: Georgia, serif; font-size: 11px; padding: 8px; border-radius: 6px; border: 1px solid #D9D9D9; margin-bottom: 14px; }
+
+  .outcome-row { display: flex; justify-content: space-between; align-items: center; border: 1px solid #E3E6EA; border-radius: 6px; padding: 9px 12px; margin-bottom: 6px; }
+  .outcome-date { font-size: 10px; color: var(--subink); }
+  .outcome-pill { font-size: 9.5px; font-weight: bold; color: #fff; padding: 4px 10px; border-radius: 8px; }
+
+  .side-note {
+    max-width: 340px;
+    background: var(--card-bg);
+    border-radius: 10px;
+    padding: 20px 22px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+  .side-note h3 { font-size: 14px; color: var(--navy-dark); margin: 0 0 8px; }
+  .layout { display: flex; gap: 30px; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+</style>
+</head>
+<body>
+
+<h1>Interactive Wireframe Prototype</h1>
+<p class="subtitle">Digital Mentorship &amp; Effectiveness Prediction System — click through the flow below the way a mentee or admin actually would. This is a clickable prototype, not a static picture.</p>
+
+<div class="tabbar">
+  <button class="active" data-screen="dashboard" onclick="goTo('dashboard')">1. Mentee Dashboard</button>
+  <button data-screen="feedback" onclick="goTo('feedback')">2. Session Feedback</button>
+  <button data-screen="admin" onclick="goTo('admin')">3. Mentor Quality Report</button>
+</div>
+
+<div class="layout">
+  <div class="device-frame">
+
+    <!-- ============ SCREEN 1: MENTEE DASHBOARD ============ -->
+    <div class="screen active" id="screen-dashboard">
+      <div class="topbar">
+        <div class="avatar"></div>
+        <div class="title">Hi, Amina</div>
+        <div class="badge">3 sessions</div>
+      </div>
+      <div class="section-pad">
+        <div class="welcome-strip">
+          <div class="line1">Your next session is Thursday, 4:00 PM</div>
+          <div class="line2">with James M. — Product Management track</div>
+        </div>
+
+        <div class="section-label">Recent Sessions</div>
+        <div class="card-row">
+          <div class="mini-card" onclick="goTo('feedback')">
+            <div class="mc-title">Aug 12</div>
+            <div class="mc-sub">James M. · 45 min</div>
+            <span class="mc-pill" style="background:var(--teal)">Effective</span>
+          </div>
+          <div class="mini-card" onclick="goTo('feedback')">
+            <div class="mc-title">Aug 5</div>
+            <div class="mc-sub">James M. · 30 min</div>
+            <span class="mc-pill" style="background:var(--amber); color:var(--navy-dark)">Pending</span>
+          </div>
+          <div class="mini-card" onclick="goTo('feedback')">
+            <div class="mc-title">Jul 29</div>
+            <div class="mc-sub">James M. · 50 min</div>
+            <span class="mc-pill" style="background:#B7BDC6">Ineffective</span>
+          </div>
+        </div>
+
+        <div class="prediction-panel">
+          <div class="pp-title">Latest Session Prediction</div>
+          <div class="pp-body">
+            <div class="pp-ring" id="dash-ring" style="background:var(--teal)">Effective</div>
+            <div class="pp-detail">Communication and goal progress were both strong this session — predicted <strong>effective</strong> with high confidence.</div>
+          </div>
+        </div>
+
+        <div class="section-label">Suggested Mentors</div>
+        <div class="mentor-row">
+          <div class="mentor-avatar"></div>
+          <div class="mentor-info">
+            <div class="mentor-name">Wanjiru K.</div>
+            <div class="mentor-sub">Data &amp; Analytics · 6 yrs experience</div>
+          </div>
+          <button class="connect-btn">Connect</button>
+        </div>
+        <div class="mentor-row">
+          <div class="mentor-avatar"></div>
+          <div class="mentor-info">
+            <div class="mentor-name">David O.</div>
+            <div class="mentor-sub">Software Engineering · 4 yrs experience</div>
+          </div>
+          <button class="connect-btn">Connect</button>
+        </div>
+      </div>
+      <div class="bottomnav">
+        <div class="nav-dot active"></div>
+        <div class="nav-dot"></div>
+        <div class="nav-dot"></div>
+      </div>
+    </div>
+
+    <!-- ============ SCREEN 2: SESSION FEEDBACK FORM ============ -->
+    <div class="screen" id="screen-feedback">
+      <div class="topbar">
+        <div class="avatar"></div>
+        <div class="title">Rate your session</div>
+      </div>
+      <div class="section-pad">
+        <div class="welcome-strip">
+          <div class="line1">Session with James M.</div>
+          <div class="line2">Aug 5 · 30 minutes · Product Management track</div>
+        </div>
+
+        <div class="form-label">Communication Quality</div>
+        <div class="rating-row" id="comm-rating">
+          <div class="dot-rate filled" data-val="1"></div>
+          <div class="dot-rate filled" data-val="2"></div>
+          <div class="dot-rate filled" data-val="3"></div>
+          <div class="dot-rate" data-val="4"></div>
+          <div class="dot-rate" data-val="5"></div>
+        </div>
+
+        <div class="form-label">Overall Session Rating</div>
+        <div class="rating-row" id="overall-rating">
+          <div class="block-rate filled" data-val="1"></div>
+          <div class="block-rate filled" data-val="2"></div>
+          <div class="block-rate filled" data-val="3"></div>
+          <div class="block-rate" data-val="4"></div>
+          <div class="block-rate" data-val="5"></div>
+        </div>
+
+        <div class="form-label">Goal Progress This Session</div>
+        <div class="slider-wrap">
+          <input type="range" min="0" max="100" value="55" id="goal-slider" oninput="updateSlider(this.value)">
+          <div class="slider-val" id="slider-val-label">55%</div>
+        </div>
+
+        <div class="form-label">Additional Comments</div>
+        <textarea placeholder="Optional — anything that would help future sessions..."></textarea>
+
+        <button class="submit-btn" onclick="submitFeedback()">Submit Feedback</button>
+        <div class="form-note">Feedback feeds directly into the effectiveness prediction model.</div>
+      </div>
+      <div class="toast" id="toast">Feedback submitted — prediction updated</div>
+    </div>
+
+    <!-- ============ SCREEN 3: MENTOR QUALITY REPORT (ADMIN) ============ -->
+    <div class="screen" id="screen-admin">
+      <div class="topbar">
+        <div class="avatar"></div>
+        <div class="title">Mentor Quality Report</div>
+        <div class="badge" id="admin-status">Active</div>
+      </div>
+      <div class="section-pad">
+        <select class="mentor-select" id="mentor-select" onchange="switchMentor(this.value)">
+          <option value="james">James M. — Product Management</option>
+          <option value="wanjiru">Wanjiru K. — Data &amp; Analytics</option>
+        </select>
+
+        <div class="stat-row">
+          <div class="stat-card a">
+            <div class="stat-label">Aggregate Effectiveness</div>
+            <div class="stat-value" id="stat-agg">0.81</div>
+          </div>
+          <div class="stat-card b">
+            <div class="stat-label">Total Sessions Tracked</div>
+            <div class="stat-value" id="stat-total">47</div>
+          </div>
+        </div>
+
+        <div class="section-label">Recent Session Outcomes</div>
+        <div id="outcome-list">
+          <div class="outcome-row">
+            <span class="outcome-date">Aug 12 — 45 min</span>
+            <span class="outcome-pill" style="background:var(--teal)">Effective</span>
+          </div>
+          <div class="outcome-row">
+            <span class="outcome-date">Aug 5 — 30 min</span>
+            <span class="outcome-pill" style="background:var(--danger)">Ineffective</span>
+          </div>
+          <div class="outcome-row">
+            <span class="outcome-date">Jul 29 — 50 min</span>
+            <span class="outcome-pill" style="background:var(--teal)">Effective</span>
+          </div>
+          <div class="outcome-row">
+            <span class="outcome-date">Jul 20 — 40 min</span>
+            <span class="outcome-pill" style="background:var(--teal)">Effective</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="side-note">
+    <h3>What's actually interactive here</h3>
+    <p>&#8226; Click any mentee dashboard card to jump into the feedback flow.<br>
+    &#8226; Drag the ratings and the goal-progress slider on the feedback screen, then submit — the dashboard's predicted effectiveness updates based on what you entered, the same way the real XGBoost prediction would respond to real feedback.<br>
+    &#8226; Switch the mentor dropdown on the admin report to see a second mentor's aggregated profile swap in.</p>
+  </div>
+</div>
+
+<script>
+let commRating = 3;
+let overallRating = 3;
+let goalProgress = 55;
+
+function goTo(screen) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + screen).classList.add('active');
+  document.querySelectorAll('.tabbar button').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.tabbar button[data-screen="${screen}"]`).classList.add('active');
+}
+
+document.querySelectorAll('#comm-rating .dot-rate').forEach(dot => {
+  dot.addEventListener('click', () => {
+    commRating = parseInt(dot.getAttribute('data-val'));
+    document.querySelectorAll('#comm-rating .dot-rate').forEach(d => {
+      d.classList.toggle('filled', parseInt(d.getAttribute('data-val')) <= commRating);
+    });
+  });
+});
+
+document.querySelectorAll('#overall-rating .block-rate').forEach(block => {
+  block.addEventListener('click', () => {
+    overallRating = parseInt(block.getAttribute('data-val'));
+    document.querySelectorAll('#overall-rating .block-rate').forEach(b => {
+      b.classList.toggle('filled', parseInt(b.getAttribute('data-val')) <= overallRating);
+    });
+  });
+});
+
+function updateSlider(val) {
+  goalProgress = parseInt(val);
+  document.getElementById('slider-val-label').textContent = val + '%';
+}
+
+function submitFeedback() {
+  const toast = document.getElementById('toast');
+  toast.classList.add('show');
+
+  const score = (commRating / 5) * 0.4 + (overallRating / 5) * 0.35 + (goalProgress / 100) * 0.25;
+  const ring = document.getElementById('dash-ring');
+  const detail = document.querySelector('.pp-detail');
+
+  setTimeout(() => {
+    if (score >= 0.6) {
+      ring.style.background = 'var(--teal)';
+      ring.textContent = 'Effective';
+      detail.innerHTML = 'Communication and goal progress were both strong this session — predicted <strong>effective</strong> with high confidence.';
+    } else {
+      ring.style.background = 'var(--danger)';
+      ring.textContent = 'Ineffective';
+      detail.innerHTML = 'Lower ratings and limited goal progress this session — predicted <strong>ineffective</strong>. Flagged for mentor follow-up.';
+    }
+  }, 350);
+
+  setTimeout(() => {
+    toast.classList.remove('show');
+    goTo('dashboard');
+  }, 1400);
+}
+
+const mentorData = {
+  james: { status: 'Active', agg: '0.81', total: '47' },
+  wanjiru: { status: 'Active', agg: '0.74', total: '32' }
+};
+
+function switchMentor(id) {
+  const d = mentorData[id];
+  document.getElementById('admin-status').textContent = d.status;
+  document.getElementById('stat-agg').textContent = d.agg;
+  document.getElementById('stat-total').textContent = d.total;
+}
+</script>
+
+</body>
+</html>

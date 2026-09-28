@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Interactive Use Case Diagram — Digital Mentorship System</title>
+<style>
+  :root {
+    --navy: #1B2A4A;
+    --navy-dark: #121D33;
+    --amber: #D9A441;
+    --teal: #3E7C7C;
+    --cream: #EDE3CF;
+    --ink: #222222;
+    --subink: #5B6472;
+    --card-bg: #F4F5F7;
+    --dim: 0.16;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Georgia, 'Times New Roman', serif;
+    background: #FFFFFF;
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 28px 16px 60px;
+  }
+  h1 { font-size: 22px; color: var(--navy-dark); margin: 0 0 4px; text-align: center; }
+  p.subtitle { color: var(--subink); font-size: 13.5px; margin: 0 0 22px; text-align: center; }
+  .layout { display: flex; gap: 28px; max-width: 1280px; width: 100%; align-items: flex-start; flex-wrap: wrap; justify-content: center; }
+  .diagram-wrap { flex: 1 1 780px; max-width: 820px; }
+  svg { width: 100%; height: auto; display: block; }
+
+  .actor-group, .uc-group, .sys-group { cursor: pointer; transition: opacity 0.25s ease; }
+  .actor-figure { stroke: var(--navy); stroke-width: 2.5; fill: none; transition: stroke 0.25s ease, filter 0.25s ease; }
+  .actor-mentor .actor-figure { stroke: var(--teal); }
+  .actor-admin .actor-figure { stroke: var(--amber); }
+  .actor-label { font-size: 13px; font-weight: bold; fill: var(--navy); text-anchor: middle; }
+  .actor-mentor .actor-label { fill: var(--teal); }
+  .actor-admin .actor-label { fill: #A67A1E; }
+
+  .uc-oval { fill: #FFFFFF; stroke: var(--navy); stroke-width: 1.6; transition: fill 0.25s ease, stroke 0.25s ease, filter 0.25s ease; }
+  .uc-oval.core { fill: var(--cream); stroke: var(--amber); stroke-width: 2; }
+  .uc-label { font-size: 11.5px; fill: var(--navy); text-anchor: middle; pointer-events: none; }
+
+  .rel-line { stroke: #B7BDC6; stroke-width: 1.3; transition: stroke 0.25s ease, stroke-width 0.25s ease, opacity 0.25s ease; }
+  .inc-line { stroke: var(--subink); stroke-width: 1.3; stroke-dasharray: 5,3; transition: stroke 0.25s ease, opacity 0.25s ease; }
+  .inc-label { font-size: 10px; font-style: italic; fill: var(--subink); }
+
+  .sys-box { fill: var(--navy-dark); transition: opacity 0.25s ease; }
+  .sys-label { font-size: 12px; fill: #FFFFFF; text-anchor: middle; font-weight: bold; }
+
+  .faded { opacity: var(--dim); }
+  .glow { filter: drop-shadow(0 0 5px rgba(217,164,65,0.9)); }
+  .glow-line { stroke: var(--amber) !important; stroke-width: 2.4 !important; opacity: 1 !important; }
+
+  .panel {
+    flex: 0 0 320px;
+    background: var(--card-bg);
+    border-radius: 10px;
+    padding: 20px 22px;
+    min-height: 260px;
+    position: sticky;
+    top: 20px;
+  }
+  .panel h2 { font-size: 16px; color: var(--navy-dark); margin: 0 0 8px; }
+  .panel .kicker { font-size: 11px; letter-spacing: 1px; color: var(--amber); font-weight: bold; text-transform: uppercase; margin-bottom: 6px; }
+  .panel p { font-size: 13.5px; line-height: 1.55; color: var(--ink); margin: 0 0 14px; }
+  .panel ul { margin: 0 0 4px; padding-left: 18px; }
+  .panel li { font-size: 13px; color: var(--subink); margin-bottom: 5px; }
+  .panel .hint { font-size: 12.5px; color: var(--subink); font-style: italic; }
+  .reset-btn {
+    margin-top: 14px;
+    background: var(--navy);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-family: Georgia, serif;
+    font-size: 12.5px;
+    cursor: pointer;
+  }
+  .reset-btn:hover { background: var(--navy-dark); }
+
+  .legend { display: flex; gap: 18px; flex-wrap: wrap; justify-content: center; margin-top: 18px; font-size: 12px; color: var(--subink); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .swatch { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+</style>
+</head>
+<body>
+
+<h1>Use Case Diagram — Digital Mentorship &amp; Effectiveness Prediction System</h1>
+<p class="subtitle">Click an actor or a use case to explore what it does and how it connects to the rest of the system.</p>
+
+<div class="layout">
+  <div class="diagram-wrap">
+    <svg viewBox="0 0 900 820" xmlns="http://www.w3.org/2000/svg">
+
+      <!-- System boundary -->
+      <rect x="205" y="35" width="500" height="740" rx="8" fill="#F4F5F7" stroke="#1B2A4A" stroke-width="2"/>
+      <text x="455" y="60" font-size="13.5" font-weight="bold" fill="#1B2A4A" text-anchor="middle">Digital Mentorship &amp; Prediction System</text>
+
+      <!-- ============ ACTORS ============ -->
+      <g class="actor-group actor-mentee" data-id="mentee" transform="translate(80,180)">
+        <circle class="actor-figure" cx="0" cy="0" r="14"/>
+        <line class="actor-figure" x1="0" y1="14" x2="0" y2="50"/>
+        <line class="actor-figure" x1="-20" y1="26" x2="20" y2="26"/>
+        <line class="actor-figure" x1="0" y1="50" x2="-16" y2="78"/>
+        <line class="actor-figure" x1="0" y1="50" x2="16" y2="78"/>
+        <text class="actor-label" x="0" y="98">Mentee</text>
+      </g>
+
+      <g class="actor-group actor-mentor" data-id="mentor" transform="translate(80,400)">
+        <circle class="actor-figure" cx="0" cy="0" r="14"/>
+        <line class="actor-figure" x1="0" y1="14" x2="0" y2="50"/>
+        <line class="actor-figure" x1="-20" y1="26" x2="20" y2="26"/>
+        <line class="actor-figure" x1="0" y1="50" x2="-16" y2="78"/>
+        <line class="actor-figure" x1="0" y1="50" x2="16" y2="78"/>
+        <text class="actor-label" x="0" y="98">Mentor</text>
+      </g>
+
+      <g class="actor-group actor-admin" data-id="admin" transform="translate(80,620)">
+        <circle class="actor-figure" cx="0" cy="0" r="14"/>
+        <line class="actor-figure" x1="0" y1="14" x2="0" y2="50"/>
+        <line class="actor-figure" x1="-20" y1="26" x2="20" y2="26"/>
+        <line class="actor-figure" x1="0" y1="50" x2="-16" y2="78"/>
+        <line class="actor-figure" x1="0" y1="50" x2="16" y2="78"/>
+        <text class="actor-label" x="0" y="98">Institutional</text>
+        <text class="actor-label" x="0" y="113">Admin</text>
+      </g>
+
+      <!-- System actor: XGBoost -->
+      <g class="sys-group" data-id="xgboost" transform="translate(815,400)">
+        <rect class="sys-box" x="-42" y="-20" width="84" height="40" rx="5"/>
+        <text class="sys-label" x="0" y="4">XGBoost</text>
+        <text x="0" y="-8" font-size="9.5" fill="#EDE3CF" text-anchor="middle">&#171;system&#187;</text>
+      </g>
+
+      <!-- ============ RELATIONSHIP LINES (actor to use case) ============ -->
+      <g id="assoc-lines">
+        <line class="rel-line" data-actor="mentee" data-uc="login" x1="95" y1="195" x2="335" y2="100"/>
+        <line class="rel-line" data-actor="mentee" data-uc="schedule" x1="95" y1="195" x2="335" y2="185"/>
+        <line class="rel-line" data-actor="mentee" data-uc="feedback" x1="95" y1="195" x2="335" y2="275"/>
+        <line class="rel-line" data-actor="mentee" data-uc="viewpred" x1="95" y1="195" x2="335" y2="450"/>
+        <line class="rel-line" data-actor="mentee" data-uc="dashboard" x1="95" y1="195" x2="335" y2="555"/>
+
+        <line class="rel-line" data-actor="mentor" data-uc="login" x1="95" y1="415" x2="335" y2="100"/>
+        <line class="rel-line" data-actor="mentor" data-uc="conduct" x1="95" y1="415" x2="530" y2="185"/>
+        <line class="rel-line" data-actor="mentor" data-uc="quality" x1="95" y1="415" x2="565" y2="450"/>
+        <line class="rel-line" data-actor="mentor" data-uc="dashboard" x1="95" y1="415" x2="335" y2="555"/>
+
+        <line class="rel-line" data-actor="admin" data-uc="manageusers" x1="95" y1="635" x2="335" y2="640"/>
+        <line class="rel-line" data-actor="admin" data-uc="monitor" x1="95" y1="635" x2="565" y2="640"/>
+        <line class="rel-line" data-actor="admin" data-uc="dashboard" x1="95" y1="635" x2="335" y2="555"/>
+
+        <line class="rel-line" data-actor="xgboost" data-uc="genpred" x1="775" y1="400" x2="665" y2="375"/>
+      </g>
+
+      <!-- ============ INCLUDE DEPENDENCY LINES ============ -->
+      <g id="inc-lines">
+        <line class="inc-line" data-a="conduct" data-b="record" x1="530" y1="215" x2="530" y2="245"/>
+        <line class="inc-line" data-a="record" data-b="genpred" x1="500" y1="280" x2="450" y2="340"/>
+        <line class="inc-line" data-a="feedback" data-b="genpred" x1="400" y1="280" x2="420" y2="340"/>
+        <line class="inc-line" data-a="genpred" data-b="viewpred" x1="410" y1="390" x2="380" y2="425"/>
+        <line class="inc-line" data-a="genpred" data-b="quality" x1="500" y1="390" x2="540" y2="425"/>
+        <line class="inc-line" data-a="quality" data-b="monitor" x1="565" y1="475" x2="565" y2="610"/>
+      </g>
+
+      <!-- ============ USE CASE OVALS ============ -->
+      <g class="uc-group" data-id="login" transform="translate(410,85)">
+        <ellipse class="uc-oval" rx="90" ry="30"/>
+        <text class="uc-label" y="5">Register / Login</text>
+      </g>
+
+      <g class="uc-group" data-id="profile" transform="translate(620,85)">
+        <ellipse class="uc-oval" rx="80" ry="30"/>
+        <text class="uc-label" y="5">Manage Profile</text>
+      </g>
+
+      <g class="uc-group" data-id="schedule" transform="translate(410,185)">
+        <ellipse class="uc-oval" rx="90" ry="30"/>
+        <text class="uc-label" y="5">Schedule Session</text>
+      </g>
+
+      <g class="uc-group" data-id="conduct" transform="translate(620,185)">
+        <ellipse class="uc-oval" rx="95" ry="30"/>
+        <text class="uc-label" y="5">Conduct Session</text>
+      </g>
+
+      <g class="uc-group" data-id="feedback" transform="translate(410,275)">
+        <ellipse class="uc-oval" rx="90" ry="30"/>
+        <text class="uc-label" y="5">Submit Feedback</text>
+      </g>
+
+      <g class="uc-group" data-id="record" transform="translate(620,275)">
+        <ellipse class="uc-oval" rx="95" ry="30"/>
+        <text class="uc-label" y="5">Record Session Data</text>
+      </g>
+
+      <g class="uc-group core" data-id="genpred" transform="translate(485,365)">
+        <ellipse class="uc-oval core" rx="110" ry="34"/>
+        <text class="uc-label" y="-3" style="font-weight:bold;">Generate Effectiveness</text>
+        <text class="uc-label" y="13" style="font-weight:bold;">Prediction</text>
+      </g>
+
+      <g class="uc-group" data-id="viewpred" transform="translate(345,450)">
+        <ellipse class="uc-oval" rx="95" ry="30"/>
+        <text class="uc-label" y="5">View Predictions</text>
+      </g>
+
+      <g class="uc-group" data-id="quality" transform="translate(565,450)">
+        <ellipse class="uc-oval" rx="100" ry="32"/>
+        <text class="uc-label" y="-2">View Quality</text>
+        <text class="uc-label" y="14">Profile</text>
+      </g>
+
+      <g class="uc-group" data-id="dashboard" transform="translate(345,555)">
+        <ellipse class="uc-oval" rx="100" ry="30"/>
+        <text class="uc-label" y="5">View Dashboard</text>
+      </g>
+
+      <g class="uc-group" data-id="manageusers" transform="translate(410,640)">
+        <ellipse class="uc-oval" rx="90" ry="30"/>
+        <text class="uc-label" y="5">Manage Users</text>
+      </g>
+
+      <g class="uc-group" data-id="monitor" transform="translate(620,640)">
+        <ellipse class="uc-oval" rx="100" ry="32"/>
+        <text class="uc-label" y="-2">Monitor Program</text>
+        <text class="uc-label" y="14">Analytics</text>
+      </g>
+
+    </svg>
+
+    <div class="legend">
+      <span><span class="swatch" style="background:#1B2A4A"></span> Mentee use cases</span>
+      <span><span class="swatch" style="background:#3E7C7C"></span> Mentor use cases</span>
+      <span><span class="swatch" style="background:#D9A441"></span> Admin use cases</span>
+      <span><span class="swatch" style="background:#EDE3CF;border:1.5px solid #D9A441"></span> Core predictive use case</span>
+    </div>
+  </div>
+
+  <div class="panel" id="panel">
+    <div class="kicker">Get started</div>
+    <h2>Click any actor or use case</h2>
+    <p>Selecting an actor (the stick figures on the left) highlights every task that actor performs. Selecting a use case (the ovals) shows what it does, who triggers it, and which other use cases it depends on.</p>
+    <p class="hint">Try starting with the amber "Generate Effectiveness Prediction" oval — it's the core of the whole system.</p>
+  </div>
+</div>
+
+<script>
+const actorInfo = {
+  mentee: {
+    title: "Mentee",
+    kicker: "Actor",
+    desc: "A university student or early-career professional receiving mentorship. Mentees book sessions, submit feedback afterward, and view how their sessions were predicted to perform.",
+    uses: ["Register / Login", "Schedule Session", "Submit Feedback", "View Predictions", "View Dashboard"]
+  },
+  mentor: {
+    title: "Mentor",
+    kicker: "Actor",
+    desc: "The industry expert or career guide conducting sessions. Mentors accept and run sessions, and can view their own accumulated quality profile once enough sessions have been predicted.",
+    uses: ["Register / Login", "Conduct Session", "View Quality Profile", "View Dashboard"]
+  },
+  admin: {
+    title: "Institutional Admin",
+    kicker: "Actor",
+    desc: "Monitors overall program health. Admins manage user accounts and view aggregated, platform-wide analytics rather than individual sessions.",
+    uses: ["Manage Users", "Monitor Program Analytics", "View Dashboard"]
+  },
+  xgboost: {
+    title: "XGBoost (system actor)",
+    kicker: "External / System Actor",
+    desc: "Not a human — this is the predictive model itself, shown as a UML system actor because it participates in the use case the same way a person would: it receives session data and returns a classification.",
+    uses: ["Generate Effectiveness Prediction"]
+  }
+};
+
+const ucInfo = {
+  login: { title: "Register / Login", actor: "Mentee, Mentor", desc: "Standard authentication flow. Creates or verifies a user account and establishes the role (mentee/mentor) used to route the rest of the system." },
+  profile: { title: "Manage Profile", actor: "Mentee, Mentor", desc: "Update personal and professional details — career interests for mentees, expertise area and experience for mentors." },
+  schedule: { title: "Schedule Session", actor: "Mentee", desc: "Mentee books a session with a chosen mentor, setting date, time, and expected duration." },
+  conduct: { title: "Conduct Session", actor: "Mentor", desc: "Mentor runs the scheduled session. This use case includes 'Record Session Data' — duration and interaction details are captured as the session happens or immediately after." },
+  feedback: { title: "Submit Feedback", actor: "Mentee", desc: "Mentee rates communication quality and overall session effectiveness after the session ends. This feedback is one of the two inputs that feed 'Generate Effectiveness Prediction.'" },
+  record: { title: "Record Session Data", actor: "Mentor (via Conduct Session)", desc: "Structured session metadata — duration, interaction frequency, goal progress — is logged. Included automatically as part of conducting a session, and feeds directly into the prediction step." },
+  genpred: { title: "Generate Effectiveness Prediction", actor: "System (XGBoost)", desc: "The core predictive use case. Once feedback and session data are available, the XGBoost classifier processes them and outputs an effective/ineffective label with a confidence score. This is the technical contribution at the center of the whole project." },
+  viewpred: { title: "View Predictions", actor: "Mentee", desc: "Mentee sees the predicted effectiveness label for their own past sessions." },
+  quality: { title: "View Quality Profile", actor: "Mentor", desc: "Mentor sees their own aggregated performance history — built from multiple predictions over time, not judged from a single session." },
+  dashboard: { title: "View Dashboard", actor: "Mentee, Mentor, Admin", desc: "The general-purpose landing view for any logged-in user, tailored by role." },
+  manageusers: { title: "Manage Users", actor: "Institutional Admin", desc: "Admin-level account management — verifying mentors, deactivating accounts, resolving disputes." },
+  monitor: { title: "Monitor Program Analytics", actor: "Institutional Admin", desc: "Platform-wide view aggregating every mentor's quality profile, used to judge whether the mentorship program overall is working." }
+};
+
+const svg = document.querySelector('svg');
+const panel = document.getElementById('panel');
+
+function clearHighlights() {
+  document.querySelectorAll('.actor-group, .uc-group, .sys-group').forEach(el => {
+    el.classList.remove('faded', 'glow');
+  });
+  document.querySelectorAll('.rel-line, .inc-line').forEach(el => {
+    el.classList.remove('faded', 'glow-line');
+  });
+}
+
+function fadeAllExcept(keepSet) {
+  document.querySelectorAll('.actor-group, .uc-group, .sys-group').forEach(el => {
+    const id = el.getAttribute('data-id');
+    if (!keepSet.has(id)) el.classList.add('faded');
+  });
+}
+
+function selectActor(id) {
+  clearHighlights();
+  const info = actorInfo[id];
+  const connectedUCs = new Set();
+  document.querySelectorAll(`#assoc-lines line[data-actor="${id}"]`).forEach(line => {
+    line.classList.add('glow-line');
+    connectedUCs.add(line.getAttribute('data-uc'));
+  });
+  const keep = new Set([id, ...connectedUCs]);
+  fadeAllExcept(keep);
+  document.querySelectorAll('.uc-group').forEach(el => {
+    if (connectedUCs.has(el.getAttribute('data-id'))) el.classList.add('glow');
+  });
+  document.querySelector(`[data-id="${id}"]`).classList.add('glow');
+
+  panel.innerHTML = `
+    <div class="kicker">${info.kicker}</div>
+    <h2>${info.title}</h2>
+    <p>${info.desc}</p>
+    <p style="font-size:12.5px; color:#5B6472; margin-bottom:6px;"><strong>Performs:</strong></p>
+    <ul>${info.uses.map(u => `<li>${u}</li>`).join('')}</ul>
+    <button class="reset-btn" onclick="resetPanel()">Clear selection</button>
+  `;
+}
+
+function selectUC(id) {
+  clearHighlights();
+  const info = ucInfo[id];
+  const keep = new Set([id]);
+
+  document.querySelectorAll(`#assoc-lines line[data-uc="${id}"]`).forEach(line => {
+    line.classList.add('glow-line');
+    keep.add(line.getAttribute('data-actor'));
+  });
+  document.querySelectorAll(`#inc-lines line[data-a="${id}"], #inc-lines line[data-b="${id}"]`).forEach(line => {
+    line.classList.add('glow-line');
+    keep.add(line.getAttribute('data-a'));
+    keep.add(line.getAttribute('data-b'));
+  });
+
+  fadeAllExcept(keep);
+  document.querySelector(`[data-id="${id}"]`).classList.add('glow');
+  keep.forEach(k => {
+    const el = document.querySelector(`.uc-group[data-id="${k}"], .actor-group[data-id="${k}"], .sys-group[data-id="${k}"]`);
+    if (el) el.classList.add('glow');
+  });
+
+  panel.innerHTML = `
+    <div class="kicker">Use Case</div>
+    <h2>${info.title}</h2>
+    <p style="font-size:12.5px; color:#5B6472; margin-bottom:2px;"><strong>Primary actor:</strong> ${info.actor}</p>
+    <p>${info.desc}</p>
+    <button class="reset-btn" onclick="resetPanel()">Clear selection</button>
+  `;
+}
+
+function resetPanel() {
+  clearHighlights();
+  panel.innerHTML = `
+    <div class="kicker">Get started</div>
+    <h2>Click any actor or use case</h2>
+    <p>Selecting an actor (the stick figures on the left) highlights every task that actor performs. Selecting a use case (the ovals) shows what it does, who triggers it, and which other use cases it depends on.</p>
+    <p class="hint">Try starting with the amber "Generate Effectiveness Prediction" oval — it's the core of the whole system.</p>
+  `;
+}
+
+document.querySelectorAll('.actor-group, .sys-group').forEach(el => {
+  el.addEventListener('click', () => selectActor(el.getAttribute('data-id')));
+});
+document.querySelectorAll('.uc-group').forEach(el => {
+  el.addEventListener('click', () => selectUC(el.getAttribute('data-id')));
+});
+</script>
+
+</body>
+</html>
