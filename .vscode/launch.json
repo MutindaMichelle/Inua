@@ -1,0 +1,38 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "ML: Generate dataset",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/ml/generate_dataset.py",
+      "cwd": "${workspaceFolder}/ml",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "ML: Train model",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/ml/train_model.py",
+      "cwd": "${workspaceFolder}/ml",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "ML: Predict smoke test",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/ml/predict.py",
+      "cwd": "${workspaceFolder}/ml",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "ML: Run tests",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "args": ["tests/", "-v"],
+      "cwd": "${workspaceFolder}/ml",
+      "console": "integratedTerminal"
+    }
+  ]
+}

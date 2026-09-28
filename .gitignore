@@ -1,0 +1,35 @@
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+
+# --- Model artifacts (regenerable via ml/train_model.py; don't commit binaries) ---
+ml/models/*.joblib
+ml/models/*.json
+!ml/models/.gitkeep
+
+# --- Generated dataset (regenerable via ml/generate_dataset.py) ---
+# Comment this out if you want to snapshot a specific dataset version in git.
+# ml/data/*.csv
+
+# --- Node / frontend ---
+node_modules/
+dist/
+build/
+.env
+.env.local
+
+# --- OS / editor ---
+.DS_Store
+Thumbs.db
+*.swp
+
+# --- VS Code (keep shared configs, ignore personal overrides) ---
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json
