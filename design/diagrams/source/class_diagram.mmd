@@ -1,0 +1,89 @@
+classDiagram
+    class User {
+        +int user_id
+        +string full_name
+        +string email
+        +string password_hash
+        +string role
+        +datetime created_at
+        +login()
+        +updateProfile()
+    }
+
+    class Mentee {
+        +int mentee_id
+        +string career_interest
+        +string institution
+        +string academic_level
+        +bookSession(mentor_id)
+        +submitFeedback(session_id)
+        +viewPredictions()
+    }
+
+    class Mentor {
+        +int mentor_id
+        +float experience_years
+        +string expertise_area
+        +string industry
+        +boolean is_verified
+        +acceptSession(session_id)
+        +viewQualityProfile()
+    }
+
+    class CareerGoal {
+        +int goal_id
+        +int mentee_id
+        +string goal_title
+        +int progress_percentage
+        +updateProgress()
+    }
+
+    class MentorshipSession {
+        +int session_id
+        +int mentor_id
+        +int mentee_id
+        +datetime session_date
+        +int duration_minutes
+        +float career_support_score
+        +float psychosocial_score
+        +string status
+        +scheduleSession()
+        +completeSession()
+    }
+
+    class Feedback {
+        +int feedback_id
+        +int session_id
+        +float communication_score
+        +float overall_rating
+        +submit()
+    }
+
+    class PredictionResult {
+        +int prediction_id
+        +int session_id
+        +string effectiveness_label
+        +float probability
+        +string model_version
+        +generatePrediction()
+        +storeResult()
+    }
+
+    class MentorQualityProfile {
+        +int mentor_id
+        +float aggregate_effectiveness_score
+        +int total_sessions
+        +datetime last_updated
+        +updateProfile(prediction_id)
+        +computeTrend()
+    }
+
+    User <|-- Mentee
+    User <|-- Mentor
+    Mentee "1" -- "many" CareerGoal : sets
+    Mentor "1" -- "many" MentorshipSession : conducts
+    Mentee "1" -- "many" MentorshipSession : attends
+    MentorshipSession "1" -- "1" Feedback : generates
+    MentorshipSession "1" -- "1" PredictionResult : produces
+    Mentor "1" -- "1" MentorQualityProfile : has
+    PredictionResult "many" --> "1" MentorQualityProfile : aggregates into
