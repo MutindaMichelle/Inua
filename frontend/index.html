@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>INUA — Intelligent Mentorship Effectiveness Analytics</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#F5F3FF',
+              100: '#EDE9FE',
+              200: '#DDD6FE',
+              300: '#C4B5FD',
+              400: '#A78BFA',
+              500: '#8B5CF6',
+              600: '#7C3AED',
+              700: '#6D28D9',
+              800: '#5B21B6',
+              900: '#4C1D95',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0F172A; }
+    .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .glass-card { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.06); }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 18px; width: 18px; border-radius: 50%;
+      background: #8B5CF6; cursor: pointer; box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+    }
+  </style>
+</head>
+<body class="text-slate-100 min-h-screen flex flex-col selection:bg-brand-500 selection:text-white">
+
+  <!-- Header Navigation -->
+  <header class="sticky top-0 z-50 glass border-b border-slate-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-brand-500/25">
+          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+        </div>
+        <div>
+          <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-brand-300 bg-clip-text text-transparent">INUA</span>
+          <span class="text-xs px-2 py-0.5 ml-2 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30">ML Analytics v1.0</span>
+        </div>
+      </div>
+      
+      <div class="flex items-center space-x-2 sm:space-x-4">
+        <button id="nav-eval-btn" onclick="switchTab('eval')" class="px-3.5 py-1.5 rounded-lg text-sm font-semibold transition bg-brand-600 text-white shadow-md shadow-brand-600/30">
+          Session Evaluator
+        </button>
+        <button id="nav-bench-btn" onclick="switchTab('bench')" class="px-3.5 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          Model Benchmarks
+        </button>
+        <button id="nav-figs-btn" onclick="switchTab('figs')" class="px-3.5 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          Chapter 4 Figures
+        </button>
+        <a href="http://127.0.0.1:8000/docs" target="_blank" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center gap-1.5">
+          <span>API Docs</span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- TAB 1: Real-Time Evaluator -->
+    <div id="tab-eval" class="space-y-8">
+      
+      <!-- Top Banner -->
+      <div class="glass p-6 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-l-4 border-brand-500">
+        <div>
+          <h1 class="text-2xl font-bold tracking-tight text-white">Intelligent Mentorship Session Evaluator</h1>
+          <p class="text-sm text-slate-400 mt-1">Simulate mentorship dyads and predict developmental outcomes using trained ensemble models.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="loadPreset('strong')" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Load Engaged Preset
+          </button>
+          <button onclick="loadPreset('weak')" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition flex items-center gap-1.5">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            Load Disrupted Preset
+          </button>
+        </div>
+      </div>
+
+      <!-- Grid layout: Form (Left) & Live Results (Right) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Form Inputs (7 Cols) -->
+        <div class="lg:col-span-7 glass p-6 sm:p-8 rounded-2xl space-y-6">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-4">
+            <h2 class="text-lg font-bold text-white flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-brand-500"></span>
+              Session Parameters & Interaction Dynamics
+            </h2>
+            <div class="flex items-center gap-2">
+              <label class="text-xs text-slate-400 font-medium">Model Engine:</label>
+              <select id="input-model" class="bg-slate-800 text-brand-300 text-xs font-semibold rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:border-brand-500">
+                <option value="XGBoost" selected>XGBoost Classifier</option>
+                <option value="Random Forest">Random Forest</option>
+                <option value="AdaBoost">AdaBoost Classifier</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Section 1: Mentee Demographics -->
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">1. Mentee Academic Profile</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Career Stage</label>
+                <select id="input-career-stage" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
+                  <option value="Year1">Year 1</option>
+                  <option value="Year2">Year 2</option>
+                  <option value="Year3">Year 3</option>
+                  <option value="Year4" selected>Year 4</option>
+                  <option value="Graduate">Graduate</option>
+                  <option value="EarlyCareer">Early Career</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Field of Study</label>
+                <select id="input-field" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
+                  <option value="Computer Science" selected>Computer Science</option>
+                  <option value="Engineering">Engineering</option>
+                  <option value="Business">Business</option>
+                  <option value="Data Analytics">Data Analytics</option>
+                  <option value="Health Sciences">Health Sciences</option>
+                  <option value="Education">Education</option>
+                  <option value="Social Sciences">Social Sciences</option>
+                  <option value="Other STEM">Other STEM</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Career Interest</label>
+                <select id="input-interest" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
+                  <option value="Software Engineering" selected>Software Engineering</option>
+                  <option value="Data Science">Data Science</option>
+                  <option value="Artificial Intelligence">Artificial Intelligence</option>
+                  <option value="Cybersecurity">Cybersecurity</option>
+                  <option value="Cloud Computing">Cloud Computing</option>
+                  <option value="UI/UX">UI/UX</option>
+                  <option value="Product Management">Product Management</option>
+                  <option value="Finance">Finance</option>
+                  <option value="Entrepreneurship">Entrepreneurship</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 2: Mentor Profile -->
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">2. Mentor Professional Background</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Experience (Years)</label>
+                <input id="input-experience" type="number" min="1" max="40" value="8" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Industry</label>
+                <select id="input-industry" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
+                  <option value="Technology" selected>Technology</option>
+                  <option value="Banking & Finance">Banking & Finance</option>
+                  <option value="Academia">Academia</option>
+                  <option value="Healthcare">Healthcare</option>
+                  <option value="NGO">NGO</option>
+                  <option value="Government">Government</option>
+                  <option value="Entrepreneurship">Entrepreneurship</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Specialization</label>
+                <input id="input-specialization" type="text" value="Backend Engineering" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Availability</label>
+                <select id="input-availability" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
+                  <option value="High" selected>High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 3: Session Execution Logistics -->
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">3. Session Execution Logistics</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Session Type</label>
+                <select id="input-session-type" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
+                  <option value="Interview Preparation" selected>Interview Preparation</option>
+                  <option value="Career Guidance">Career Guidance</option>
+                  <option value="CV Review">CV Review</option>
+                  <option value="Technical Coaching">Technical Coaching</option>
+                  <option value="Networking">Networking</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Duration (Min)</label>
+                <input id="input-duration" type="number" min="15" max="180" value="65" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Attendance</label>
+                <select id="input-attendance" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
+                  <option value="Attended" selected>Attended</option>
+                  <option value="Rescheduled">Rescheduled</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Platform</label>
+                <select id="input-platform" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
+                  <option value="Teams" selected>Microsoft Teams</option>
+                  <option value="Zoom">Zoom</option>
+                  <option value="Meet">Google Meet</option>
+                  <option value="Physical">Physical In-Person</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Goal Category</label>
+                <select id="input-goal" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
+                  <option value="Internship" selected>Internship</option>
+                  <option value="Portfolio Development">Portfolio Development</option>
+                  <option value="Technical Skills">Technical Skills</option>
+                  <option value="Career Transition">Career Transition</option>
+                  <option value="Leadership">Leadership</option>
+                  <option value="Research">Research</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-medium text-slate-300 mb-1">Prior Completed Sessions</label>
+                <input id="input-prior" type="number" min="0" max="15" value="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Psychometric Quality Likert Ratings (1-5) -->
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">4. Interaction Quality & Psychometrics (Likert 1–5)</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+              
+              <div>
+                <div class="flex justify-between text-xs font-medium mb-1">
+                  <span class="text-slate-300">Career Support Guidance:</span>
+                  <span id="val-career" class="text-brand-300 font-bold">4 / 5</span>
+                </div>
+                <input id="input-career" type="range" min="1" max="5" value="4" oninput="updateRange('career', this.value)" class="w-full accent-brand-500">
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs font-medium mb-1">
+                  <span class="text-slate-300">Psychosocial & Motivation:</span>
+                  <span id="val-psycho" class="text-brand-300 font-bold">4 / 5</span>
+                </div>
+                <input id="input-psycho" type="range" min="1" max="5" value="4" oninput="updateRange('psycho', this.value)" class="w-full accent-brand-500">
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs font-medium mb-1">
+                  <span class="text-slate-300">Communication Quality:</span>
+                  <span id="val-comm" class="text-brand-300 font-bold">5 / 5</span>
+                </div>
+                <input id="input-comm" type="range" min="1" max="5" value="5" oninput="updateRange('comm', this.value)" class="w-full accent-brand-500">
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs font-medium mb-1">
+                  <span class="text-slate-300">Milestone Goal Progress:</span>
+                  <span id="val-goal" class="text-brand-300 font-bold">4 / 5</span>
+                </div>
+                <input id="input-goal-prog" type="range" min="1" max="5" value="4" oninput="updateRange('goal', this.value)" class="w-full accent-brand-500">
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs font-medium mb-1">
+                  <span class="text-slate-300">Self-Efficacy / Confidence:</span>
+                  <span id="val-conf" class="text-brand-300 font-bold">4 / 5</span>
+                </div>
+                <input id="input-conf" type="range" min="1" max="5" value="4" oninput="updateRange('conf', this.value)" class="w-full accent-brand-500">
+              </div>
+
+              <div>
+                <div class="flex justify-between text-xs font-medium mb-1">
+                  <span class="text-slate-300">Mentor Responsiveness:</span>
+                  <span id="val-resp" class="text-brand-300 font-bold">5 / 5</span>
+                </div>
+                <input id="input-resp" type="range" min="1" max="5" value="5" oninput="updateRange('resp', this.value)" class="w-full accent-brand-500">
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="pt-2">
+            <button onclick="evaluateLiveSession()" class="w-full py-3.5 px-6 rounded-xl font-bold text-white bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 shadow-lg shadow-brand-500/25 transition flex items-center justify-center gap-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+              <span>Predict Session Effectiveness</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Live Prediction Output (5 Cols) -->
+        <div class="lg:col-span-5 space-y-6">
+          
+          <div class="glass p-6 sm:p-8 rounded-2xl relative overflow-hidden border border-slate-700">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+              <h2 class="text-lg font-bold text-white">Model Inference Outcome</h2>
+              <span id="res-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                Awaiting Execution
+              </span>
+            </div>
+
+            <!-- Probability Gauge Card -->
+            <div class="py-6 flex flex-col items-center justify-center text-center">
+              <div class="relative w-44 h-44 flex items-center justify-center">
+                <!-- SVG Circle Progress -->
+                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="42" stroke="currentColor" stroke-width="10" class="text-slate-800 fill-none" />
+                  <circle id="prob-circle" cx="50" cy="50" r="42" stroke="currentColor" stroke-width="10" stroke-dasharray="264" stroke-dashoffset="2" stroke-linecap="round" class="text-brand-500 fill-none transition-all duration-700 ease-out" />
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                  <span id="res-probability" class="text-4xl font-extrabold text-white tracking-tight">--</span>
+                  <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider mt-0.5">Confidence</span>
+                </div>
+              </div>
+              <div class="mt-4 text-center">
+                <span id="res-model-badge" class="text-xs text-slate-400 font-medium">Evaluated using: <strong class="text-brand-300" id="res-model-name">XGBoost</strong></span>
+              </div>
+            </div>
+
+            <!-- Prescriptive Recommendation -->
+            <div class="space-y-4 pt-4 border-t border-slate-800">
+              <div>
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Pedagogical Recommendation</h4>
+                <p id="res-recommendation" class="text-sm text-slate-200 leading-relaxed bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
+                  Configure session attributes and click evaluate to generate intervention guidelines.
+                </p>
+              </div>
+
+              <!-- Risk Factor Alerts Container -->
+              <div>
+                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Diagnostic Risk Alerts</h4>
+                <div id="res-risks-container" class="space-y-2 text-xs">
+                  <div class="p-3 rounded-xl bg-slate-900/40 text-slate-400 border border-slate-800/80">
+                    No risk flags identified.
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Strathmore Academic Panel Card -->
+          <div class="glass-card p-5 rounded-2xl border border-slate-800 space-y-2">
+            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Academic Dissertation Context</h4>
+            <p class="text-xs text-slate-400 leading-relaxed">
+              Target class ground truth is synthesized through Kram's Mentoring Framework (1985) and Bandura's Self-Efficacy construct (1997). Model excludes intermediate indices to prevent data leakage.
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- TAB 2: Model Benchmarks (Table 4.4) -->
+    <div id="tab-bench" class="hidden space-y-8">
+      <div class="glass p-6 rounded-2xl border-l-4 border-indigo-500">
+        <h2 class="text-2xl font-bold text-white">Comparative Model Benchmark Evaluation (Table 4.4)</h2>
+        <p class="text-sm text-slate-400 mt-1">Cross-validation stability and generalization metrics evaluated across Random Forest, AdaBoost, and XGBoost.</p>
+      </div>
+
+      <div class="glass p-6 rounded-2xl overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="border-b border-slate-700 text-xs font-bold uppercase tracking-wider text-slate-400">
+              <th class="py-3 px-4">Classifier</th>
+              <th class="py-3 px-4">5-Fold CV Accuracy</th>
+              <th class="py-3 px-4">5-Fold CV ROC-AUC</th>
+              <th class="py-3 px-4">Test Accuracy</th>
+              <th class="py-3 px-4">Test Precision</th>
+              <th class="py-3 px-4">Test Recall</th>
+              <th class="py-3 px-4">Test F1-Score</th>
+              <th class="py-3 px-4">Test ROC-AUC</th>
+            </tr>
+          </thead>
+          <tbody id="benchmark-table-body" class="divide-y divide-slate-800 font-medium text-slate-200">
+            <tr>
+              <td class="py-4 px-4 font-bold text-brand-300">AdaBoost</td>
+              <td class="py-4 px-4 text-emerald-400 font-bold">96.31% ± 1.21%</td>
+              <td class="py-4 px-4">0.9955</td>
+              <td class="py-4 px-4 text-emerald-400 font-bold">94.50%</td>
+              <td class="py-4 px-4">95.96%</td>
+              <td class="py-4 px-4">94.27%</td>
+              <td class="py-4 px-4 font-bold text-emerald-400">95.11%</td>
+              <td class="py-4 px-4 font-bold">0.9913</td>
+            </tr>
+            <tr>
+              <td class="py-4 px-4 font-bold text-brand-300">XGBoost</td>
+              <td class="py-4 px-4">95.81% ± 0.58%</td>
+              <td class="py-4 px-4">0.9941</td>
+              <td class="py-4 px-4">94.00%</td>
+              <td class="py-4 px-4">95.52%</td>
+              <td class="py-4 px-4">93.83%</td>
+              <td class="py-4 px-4">94.67%</td>
+              <td class="py-4 px-4">0.9898</td>
+            </tr>
+            <tr>
+              <td class="py-4 px-4 font-bold text-brand-300">Random Forest</td>
+              <td class="py-4 px-4">95.06% ± 1.02%</td>
+              <td class="py-4 px-4">0.9928</td>
+              <td class="py-4 px-4">94.00%</td>
+              <td class="py-4 px-4">94.71%</td>
+              <td class="py-4 px-4 font-bold text-emerald-400">94.71%</td>
+              <td class="py-4 px-4">94.71%</td>
+              <td class="py-4 px-4">0.9876</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="glass p-5 rounded-2xl border border-slate-800">
+          <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Top Generalization Performer</span>
+          <h3 class="text-xl font-extrabold text-white mt-1">AdaBoost Classifier</h3>
+          <p class="text-xs text-slate-400 mt-2">Achieved 96.31% cross-validation accuracy and 95.11% test F1-score with optimal regularization.</p>
+        </div>
+        <div class="glass p-5 rounded-2xl border border-slate-800">
+          <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Lowest Cross-Validation Variance</span>
+          <h3 class="text-xl font-extrabold text-white mt-1">XGBoost Classifier</h3>
+          <p class="text-xs text-slate-400 mt-2">Demonstrated minimal standard deviation (±0.58%), indicating high empirical stability across data splits.</p>
+        </div>
+        <div class="glass p-5 rounded-2xl border border-slate-800">
+          <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Maximum Sensitivity / Recall</span>
+          <h3 class="text-xl font-extrabold text-white mt-1">Random Forest</h3>
+          <p class="text-xs text-slate-400 mt-2">Highest true positive capture rate (94.71% Recall), minimizing missed positive mentorship interventions.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: Chapter 4 Figures Gallery -->
+    <div id="tab-figs" class="hidden space-y-8">
+      <div class="glass p-6 rounded-2xl border-l-4 border-purple-500">
+        <h2 class="text-2xl font-bold text-white">Dissertation Chapter 4 Publication Figures (300 DPI)</h2>
+        <p class="text-sm text-slate-400 mt-1">Empirical visual evidence generated in Sprint 2 and Sprint 3 directly referenced in the dissertation thesis.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <!-- Figure 4.1 -->
+        <div class="glass p-5 rounded-2xl space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white">Figure 4.1: Mentee Career Stage Distribution</h3>
+            <span class="text-xs text-brand-300 font-semibold">Sprint 2</span>
+          </div>
+          <img src="http://127.0.0.1:8000/api/v1/analytics/figures/figure_4_1_career_stage_distribution.png" alt="Figure 4.1" class="rounded-xl border border-slate-800 w-full object-cover">
+          <p class="text-xs text-slate-400">Illustrates final-year undergraduate skew (24.6% Year 4), validating chronological attachment urgency.</p>
+        </div>
+
+        <!-- Figure 4.4 -->
+        <div class="glass p-5 rounded-2xl space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white">Figure 4.4: Mentor Experience vs Career Support</h3>
+            <span class="text-xs text-brand-300 font-semibold">Sprint 2</span>
+          </div>
+          <img src="http://127.0.0.1:8000/api/v1/analytics/figures/figure_4_4_mentor_exp_vs_career_support.png" alt="Figure 4.4" class="rounded-xl border border-slate-800 w-full object-cover">
+          <p class="text-xs text-slate-400">Validates Rule 3 logarithmic trajectory: senior mentors (16+ yrs) deliver higher instrumental support ratings.</p>
+        </div>
+
+        <!-- Figure 4.6 -->
+        <div class="glass p-5 rounded-2xl space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white">Figure 4.6: Psychometric Correlation Heatmap</h3>
+            <span class="text-xs text-brand-300 font-semibold">Sprint 2</span>
+          </div>
+          <img src="http://127.0.0.1:8000/api/v1/analytics/figures/figure_4_6_correlation_heatmap.png" alt="Figure 4.6" class="rounded-xl border border-slate-800 w-full object-cover">
+          <p class="text-xs text-slate-400">Confirms strong relational correlation (r=0.93) between Communication Quality and Psychosocial Support.</p>
+        </div>
+
+        <!-- Figure 4.7 -->
+        <div class="glass p-5 rounded-2xl space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white">Figure 4.7: Target Class & Attendance Breakdown</h3>
+            <span class="text-xs text-brand-300 font-semibold">Sprint 2</span>
+          </div>
+          <img src="http://127.0.0.1:8000/api/v1/analytics/figures/figure_4_7_target_class_distribution.png" alt="Figure 4.7" class="rounded-xl border border-slate-800 w-full object-cover">
+          <p class="text-xs text-slate-400">Target balance of 56.7% effective vs 43.3% ineffective, highlighting attendance impact.</p>
+        </div>
+
+        <!-- Figure 4.8 -->
+        <div class="glass p-5 rounded-2xl space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white">Figure 4.8: Confusion Matrices Comparison</h3>
+            <span class="text-xs text-brand-300 font-semibold">Sprint 3</span>
+          </div>
+          <img src="http://127.0.0.1:8000/api/v1/analytics/figures/figure_4_8_confusion_matrices.png" alt="Figure 4.8" class="rounded-xl border border-slate-800 w-full object-cover">
+          <p class="text-xs text-slate-400">Detailed error distribution across 400 held-out test encounters for Random Forest, AdaBoost, and XGBoost.</p>
+        </div>
+
+        <!-- Figure 4.9 -->
+        <div class="glass p-5 rounded-2xl space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white">Figure 4.9: Comparative ROC Curves</h3>
+            <span class="text-xs text-brand-300 font-semibold">Sprint 3</span>
+          </div>
+          <img src="http://127.0.0.1:8000/api/v1/analytics/figures/figure_4_9_roc_curves.png" alt="Figure 4.9" class="rounded-xl border border-slate-800 w-full object-cover">
+          <p class="text-xs text-slate-400">Demonstrates stellar discrimination capability (AUC = 0.988 - 0.991) across all decision thresholds.</p>
+        </div>
+
+        <!-- Figure 4.10 -->
+        <div class="glass p-5 rounded-2xl space-y-3 md:col-span-2">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-white">Figure 4.10: Predictive Feature Importances</h3>
+            <span class="text-xs text-brand-300 font-semibold">Sprint 3</span>
+          </div>
+          <img src="http://127.0.0.1:8000/api/v1/analytics/figures/figure_4_10_feature_importances.png" alt="Figure 4.10" class="rounded-xl border border-slate-800 w-full object-cover">
+          <p class="text-xs text-slate-400">Identifies goal progress score, career support rating, and cancelled attendance as the most dominant drivers of mentorship success.</p>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="glass border-t border-slate-800 py-6 mt-12">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-3">
+      <div>
+        <span>INUA Project · Bachelor of Business Information Technology / Computer Science</span>
+        <span class="mx-2">•</span>
+        <span>Strathmore University</span>
+      </div>
+      <div>
+        <span>Student Researcher: Michelle (BICS Year 4)</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Application Logic -->
+  <script>
+    const API_BASE = "http://127.0.0.1:8000/api/v1";
+
+    function updateRange(id, val) {
+      document.getElementById(`val-${id}`).innerText = `${val} / 5`;
+    }
+
+    function switchTab(tab) {
+      document.getElementById('tab-eval').classList.add('hidden');
+      document.getElementById('tab-bench').classList.add('hidden');
+      document.getElementById('tab-figs').classList.add('hidden');
+
+      document.getElementById('nav-eval-btn').className = "px-3.5 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition";
+      document.getElementById('nav-bench-btn').className = "px-3.5 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition";
+      document.getElementById('nav-figs-btn').className = "px-3.5 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition";
+
+      if (tab === 'eval') {
+        document.getElementById('tab-eval').classList.remove('hidden');
+        document.getElementById('nav-eval-btn').className = "px-3.5 py-1.5 rounded-lg text-sm font-semibold transition bg-brand-600 text-white shadow-md shadow-brand-600/30";
+      } else if (tab === 'bench') {
+        document.getElementById('tab-bench').classList.remove('hidden');
+        document.getElementById('nav-bench-btn').className = "px-3.5 py-1.5 rounded-lg text-sm font-semibold transition bg-brand-600 text-white shadow-md shadow-brand-600/30";
+      } else if (tab === 'figs') {
+        document.getElementById('tab-figs').classList.remove('hidden');
+        document.getElementById('nav-figs-btn').className = "px-3.5 py-1.5 rounded-lg text-sm font-semibold transition bg-brand-600 text-white shadow-md shadow-brand-600/30";
+      }
+    }
+
+    function loadPreset(type) {
+      if (type === 'strong') {
+        document.getElementById('input-career-stage').value = 'Year4';
+        document.getElementById('input-field').value = 'Computer Science';
+        document.getElementById('input-interest').value = 'Software Engineering';
+        document.getElementById('input-experience').value = 8;
+        document.getElementById('input-industry').value = 'Technology';
+        document.getElementById('input-specialization').value = 'Backend Engineering';
+        document.getElementById('input-availability').value = 'High';
+        document.getElementById('input-session-type').value = 'Interview Preparation';
+        document.getElementById('input-duration').value = 65;
+        document.getElementById('input-attendance').value = 'Attended';
+        document.getElementById('input-platform').value = 'Teams';
+        document.getElementById('input-goal').value = 'Internship';
+        document.getElementById('input-prior').value = 3;
+
+        document.getElementById('input-career').value = 4; updateRange('career', 4);
+        document.getElementById('input-psycho').value = 4; updateRange('psycho', 4);
+        document.getElementById('input-comm').value = 5; updateRange('comm', 5);
+        document.getElementById('input-goal-prog').value = 4; updateRange('goal', 4);
+        document.getElementById('input-conf').value = 4; updateRange('conf', 4);
+        document.getElementById('input-resp').value = 5; updateRange('resp', 5);
+      } else {
+        document.getElementById('input-career-stage').value = 'Year1';
+        document.getElementById('input-field').value = 'Business';
+        document.getElementById('input-interest').value = 'Finance';
+        document.getElementById('input-experience').value = 1;
+        document.getElementById('input-industry').value = 'Banking & Finance';
+        document.getElementById('input-specialization').value = 'Risk Management';
+        document.getElementById('input-availability').value = 'Low';
+        document.getElementById('input-session-type').value = 'Career Guidance';
+        document.getElementById('input-duration').value = 25;
+        document.getElementById('input-attendance').value = 'Rescheduled';
+        document.getElementById('input-platform').value = 'Meet';
+        document.getElementById('input-goal').value = 'Career Transition';
+        document.getElementById('input-prior').value = 0;
+
+        document.getElementById('input-career').value = 2; updateRange('career', 2);
+        document.getElementById('input-psycho').value = 2; updateRange('psycho', 2);
+        document.getElementById('input-comm').value = 2; updateRange('comm', 2);
+        document.getElementById('input-goal-prog').value = 1; updateRange('goal', 1);
+        document.getElementById('input-conf').value = 2; updateRange('conf', 2);
+        document.getElementById('input-resp').value = 1; updateRange('resp', 1);
+      }
+      evaluateLiveSession();
+    }
+
+    async function evaluateLiveSession() {
+      const payload = {
+        career_stage: document.getElementById('input-career-stage').value,
+        field_of_study: document.getElementById('input-field').value,
+        career_interest: document.getElementById('input-interest').value,
+        prior_sessions: parseInt(document.getElementById('input-prior').value),
+        mentor_experience_years: parseInt(document.getElementById('input-experience').value),
+        mentor_industry: document.getElementById('input-industry').value,
+        mentor_specialization: document.getElementById('input-specialization').value,
+        mentor_availability: document.getElementById('input-availability').value,
+        session_type: document.getElementById('input-session-type').value,
+        session_duration_minutes: parseInt(document.getElementById('input-duration').value),
+        attendance_status: document.getElementById('input-attendance').value,
+        meeting_platform: document.getElementById('input-platform').value,
+        goal_category: document.getElementById('input-goal').value,
+        career_support_score: parseInt(document.getElementById('input-career').value),
+        psychosocial_support_score: parseInt(document.getElementById('input-psycho').value),
+        communication_quality: parseInt(document.getElementById('input-comm').value),
+        goal_progress_score: parseInt(document.getElementById('input-goal-prog').value),
+        confidence_growth_score: parseInt(document.getElementById('input-conf').value),
+        mentor_responsiveness_score: parseInt(document.getElementById('input-resp').value),
+        model_name: document.getElementById('input-model').value
+      };
+
+      try {
+        const res = await fetch(`${API_BASE}/predict`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error("API request failed");
+        const data = await res.json();
+
+        // Update UI
+        const prob = Math.round(data.effectiveness_probability * 100);
+        document.getElementById('res-probability').innerText = `${prob}%`;
+        document.getElementById('res-model-name').innerText = data.model_used;
+        document.getElementById('res-recommendation').innerText = data.recommendation;
+
+        const circle = document.getElementById('prob-circle');
+        const offset = 264 - (264 * prob) / 100;
+        circle.style.strokeDashoffset = offset;
+
+        const badge = document.getElementById('res-badge');
+        if (data.prediction === 1) {
+          badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+          badge.innerText = "Effective Session";
+          circle.classList.remove('text-rose-500');
+          circle.classList.add('text-emerald-500');
+        } else {
+          badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30";
+          badge.innerText = "Intervention Advised";
+          circle.classList.remove('text-emerald-500');
+          circle.classList.add('text-rose-500');
+        }
+
+        const risksCont = document.getElementById('res-risks-container');
+        if (data.risk_factors && data.risk_factors.length > 0) {
+          risksCont.innerHTML = data.risk_factors.map(r => `
+            <div class="p-2.5 rounded-xl bg-rose-500/10 text-rose-300 border border-rose-500/20 flex items-start gap-2">
+              <svg class="w-4 h-4 text-rose-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+              <span>${r}</span>
+            </div>
+          `).join('');
+        } else {
+          risksCont.innerHTML = `
+            <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+              <span>Zero developmental friction detected. Optimal flow.</span>
+            </div>
+          `;
+        }
+
+      } catch (err) {
+        console.error(err);
+        alert("Failed to connect to FastAPI backend at http://127.0.0.1:8000. Ensure 'python backend/run.py' is running!");
+      }
+    }
+
+    // Auto-evaluate preset on load
+    window.addEventListener('DOMContentLoaded', () => {
+      evaluateLiveSession();
+    });
+  </script>
+</body>
+</html>

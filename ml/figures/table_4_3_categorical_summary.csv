@@ -1,0 +1,12 @@
+Feature,UniqueValues,TopCategory,TopCategoryCount,TopCategoryPercent
+session_id,2000,INUA_SESS_0001,1,0.0
+career_stage,6,Year4,491,24.6
+field_of_study,8,Computer Science,431,21.6
+career_interest,9,Software Engineering,383,19.2
+mentor_industry,7,Technology,598,29.9
+mentor_specialization,26,Cyber Defense,131,6.6
+mentor_availability,3,Medium,865,43.2
+session_type,5,Interview Preparation,516,25.8
+attendance_status,3,Attended,1596,79.8
+meeting_platform,4,Teams,673,33.7
+goal_category,6,Internship,496,24.8

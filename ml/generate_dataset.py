@@ -1,143 +1,451 @@
 """
-generate_dataset.py
+INUA Mentorship Platform: Synthetic Dataset Generator
+Author: Michelle (Final Year Project - BICS Year 4, Strathmore University)
+Sprint: Sprint 1 · Day 1 & Day 2
+Version: 1.0 (Locked Source of Truth)
 
-Builds a structured, literature-informed SIMULATED mentorship dataset,
-aligned to the logical database schema finalised in Chapter 4 (Figure 4.3)
-of the project report:
-  "Supporting Career Mentorship Outcomes Among University Students and
-   Early-Career Professionals in Kenya: An XGBoost-Based System for
-   Predicting Session Effectiveness"
+Academic Foundation:
+- Kram, K. E. (1985). Mentoring at work: Developmental relationships in organizational life.
+- Allen, T. D., et al. (2004). Career benefits associated with mentoring for protégés: A meta-analysis.
+- Bandura, A. (1997). Self-efficacy: The exercise of control.
 
-WHY SIMULATED DATA:
-No public dataset captures session-level mentorship data with an
-effectiveness label (confirmed by search across Kaggle, Zenodo, Hugging
-Face, and academic mentorship-research repositories -- Section 3.2.1).
-Building a rule-based simulated dataset lets the modelling pipeline be
-validated end-to-end; validating predictive power against real-world data
-is explicitly future work (Section 1.5.2).
-
-SCHEMA ALIGNMENT (Chapter 4, Figure 4.3 -- Logical Database Schema):
-  sessions:    mentor_id, mentee_id, session_date, duration_minutes,
-               career_support_score, psychosocial_score, status
-  feedback:    session_id, communication_score, goal_progress, overall_rating
-  predictions: session_id, effectiveness_label, probability, model_version
-
-career_support_score and psychosocial_score are not raw inputs -- they are
-themselves derived from lower-level session/feedback variables, mirroring
-the two-domain structure of established mentoring-measurement instruments
-(Noe, 1988; Scandura & Ragins, 1993; Ragins & McFarlin, 1990; Berk et al.,
-2005 -- see Section 3.2.1 for the full grounding). This script generates
-both the lower-level variables (so preprocessing has real, interpretable
-inputs) and the two schema-aligned composite scores.
-
-Missingness and light noise are injected deliberately so preprocessing
-(Section 3.2.2) has real work to do, rather than operating on an
-artificially perfect dataset.
+This module deterministically generates `inua_mentorship_dataset.csv` (2,000 sessions)
+following the exact 22-column specification in `ml/data/data_dictionary.md`.
 """
 
-import numpy as np
-import pandas as pd
+import os
+import math
+import random
+import csv
 
-RNG_SEED = 42
-N_SESSIONS = 400
+# Graceful optional imports for environments where pandas/numpy are present
+try:
+    import numpy as np
+    import pandas as pd
+    HAS_PANDAS = True
+except ImportError:
+    HAS_PANDAS = False
 
-rng = np.random.default_rng(RNG_SEED)
+
+def set_seed(seed: int = 42):
+    """Initializes deterministic random state for reproducible synthesis."""
+    random.seed(seed)
+    if HAS_PANDAS:
+        return np.random.default_rng(seed)
+    return None
 
 
-def generate_raw_dataset(n: int = N_SESSIONS) -> pd.DataFrame:
-    mentor_ids = rng.integers(1, 51, size=n)   # 50 distinct mentors
-    mentee_ids = rng.integers(1, 221, size=n)  # 220 distinct mentees
-    session_ids = np.arange(1, n + 1)
+def generate_student_profile(n_samples: int, rng=None) -> list:
+    """
+    Generates mentee demographic and baseline academic characteristics.
+    Probabilities are calibrated to Strathmore undergraduate academic demographics.
+    """
+    career_stages = ["Year1", "Year2", "Year3", "Year4", "Graduate", "EarlyCareer"]
+    stage_probs = [0.125, 0.160, 0.210, 0.240, 0.140, 0.125]
 
-    # ---- lower-level session variables (feed the CAREER sub-score) ----
-    mentor_experience_years = np.clip(rng.gamma(shape=2.2, scale=2.5, size=n), 0.5, 20).round(1)
-    duration_minutes = rng.integers(20, 91, size=n)
-    interaction_frequency_per_month = rng.integers(1, 9, size=n)
-    goal_progress_pct = np.clip(
-        rng.normal(
-            loc=30 + 4.5 * interaction_frequency_per_month + 0.25 * duration_minutes,
-            scale=12, size=n,
-        ), 0, 100,
-    ).round(1)
+    fields_of_study = [
+        "Computer Science",
+        "Engineering",
+        "Business",
+        "Data Analytics",
+        "Health Sciences",
+        "Education",
+        "Social Sciences",
+        "Other STEM",
+    ]
+    field_probs = [0.21, 0.16, 0.15, 0.11, 0.09, 0.07, 0.06, 0.15]
 
-    # ---- lower-level feedback variables (feed the PSYCHOSOCIAL sub-score) ----
-    communication_score = np.clip(
-        rng.normal(loc=2.7 + 0.08 * mentor_experience_years, scale=0.8, size=n), 1, 5
-    ).round(0)
-    overall_rating = np.clip(
-        rng.normal(loc=2.5 + 0.35 * communication_score, scale=0.7, size=n), 1, 5
-    ).round(0)
+    career_interests = [
+        "Data Science",
+        "Software Engineering",
+        "Cybersecurity",
+        "Artificial Intelligence",
+        "Cloud Computing",
+        "UI/UX",
+        "Product Management",
+        "Finance",
+        "Entrepreneurship",
+    ]
+    interest_probs = [0.17, 0.18, 0.11, 0.13, 0.10, 0.09, 0.08, 0.08, 0.06]
 
-    # ---- schema-aligned composite scores (sessions table) ----
-    # CAREER support: goal achievement, session frequency, mentor experience
-    career_support_score = np.clip(
-        0.55 * (goal_progress_pct / 100)
-        + 0.25 * (interaction_frequency_per_month / 8)
-        + 0.20 * (mentor_experience_years / 20),
-        0, 1,
-    ).round(3)
+    students = []
+    for _ in range(n_samples):
+        stage = random.choices(career_stages, weights=stage_probs, k=1)[0]
+        field = random.choices(fields_of_study, weights=field_probs, k=1)[0]
+        interest = random.choices(career_interests, weights=interest_probs, k=1)[0]
 
-    # PSYCHOSOCIAL support: communication quality + overall feedback rating
-    psychosocial_score = np.clip(
-        0.55 * (communication_score / 5) + 0.45 * (overall_rating / 5), 0, 1
-    ).round(3)
+        # Prior sessions: Poisson-like distribution centered around 2 sessions (range 0 to 12)
+        # Using Knuth's algorithm for standard library Poisson sampling
+        lam = 2.2
+        L = math.exp(-lam)
+        k = 0
+        p = 1.0
+        while p > L:
+            k += 1
+            p *= random.random()
+        prior_sessions = max(0, min(12, k - 1))
 
-    status = np.full(n, "completed")
+        students.append({
+            "career_stage": stage,
+            "field_of_study": field,
+            "career_interest": interest,
+            "prior_sessions": prior_sessions,
+        })
 
-    sessions = pd.DataFrame({
-        "session_id": session_ids,
-        "mentor_id": mentor_ids,
-        "mentee_id": mentee_ids,
-        "duration_minutes": duration_minutes,
-        "interaction_frequency_per_month": interaction_frequency_per_month,
-        "mentor_experience_years": mentor_experience_years,
-        "goal_progress_pct": goal_progress_pct,
-        "career_support_score": career_support_score,
-        "psychosocial_score": psychosocial_score,
-        "status": status,
-    })
+    return students
 
-    feedback = pd.DataFrame({
-        "session_id": session_ids,
-        "communication_score": communication_score,
-        "goal_progress": goal_progress_pct,  # feedback-reported echo of goal progress
-        "overall_rating": overall_rating,
-    })
 
-    # ---- derived categorical field ----
-    sessions["mentor_experience_level"] = pd.cut(
-        sessions["mentor_experience_years"], bins=[0, 2, 6, 20], labels=["Junior", "Mid", "Senior"]
-    )
+def generate_mentor_profile(n_samples: int, rng=None) -> list:
+    """
+    Generates mentor professional attributes and availability indicators.
+    """
+    industries = [
+        "Technology",
+        "Banking & Finance",
+        "Academia",
+        "Healthcare",
+        "NGO",
+        "Government",
+        "Entrepreneurship",
+    ]
+    industry_probs = [0.28, 0.16, 0.14, 0.10, 0.10, 0.08, 0.14]
 
-    # ---- effectiveness label: equal-weight combination of the two domain scores + noise ----
-    # (equal weighting follows the balanced two-domain structure used by Noe, 1988
-    # and the RMMRI, Ragins & McFarlin, 1990 -- see Section 3.2.1)
-    score = 0.5 * career_support_score + 0.5 * psychosocial_score
-    noise = rng.normal(0, 0.07, size=n)
-    raw = (score + noise).round(3)
-    label = np.where(raw >= np.median(raw), "Effective", "Ineffective")
+    availabilities = ["High", "Medium", "Low"]
+    availability_probs = [0.35, 0.45, 0.20]
 
-    df = sessions.merge(feedback, on="session_id")
-    df["session_effectiveness"] = label
+    specialization_map = {
+        "Technology": ["Cloud Architecture", "Backend Engineering", "AI Systems", "Cyber Defense", "Full Stack Dev"],
+        "Banking & Finance": ["Financial Modeling", "Fintech Innovations", "Risk Management", "Investment Banking"],
+        "Academia": ["Postgraduate Research", "Scientific Writing", "Doctoral Pathways", "Applied Statistics"],
+        "Healthcare": ["Health Informatics", "Biomedical Systems", "Public Health Research"],
+        "NGO": ["Program Evaluation", "Development Policy", "Sustainable Tech"],
+        "Government": ["Public Sector ICT", "E-Governance", "Digital Infrastructure"],
+        "Entrepreneurship": ["Tech Venture Building", "Product Strategy", "Seed Fundraising", "Go-to-Market"],
+    }
 
-    # ---- deliberately injected messiness ----
-    miss_idx = rng.choice(df.index, size=int(0.06 * n), replace=False)
-    df.loc[miss_idx, "overall_rating"] = np.nan
+    mentors = []
+    for _ in range(n_samples):
+        industry = random.choices(industries, weights=industry_probs, k=1)[0]
+        specialization = random.choice(specialization_map[industry])
+        availability = random.choices(availabilities, weights=availability_probs, k=1)[0]
 
-    dup_rows = df.sample(6, random_state=RNG_SEED)
-    df = pd.concat([df, dup_rows], ignore_index=True)
+        # Experience in years: Gamma distribution (shape=2.8, scale=3.2), range [1, 25]
+        # In Python random: gammavariate(alpha, beta) where alpha=shape, beta=scale
+        raw_exp = random.gammavariate(2.8, 3.2)
+        exp_years = max(1, min(25, round(raw_exp)))
 
-    return df
+        mentors.append({
+            "mentor_experience_years": exp_years,
+            "mentor_industry": industry,
+            "mentor_specialization": specialization,
+            "mentor_availability": availability,
+        })
+
+    return mentors
+
+
+def generate_session(students: list, mentors: list, rng=None) -> list:
+    """
+    Synthesizes session mechanics implementing:
+    - Rule 1: Career Stage influences Session Type and Goal Category
+    - Rule 2: Session Type influences Duration (minutes)
+    - Session execution attributes (Platform, Attendance)
+    """
+    n_samples = len(students)
+
+    session_types = [
+        "Career Guidance",
+        "CV Review",
+        "Interview Preparation",
+        "Technical Coaching",
+        "Networking",
+    ]
+
+    stage_to_session_probs = {
+        "Year1": [0.50, 0.15, 0.05, 0.05, 0.25],
+        "Year2": [0.35, 0.35, 0.05, 0.15, 0.10],
+        "Year3": [0.10, 0.30, 0.20, 0.35, 0.05],
+        "Year4": [0.10, 0.25, 0.40, 0.20, 0.05],
+        "Graduate": [0.15, 0.20, 0.45, 0.10, 0.10],
+        "EarlyCareer": [0.25, 0.10, 0.20, 0.20, 0.25],
+    }
+
+    goal_categories = [
+        "Internship",
+        "Portfolio Development",
+        "Technical Skills",
+        "Career Transition",
+        "Leadership",
+        "Research",
+    ]
+
+    stage_to_goal_probs = {
+        "Year1": [0.15, 0.15, 0.30, 0.10, 0.15, 0.15],
+        "Year2": [0.35, 0.25, 0.25, 0.05, 0.05, 0.05],
+        "Year3": [0.45, 0.25, 0.20, 0.03, 0.03, 0.04],
+        "Year4": [0.30, 0.30, 0.20, 0.10, 0.05, 0.05],
+        "Graduate": [0.10, 0.25, 0.15, 0.35, 0.10, 0.05],
+        "EarlyCareer": [0.05, 0.15, 0.15, 0.35, 0.25, 0.05],
+    }
+
+    duration_params = {
+        "Career Guidance": {"mean": 55, "std": 8, "min": 40, "max": 70},
+        "CV Review": {"mean": 45, "std": 7, "min": 30, "max": 60},
+        "Interview Preparation": {"mean": 65, "std": 10, "min": 45, "max": 90},
+        "Technical Coaching": {"mean": 85, "std": 15, "min": 60, "max": 120},
+        "Networking": {"mean": 30, "std": 6, "min": 20, "max": 45},
+    }
+
+    attendance_opts = ["Attended", "Rescheduled", "Cancelled"]
+    attendance_probs = [0.80, 0.13, 0.07]
+
+    platforms = ["Teams", "Zoom", "Meet", "Physical"]
+    platform_probs = [0.35, 0.30, 0.20, 0.15]
+
+    sessions = []
+    for i in range(n_samples):
+        stage = students[i]["career_stage"]
+        s_type = random.choices(session_types, weights=stage_to_session_probs[stage], k=1)[0]
+        goal = random.choices(goal_categories, weights=stage_to_goal_probs[stage], k=1)[0]
+
+        cfg = duration_params[s_type]
+        duration = int(random.gauss(cfg["mean"], cfg["std"]))
+        duration = max(cfg["min"], min(cfg["max"], duration))
+
+        attendance = random.choices(attendance_opts, weights=attendance_probs, k=1)[0]
+        platform = random.choices(platforms, weights=platform_probs, k=1)[0]
+
+        sessions.append({
+            "session_id": f"INUA_SESS_{i+1:04d}",
+            "session_type": s_type,
+            "session_duration_minutes": duration,
+            "attendance_status": attendance,
+            "meeting_platform": platform,
+            "goal_category": goal,
+        })
+
+    return sessions
+
+
+def generate_scores(sessions: list, mentors: list, rng=None) -> list:
+    """
+    Computes correlated Likert ratings (1-5) implementing:
+    - Rule 3: Mentor Experience influences Career Support (Logarithmic model)
+    - Rule 4: Mentor Availability influences Mentor Responsiveness
+    - Rule 5: Communication Quality influences Psychosocial Support
+    - Interdependent Goal Progress and Confidence Growth (Bandura, 1997)
+    - Nullification/floor values for Cancelled sessions
+    """
+    n_samples = len(sessions)
+
+    avail_to_resp = {
+        "High": ([3, 4, 5], [0.10, 0.45, 0.45]),
+        "Medium": ([2, 3, 4, 5], [0.15, 0.50, 0.30, 0.05]),
+        "Low": ([1, 2, 3, 4], [0.35, 0.40, 0.20, 0.05]),
+    }
+
+    scores = []
+    for i in range(n_samples):
+        attendance = sessions[i]["attendance_status"]
+        exp_years = mentors[i]["mentor_experience_years"]
+        avail = mentors[i]["mentor_availability"]
+
+        if attendance == "Cancelled":
+            scores.append({
+                "career_support_score": 1,
+                "psychosocial_support_score": 1,
+                "communication_quality": 1,
+                "goal_progress_score": 1,
+                "confidence_growth_score": 1,
+                "mentor_responsiveness_score": 1,
+            })
+            continue
+
+        # Rule 4: Responsiveness from Availability
+        resp_vals, resp_weights = avail_to_resp[avail]
+        resp_score = random.choices(resp_vals, weights=resp_weights, k=1)[0]
+
+        # Rule 3: Career Support from Mentor Experience
+        # mu = 1.8 + 0.95 * ln(exp + 1)
+        mu_career = 1.8 + 0.95 * math.log(exp_years + 1.0)
+        c_score = max(1, min(5, round(random.gauss(mu_career, 0.45))))
+
+        # Communication Quality: base distribution conditioned on mentor responsiveness
+        if resp_score >= 4:
+            comm_score = random.choices([3, 4, 5], weights=[0.20, 0.45, 0.35], k=1)[0]
+        elif resp_score == 3:
+            comm_score = random.choices([2, 3, 4, 5], weights=[0.15, 0.50, 0.30, 0.05], k=1)[0]
+        else:
+            comm_score = random.choices([1, 2, 3, 4], weights=[0.35, 0.40, 0.20, 0.05], k=1)[0]
+
+        # Rule 5: Psychosocial Support from Communication Quality
+        # mu = 0.3 + 0.90 * communication_quality
+        mu_psycho = 0.3 + 0.90 * comm_score
+        p_score = max(1, min(5, round(random.gauss(mu_psycho, 0.40))))
+
+        # Goal Progress Score: driven by career support + responsiveness
+        mu_goal = 0.50 * c_score + 0.30 * comm_score + 0.20 * resp_score
+        g_score = max(1, min(5, round(random.gauss(mu_goal, 0.45))))
+
+        # Confidence Growth Score (Bandura Self-Efficacy): driven by psychosocial + goal progress
+        mu_conf = 0.55 * p_score + 0.35 * g_score + 0.10 * comm_score
+        conf_score = max(1, min(5, round(random.gauss(mu_conf, 0.40))))
+
+        if attendance == "Rescheduled":
+            resp_score = max(1, resp_score - random.choices([0, 1], weights=[0.4, 0.6], k=1)[0])
+            g_score = max(1, g_score - random.choices([0, 1], weights=[0.5, 0.5], k=1)[0])
+            conf_score = max(1, conf_score - random.choices([0, 1], weights=[0.6, 0.4], k=1)[0])
+
+        scores.append({
+            "career_support_score": c_score,
+            "psychosocial_support_score": p_score,
+            "communication_quality": comm_score,
+            "goal_progress_score": g_score,
+            "confidence_growth_score": conf_score,
+            "mentor_responsiveness_score": resp_score,
+        })
+
+    return scores
+
+
+def calculate_effectiveness(sessions: list, scores: list, rng=None) -> list:
+    """
+    Computes:
+    1. effectiveness_index: Continuous [0.0, 1.0] Multi-Attribute Utility score.
+    2. session_effectiveness: Binary classification label {0, 1}.
+    """
+    n_samples = len(sessions)
+    outcomes = []
+
+    # Multi-attribute weights summing to 1.0
+    w_goal = 0.25
+    w_career = 0.20
+    w_conf = 0.20
+    w_comm = 0.15
+    w_psycho = 0.10
+    w_resp = 0.10
+
+    for i in range(n_samples):
+        attendance = sessions[i]["attendance_status"]
+
+        if attendance == "Cancelled":
+            idx = round(random.uniform(0.05, 0.22), 4)
+            label = 0
+        else:
+            sc = scores[i]
+            g = sc["goal_progress_score"] / 5.0
+            car = sc["career_support_score"] / 5.0
+            conf = sc["confidence_growth_score"] / 5.0
+            comm = sc["communication_quality"] / 5.0
+            p = sc["psychosocial_support_score"] / 5.0
+            r = sc["mentor_responsiveness_score"] / 5.0
+
+            composite = (
+                w_goal * g
+                + w_career * car
+                + w_conf * conf
+                + w_comm * comm
+                + w_psycho * p
+                + w_resp * r
+            )
+
+            idx = max(0.10, min(0.99, composite + random.gauss(0, 0.02)))
+            idx = round(idx, 4)
+
+            # Rule 6 Target Classification
+            if attendance == "Attended":
+                label = 1 if idx >= 0.65 else 0
+            else:  # Rescheduled
+                label = 1 if idx >= 0.72 else 0
+
+        outcomes.append({
+            "effectiveness_index": idx,
+            "session_effectiveness": label,
+        })
+
+    return outcomes
+
+
+def create_dataset(n: int = 2000, random_state: int = 42, output_path: str = None):
+    """
+    Coordinates modular synthesis, verifies invariants, and exports CSV.
+    Compatible with standard library and pandas environments.
+    """
+    print(f"[INUA] Initializing synthetic mentorship dataset generation (n={n}, seed={random_state})...")
+    rng = set_seed(random_state)
+
+    students = generate_student_profile(n, rng)
+    mentors = generate_mentor_profile(n, rng)
+    sessions = generate_session(students, mentors, rng)
+    scores = generate_scores(sessions, mentors, rng)
+    outcomes = calculate_effectiveness(sessions, scores, rng)
+
+    column_order = [
+        "session_id",
+        "career_stage",
+        "field_of_study",
+        "career_interest",
+        "prior_sessions",
+        "mentor_experience_years",
+        "mentor_industry",
+        "mentor_specialization",
+        "mentor_availability",
+        "session_type",
+        "session_duration_minutes",
+        "attendance_status",
+        "meeting_platform",
+        "goal_category",
+        "career_support_score",
+        "psychosocial_support_score",
+        "communication_quality",
+        "goal_progress_score",
+        "confidence_growth_score",
+        "mentor_responsiveness_score",
+        "effectiveness_index",
+        "session_effectiveness",
+    ]
+
+    rows = []
+    for i in range(n):
+        record = {}
+        record.update(students[i])
+        record.update(mentors[i])
+        record.update(sessions[i])
+        record.update(scores[i])
+        record.update(outcomes[i])
+        # Sort keys by standard column order
+        ordered_record = {col: record[col] for col in column_order}
+        rows.append(ordered_record)
+
+    # Invariants verification
+    assert len(rows) == n, f"Expected {n} rows, got {len(rows)}"
+    assert len(column_order) == 22, f"Expected 22 columns, got {len(column_order)}"
+
+    pos_count = sum(1 for r in rows if r["session_effectiveness"] == 1)
+    pos_rate = pos_count / n
+
+    print(f"[INUA] Dataset synthesis completed successfully!")
+    print(f"       Total rows: {len(rows)}")
+    print(f"       Total columns: {len(column_order)}")
+    print(f"       Effective sessions (1): {pos_count} ({pos_rate:.1%})")
+    print(f"       Ineffective/Disrupted sessions (0): {n - pos_count} ({1 - pos_rate:.1%})")
+
+    # Export to CSV
+    if output_path:
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        with open(output_path, mode="w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=column_order)
+            writer.writeheader()
+            writer.writerows(rows)
+        print(f"[INUA] Successfully exported dataset to: {output_path}")
+
+    if HAS_PANDAS:
+        return pd.DataFrame(rows)
+    return rows
 
 
 if __name__ == "__main__":
-    import os
-    dataset = generate_raw_dataset()
-    out_dir = os.path.join(os.path.dirname(__file__), "data")
-    os.makedirs(out_dir, exist_ok=True)
-    out_path = os.path.join(out_dir, "mentorship_sessions_sample.csv")
-    dataset.to_csv(out_path, index=False)
-    print(f"Generated {len(dataset)} rows -> {out_path}")
-    print(dataset["session_effectiveness"].value_counts())
-    print(f"Missing overall_rating: {dataset['overall_rating'].isna().sum()}")
-    print(f"Duplicate session_ids: {dataset['session_id'].duplicated().sum()}")
+    cur_dir = os.path.dirname(os.path.abspath(__file__))
+    base_dir = os.path.dirname(cur_dir) if os.path.basename(cur_dir) == "scripts" else cur_dir
+    target_csv = os.path.join(base_dir, "data", "inua_mentorship_dataset.csv")
+    create_dataset(n=2000, random_state=42, output_path=target_csv)

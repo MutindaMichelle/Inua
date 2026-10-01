@@ -1,0 +1,4 @@
+Model,Accuracy,Precision,Recall,F1-Score,ROC-AUC,5-Fold CV Acc Mean,5-Fold CV Acc Std
+Random Forest,0.94,0.9471,0.9471,0.9471,0.9876,0.9506,0.0102
+AdaBoost,0.945,0.9596,0.9427,0.9511,0.9913,0.9631,0.0121
+XGBoost,0.94,0.9552,0.9383,0.9467,0.9898,0.9581,0.0058

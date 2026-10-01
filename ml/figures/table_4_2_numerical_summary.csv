@@ -1,0 +1,12 @@
+,count,mean,std,min,25%,50%,75%,max
+prior_sessions,2000.0,2.192,1.446,0.0,1.0,2.0,3.0,9.0
+mentor_experience_years,2000.0,8.814,5.037,1.0,5.0,8.0,12.0,25.0
+session_duration_minutes,2000.0,57.73,18.671,20.0,45.0,56.0,68.0,120.0
+career_support_score,2000.0,3.663,0.992,1.0,3.0,4.0,4.0,5.0
+psychosocial_support_score,2000.0,3.151,1.248,1.0,2.0,3.0,4.0,5.0
+communication_quality,2000.0,3.2,1.27,1.0,2.0,3.0,4.0,5.0
+goal_progress_score,2000.0,3.337,1.041,1.0,3.0,3.0,4.0,5.0
+confidence_growth_score,2000.0,3.202,1.195,1.0,2.0,3.0,4.0,5.0
+mentor_responsiveness_score,2000.0,3.096,1.28,1.0,2.0,3.0,4.0,5.0
+effectiveness_index,2000.0,0.658,0.202,0.05,0.548,0.694,0.799,0.99
+session_effectiveness,2000.0,0.567,0.496,0.0,0.0,1.0,1.0,1.0

@@ -6,6 +6,9 @@ __pycache__/
 .venv/
 venv/
 *.egg-info/
+*.db
+inua.db
+_legacy_ml_backup/
 
 # --- Model artifacts (regenerable via ml/train_model.py; don't commit binaries) ---
 ml/models/*.joblib
