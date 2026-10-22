@@ -3,7 +3,7 @@ INUA Platform: Pydantic Data Models & API Contracts
 Author: Michelle (Final Year Project - BICS Year 4, Strathmore University)
 """
 
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, Dict, Any
 from pydantic import BaseModel, Field
 
 
@@ -140,3 +140,69 @@ class HealthResponse(BaseModel):
     api_version: str
     loaded_models: List[str]
     default_model: str
+
+
+# ==========================================
+# Authentication & RBAC Schemas (FR-01, IR-01)
+# ==========================================
+
+class UserRegisterRequest(BaseModel):
+    """Payload for registering a new user across all three personas."""
+    name: str = Field(..., min_length=2, max_length=120, description="Full name of user", example="Faith Wanjiku")
+    email: str = Field(
+        ...,
+        pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+        description="Unique institutional or professional email",
+        example="faith.wanjiku@strathmore.edu",
+    )
+    password: str = Field(..., min_length=6, max_length=100, description="Account password", example="Password123!")
+    role: Literal["mentee", "mentor", "administrator"] = Field(..., description="Assigned platform role", example="mentee")
+
+    # Mentee-specific fields
+    university: Optional[str] = Field("Strathmore University", description="University name (for mentees)", example="Strathmore University")
+    career_stage: Optional[Literal["Year1", "Year2", "Year3", "Year4", "Graduate", "EarlyCareer"]] = Field(
+        None, description="Academic year or progression (required if role is mentee)", example="Year3"
+    )
+    career_interest: Optional[str] = Field(
+        None, description="Target career interest (required if role is mentee)", example="Software Engineering"
+    )
+
+    # Mentor-specific fields
+    experience_years: Optional[float] = Field(
+        None, ge=0.5, le=50.0, description="Years of professional experience (required if role is mentor)", example=6.5
+    )
+    industry: Optional[str] = Field(
+        None, description="Primary industry sector (required if role is mentor)", example="Technology"
+    )
+    expertise: Optional[str] = Field(
+        None, description="Primary domain specialization (required if role is mentor)", example="Cloud Architecture"
+    )
+
+
+class UserLoginRequest(BaseModel):
+    """Payload for user authentication."""
+    email: str = Field(
+        ...,
+        pattern=r"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+        description="Registered account email",
+        example="michelle.mutinda@strathmore.edu",
+    )
+    password: str = Field(..., min_length=1, description="Account password", example="Password123!")
+
+
+class UserResponse(BaseModel):
+    """Public user identity and profile details."""
+    user_id: int
+    name: str
+    email: str
+    role: str
+    created_at: Optional[str] = None
+    profile: Optional[Dict[str, Any]] = None
+
+
+class TokenResponse(BaseModel):
+    """OAuth2 / JWT Bearer token issuance response (IR-01)."""
+    access_token: str = Field(..., description="Encoded HS256 JWT access token")
+    token_type: str = Field("bearer", description="Token authentication scheme")
+    expires_in: int = Field(..., description="Access token lifetime in seconds")
+    user: UserResponse

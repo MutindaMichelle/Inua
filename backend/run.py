@@ -1,11 +1,3 @@
-"""
-INUA Mentorship Platform: FastAPI Server Launcher
-Author: Michelle (Final Year Project - BICS Year 4, Strathmore University)
-
-Run via:
-    python backend/run.py
-"""
-
 import sys
 import os
 import uvicorn
@@ -19,10 +11,12 @@ if str(BACKEND_DIR) not in sys.path:
 if __name__ == "__main__":
     print("[INUA API] Launching FastAPI backend server on http://127.0.0.1:8000 ...")
     print("[INUA API] Interactive Swagger Documentation: http://127.0.0.1:8000/docs")
+    # Note: reload=False by default to avoid premature StatReload shutdown on Windows with Python 3.14
+    use_reload = "--reload" in sys.argv
     uvicorn.run(
         "app.main:app",
         host="127.0.0.1",
         port=8000,
-        reload=True,
+        reload=use_reload,
         log_level="info",
     )
