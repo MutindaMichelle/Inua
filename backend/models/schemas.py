@@ -3,6 +3,7 @@ INUA Platform: Pydantic Data Models & API Contracts
 Author: Michelle (Final Year Project - BICS Year 4, Strathmore University)
 """
 
+from datetime import datetime
 from typing import List, Optional, Literal, Dict, Any
 from pydantic import BaseModel, Field
 
@@ -206,3 +207,74 @@ class TokenResponse(BaseModel):
     token_type: str = Field("bearer", description="Token authentication scheme")
     expires_in: int = Field(..., description="Access token lifetime in seconds")
     user: UserResponse
+
+
+# ==========================================
+# Session Booking & Status Schemas (FR-02, FR-03)
+# ==========================================
+
+class MentorSummaryResponse(BaseModel):
+    """Public mentor catalog entry for browsing and booking."""
+    mentor_id: int
+    name: str
+    email: str
+    industry: str
+    expertise: str
+    experience_years: float
+    is_verified: bool
+
+
+class SessionBookingRequest(BaseModel):
+    """Payload for booking a new mentorship session."""
+    mentor_id: int = Field(..., description="ID of the mentor to book", example=1)
+    session_date: datetime = Field(
+        ..., description="Scheduled start date and time (ISO 8601)", example="2026-11-15T10:00:00"
+    )
+    duration: int = Field(60, ge=15, le=180, description="Duration in minutes", example=60)
+    session_type: Literal[
+        "Career Guidance", "CV Review", "Interview Preparation", "Technical Coaching", "Networking"
+    ] = Field("Career Guidance", description="Type of mentorship session")
+    meeting_platform: Literal["Teams", "Zoom", "Meet", "Physical"] = Field(
+        "Teams", description="Modality for the session"
+    )
+    goal_category: Literal[
+        "Internship", "Portfolio Development", "Technical Skills",
+        "Career Transition", "Leadership", "Research"
+    ] = Field("Technical Skills", description="Primary goal category for the session")
+
+
+class SessionStatusUpdateRequest(BaseModel):
+    """Payload to update a session status."""
+    status: Literal["Scheduled", "Completed", "Cancelled", "Rescheduled"] = Field(
+        ..., description="New session status"
+    )
+    rescheduled_date: Optional[datetime] = Field(
+        None, description="New scheduled date when status is 'Rescheduled'"
+    )
+    cancellation_reason: Optional[str] = Field(
+        None, max_length=500, description="Optional reason for cancellation"
+    )
+
+
+class SessionDetailResponse(BaseModel):
+    """Full session detail including participants and metadata."""
+    session_id: int
+    mentor_id: int
+    mentor_name: Optional[str] = None
+    mentee_id: int
+    mentee_name: Optional[str] = None
+    session_date: Optional[str] = None
+    duration: int
+    session_type: str
+    meeting_platform: str
+    interaction_frequency: int
+    goal_category: Optional[str] = None
+    status: str
+    has_feedback: bool = False
+    has_prediction: bool = False
+
+
+class SessionListResponse(BaseModel):
+    """Paginated session list."""
+    total: int
+    sessions: List[SessionDetailResponse]
