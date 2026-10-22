@@ -23,6 +23,7 @@ from routes.health import router as health_router
 from routes.auth import router as auth_router
 from routes.sessions import router as sessions_router
 from routes.mentors import router as mentors_router
+from routes.feedback import router as feedback_router
 from db.session import init_db
 from db.seed import seed_database
 from services.ml_service import MLService
@@ -73,6 +74,7 @@ app.include_router(predict_router, prefix="/api/v1")
 app.include_router(analytics_router, prefix="/api/v1")
 app.include_router(sessions_router, prefix="/api/v1")
 app.include_router(mentors_router, prefix="/api/v1")
+app.include_router(feedback_router, prefix="/api/v1")
 
 # Mount Frontend Dashboard
 from fastapi.staticfiles import StaticFiles

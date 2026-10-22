@@ -278,3 +278,39 @@ class SessionListResponse(BaseModel):
     """Paginated session list."""
     total: int
     sessions: List[SessionDetailResponse]
+
+
+
+# ==========================================
+# Feedback Schemas (FR-04)
+# ==========================================
+
+class FeedbackSubmitRequest(BaseModel):
+    """Payload for submitting mentee feedback after a completed session."""
+    communication_score: float = Field(
+        ..., ge=1.0, le=5.0, description="Communication quality (1.0 to 5.0)", example=4.5
+    )
+    goal_progress: float = Field(
+        ..., ge=1.0, le=5.0, description="Goal progress achieved (1.0 to 5.0)", example=4.0
+    )
+    confidence_growth: float = Field(
+        ..., ge=1.0, le=5.0, description="Confidence growth rating (1.0 to 5.0)", example=4.0
+    )
+    overall_rating: float = Field(
+        ..., ge=1.0, le=5.0, description="Overall satisfaction rating (1.0 to 5.0)", example=4.5
+    )
+    comments: Optional[str] = Field(
+        None, max_length=1000, description="Optional written qualitative feedback", example="Extremely valuable technical guidance and roadmap planning."
+    )
+
+
+class FeedbackResponse(BaseModel):
+    """Feedback evaluation detail."""
+    feedback_id: int
+    session_id: int
+    communication_score: float
+    goal_progress: float
+    confidence_growth: float
+    overall_rating: float
+    comments: Optional[str] = None
+    submitted_at: Optional[str] = None
