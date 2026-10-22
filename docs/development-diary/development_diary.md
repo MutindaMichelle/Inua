@@ -128,6 +128,26 @@ It is structured so that any supervisor, internal assessor, or external examiner
 
 ---
 
+### Phase 8: Authentication, JWT Bearer Token Issuance & Role-Based Access Control (Issue #5 / FR-01, IR-01, NFR-02 — COMPLETED & VERIFIED)
+* **Branch:** `5-featbackend-implement-authregister-and-authlogin-fr-01`
+* **Problem Addressed:** Implement secure registration and authentication across the three system personas (`mentee`, `mentor`, `administrator`) with salted password hashing, JWT token issuance (IR-01), and Role-Based Access Control (RBAC) route guarding (NFR-02).
+* **Deliverables Implemented:**
+  1. `backend/services/auth_service.py`:
+     * Password hashing and verification via salted `bcrypt`.
+     * Token creation and decoding via `pyjwt` with HS256 signing and expiration validation.
+     * FastAPI security dependency `get_current_user` resolving the authenticated User from the Bearer token or raising `401 Unauthorized`.
+     * RBAC dependency factory `require_roles(*roles)` enforcing role authorization or raising `403 Forbidden`.
+  2. `backend/models/schemas.py`: Added `UserRegisterRequest`, `UserLoginRequest`, `UserResponse`, and `TokenResponse`.
+  3. `backend/routes/auth.py`:
+     * `POST /api/v1/auth/register`: Atomic registration of User credentials and linked specialization profile (`Mentee` or `Mentor`). Enforces email uniqueness (`409 Conflict`) and role-specific profile requirements (`422 Unprocessable Content`).
+     * `POST /api/v1/auth/login`: Authenticates credentials against bcrypt hash and issues 24-hour JWT Bearer token.
+     * `GET /api/v1/auth/me`: Retrieves current authenticated user profile.
+     * Role-protected test routes (`/mentee-only`, `/mentor-only`, `/admin-only`) demonstrating NFR-02 role isolation.
+  4. `backend/app/main.py`: Mounted `auth_router` under prefix `/api/v1`.
+  5. `backend/tests/test_auth.py`: 14 automated assertions covering registration, login, token issuance, credential rejection, and RBAC enforcement (**100% PASS**).
+
+---
+
 ## 3. How to Run & Verify the Project (Examiner & Reviewer Guide)
 
 Follow these steps from a terminal to run and verify every layer of the system:
@@ -245,22 +265,19 @@ Provides an interactive client dashboard demonstrating live parameter adjustment
 
 ## 4. Current Milestone Status & Next Steps
 
-### Issues Completed & Closed on GitHub:
+### Issues Completed & Verified:
 * [x] **#1 `chore: configure GitHub repository and project board`**
 * [x] **#2 `feat(ml): per-prediction feature explanations (NFR-05)`**
 * [x] **#3 `feat(db): create PostgreSQL schema from the logical schema`**
 * [x] **#4 `feat(backend): scaffold FastAPI app, folder structure, config`**
+* [x] **#5 `feat(backend): implement /auth/register and /auth/login (FR-01, IR-01, NFR-02)`** (Branch: `5-featbackend-implement-authregister-and-authlogin-fr-01`)
 
 ---
 
 ### Branching Strategy for Upcoming Issues:
 In accordance with professional software engineering practice and course requirements, each remaining issue will be developed on a **distinct feature branch**, tested independently, and merged into `main` via Pull Request:
 
-1. **Issue #5 (`feat/auth-issue-5`)**:
-   * Implement `/api/v1/auth/register` and `/api/v1/auth/login` (FR-01, IR-01).
-   * Password hashing (bcrypt) and JWT Bearer token issuance.
-   * Role-based access control dependencies enforcing `NFR-02` (`mentee`, `mentor`, `administrator`).
-2. **Issue #6 (`feat/sessions-issue-6`)**:
+1. **Issue #6 (`feat/sessions-issue-6`)**:
    * Session booking and status transition endpoints (FR-02, FR-03).
 3. **Issue #7 (`feat/feedback-issue-7`)**:
    * Mentee feedback submission endpoint (FR-04).
