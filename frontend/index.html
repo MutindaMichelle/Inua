@@ -3,731 +3,979 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>INUA — Intelligent Mentorship Effectiveness Analytics</title>
-  <!-- Tailwind CSS -->
+  <title>INUA — Mentorship Platform</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
   <script>
     tailwind.config = {
       theme: {
         extend: {
-          fontFamily: {
-            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
-          },
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
           colors: {
-            brand: {
-              50: '#F5F3FF',
-              100: '#EDE9FE',
-              200: '#DDD6FE',
-              300: '#C4B5FD',
-              400: '#A78BFA',
-              500: '#8B5CF6',
-              600: '#7C3AED',
-              700: '#6D28D9',
-              800: '#5B21B6',
-              900: '#4C1D95',
-            }
+            sage:   { 50:'#f2f7f4', 100:'#e0ede5', 200:'#c2daca', 300:'#96c0a4', 400:'#63a07c', 500:'#40855d', 600:'#2f6847', 700:'#265438', 800:'#1e4230', 900:'#192f24' },
+            warm:   { 50:'#fdf8f3', 100:'#faeedd', 200:'#f5dabc', 300:'#edbe8f', 400:'#e29b5f', 500:'#d67d3a', 600:'#c0642a', 700:'#9f4e23', 800:'#803f22', 900:'#68341e' },
+            slate2: { 50:'#f8fafc', 100:'#f0f4f8', 200:'#dce5ef', 300:'#b9cad9', 400:'#8aa6be', 500:'#6285a1', 600:'#4a6a85', 700:'#3b546b', 800:'#324659', 900:'#2c3c4b' },
           }
         }
       }
     }
   </script>
   <style>
-    body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0F172A; }
-    .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
-    .glass-card { background: rgba(30, 41, 59, 0.5); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.06); }
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      height: 18px; width: 18px; border-radius: 50%;
-      background: #8B5CF6; cursor: pointer; box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
-    }
+    body { background: #f8fafc; }
+    .card { background:#fff; border-radius:16px; box-shadow:0 1px 4px rgba(0,0,0,.06), 0 4px 20px rgba(0,0,0,.05); }
+    .btn-primary { background:#2f6847; color:#fff; border-radius:10px; padding:10px 20px; font-weight:600; font-size:.92rem; transition:all .18s; border:none; cursor:pointer; }
+    .btn-primary:hover { background:#265438; transform:translateY(-1px); box-shadow:0 4px 12px rgba(47,104,71,.25); }
+    .btn-secondary { background:#f0f4f8; color:#3b546b; border-radius:10px; padding:10px 20px; font-weight:600; font-size:.92rem; transition:all .18s; border:none; cursor:pointer; }
+    .btn-secondary:hover { background:#dce5ef; }
+    .btn-danger { background:#fee2e2; color:#b91c1c; border-radius:10px; padding:10px 20px; font-weight:600; font-size:.92rem; transition:all .18s; border:none; cursor:pointer; }
+    .btn-danger:hover { background:#fecaca; }
+    input, select, textarea { border:1.5px solid #dce5ef; border-radius:10px; padding:10px 14px; font-size:.92rem; width:100%; font-family:inherit; transition:border .18s; background:#f8fafc; }
+    input:focus, select:focus, textarea:focus { outline:none; border-color:#63a07c; background:#fff; }
+    label { font-size:.82rem; font-weight:600; color:#4a6a85; text-transform:uppercase; letter-spacing:.05em; margin-bottom:4px; display:block; }
+    .tab-btn { padding:10px 22px; border-radius:10px; font-weight:600; font-size:.88rem; cursor:pointer; transition:all .18s; border:none; background:transparent; color:#6285a1; }
+    .tab-btn.active { background:#2f6847; color:#fff; box-shadow:0 2px 8px rgba(47,104,71,.2); }
+    .tab-btn:hover:not(.active) { background:#e0ede5; color:#2f6847; }
+    .status-badge { display:inline-flex; align-items:center; gap:5px; padding:4px 12px; border-radius:99px; font-size:.78rem; font-weight:700; }
+    .status-Scheduled { background:#e0ede5; color:#265438; }
+    .status-Completed { background:#dbeafe; color:#1e40af; }
+    .status-Cancelled { background:#fee2e2; color:#991b1b; }
+    .status-Rescheduled { background:#fef3c7; color:#92400e; }
+    .status-Pending { background:#f0f4f8; color:#4a6a85; }
+    .nav-link { padding:8px 16px; border-radius:8px; font-size:.88rem; font-weight:600; color:#4a6a85; cursor:pointer; transition:all .15s; }
+    .nav-link:hover, .nav-link.active { background:#e0ede5; color:#2f6847; }
+    .alert { padding:14px 18px; border-radius:12px; font-size:.9rem; font-weight:500; margin-bottom:12px; display:flex; align-items:flex-start; gap:10px; }
+    .alert-success { background:#f0fdf4; border:1px solid #bbf7d0; color:#166534; }
+    .alert-error   { background:#fef2f2; border:1px solid #fecaca; color:#991b1b; }
+    .alert-info    { background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; }
+    .alert-warn    { background:#fffbeb; border:1px solid #fde68a; color:#92400e; }
+    .section-title { font-size:1.25rem; font-weight:700; color:#192f24; }
+    .section-sub   { font-size:.88rem; color:#6285a1; margin-top:2px; }
+    .divider { height:1px; background:#f0f4f8; margin:20px 0; }
+    .mentor-card { border:1.5px solid #e0ede5; border-radius:14px; padding:16px 18px; transition:all .18s; cursor:pointer; }
+    .mentor-card:hover { border-color:#63a07c; box-shadow:0 4px 16px rgba(47,104,71,.1); transform:translateY(-2px); }
+    .session-row { border:1.5px solid #f0f4f8; border-radius:12px; padding:14px 18px; transition:all .15s; }
+    .session-row:hover { border-color:#dce5ef; background:#f8fafc; }
+    .avatar { width:40px; height:40px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:.95rem; }
+    .spinner { border:3px solid #e0ede5; border-top:3px solid #40855d; border-radius:50%; width:22px; height:22px; animation:spin .7s linear infinite; display:inline-block; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    #toast-container { position:fixed; bottom:28px; right:28px; display:flex; flex-direction:column-reverse; gap:10px; z-index:9999; }
+    .toast { padding:14px 20px; border-radius:14px; font-size:.9rem; font-weight:500; box-shadow:0 8px 30px rgba(0,0,0,.12); animation:slideIn .3s ease; max-width:340px; }
+    .toast-success { background:#166534; color:#fff; }
+    .toast-error   { background:#991b1b; color:#fff; }
+    .toast-info    { background:#1e40af; color:#fff; }
+    @keyframes slideIn { from { opacity:0; transform:translateX(30px); } to { opacity:1; transform:translateX(0); } }
+    .field-row { display:grid; gap:14px; }
+    .field-row-2 { grid-template-columns:1fr 1fr; }
+    @media(max-width:640px) { .field-row-2 { grid-template-columns:1fr; } }
+    .section-hidden { display:none; }
+    #userbar { display:none; }
   </style>
 </head>
-<body class="text-slate-100 min-h-screen flex flex-col selection:bg-brand-500 selection:text-white">
+<body class="font-sans min-h-screen">
 
-  <!-- Header Navigation -->
-  <header class="sticky top-0 z-50 glass border-b border-slate-800">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-brand-500/25">
-          <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-        </div>
-        <div>
-          <span class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-brand-300 bg-clip-text text-transparent">INUA</span>
-          <span class="text-xs px-2 py-0.5 ml-2 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30">ML Analytics v1.0</span>
-        </div>
+<!-- Toast container -->
+<div id="toast-container"></div>
+
+<!-- ═══ TOP NAV ═══ -->
+<nav class="bg-white border-b border-slate-100 sticky top-0 z-50 shadow-sm">
+  <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+    <!-- Logo -->
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#40855d,#2f6847)">
+        <span class="text-white font-bold text-sm">IN</span>
       </div>
-      
-      <div class="flex items-center space-x-2 sm:space-x-4">
-        <button id="nav-eval-btn" onclick="switchTab('eval')" class="px-3.5 py-1.5 rounded-lg text-sm font-semibold transition bg-brand-600 text-white shadow-md shadow-brand-600/30">
-          Session Evaluator
-        </button>
-        <button id="nav-bench-btn" onclick="switchTab('bench')" class="px-3.5 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">
-          Model Benchmarks
-        </button>
-        <button id="nav-figs-btn" onclick="switchTab('figs')" class="px-3.5 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition">
-          Chapter 4 Figures
-        </button>
-        <a href="http://127.0.0.1:8000/docs" target="_blank" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center gap-1.5">
-          <span>API Docs</span>
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-        </a>
+      <div>
+        <div class="font-800 text-slate2-900 text-base font-bold leading-tight">INUA</div>
+        <div class="text-xs text-sage-600 font-medium leading-tight">Mentorship Platform</div>
       </div>
     </div>
-  </header>
 
-  <!-- Main Container -->
-  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Logged-out nav -->
+    <div id="nav-loggedout" class="flex items-center gap-2">
+      <span class="text-sm text-slate2-500 mr-2 hidden sm:block">Your smart mentorship companion</span>
+      <button onclick="showPage('login')" class="btn-secondary py-2 px-4 text-sm">Sign In</button>
+      <button onclick="showPage('register')" class="btn-primary py-2 px-4 text-sm">Get Started</button>
+    </div>
 
-    <!-- TAB 1: Real-Time Evaluator -->
-    <div id="tab-eval" class="space-y-8">
-      
-      <!-- Top Banner -->
-      <div class="glass p-6 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-l-4 border-brand-500">
-        <div>
-          <h1 class="text-2xl font-bold tracking-tight text-white">Intelligent Mentorship Session Evaluator</h1>
-          <p class="text-sm text-slate-400 mt-1">Simulate mentorship dyads and predict developmental outcomes using trained ensemble models.</p>
-        </div>
-        <div class="flex items-center gap-3">
-          <button onclick="loadPreset('strong')" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 transition flex items-center gap-1.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            Load Engaged Preset
-          </button>
-          <button onclick="loadPreset('weak')" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 transition flex items-center gap-1.5">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-            Load Disrupted Preset
-          </button>
+    <!-- Logged-in nav -->
+    <div id="nav-loggedin" class="hidden items-center gap-1">
+      <button onclick="showPage('mentors')" class="nav-link" id="nav-mentors">Find Mentors</button>
+      <button onclick="showPage('sessions')" class="nav-link" id="nav-sessions">My Sessions</button>
+      <button onclick="showPage('predict')" class="nav-link" id="nav-predict">AI Score</button>
+      <div class="w-px h-6 bg-slate-200 mx-2"></div>
+      <div id="userbar" class="flex items-center gap-2">
+        <div id="nav-avatar" class="avatar text-white text-sm" style="background:#40855d"></div>
+        <div class="hidden sm:block">
+          <div id="nav-username" class="text-sm font-semibold text-slate2-800"></div>
+          <div id="nav-role" class="text-xs text-sage-600 font-medium capitalize"></div>
         </div>
       </div>
+      <button onclick="logout()" class="nav-link ml-1 text-red-500 hover:bg-red-50">Sign Out</button>
+    </div>
+  </div>
+</nav>
 
-      <!-- Grid layout: Form (Left) & Live Results (Right) -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        <!-- Form Inputs (7 Cols) -->
-        <div class="lg:col-span-7 glass p-6 sm:p-8 rounded-2xl space-y-6">
-          <div class="flex items-center justify-between border-b border-slate-800 pb-4">
-            <h2 class="text-lg font-bold text-white flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-brand-500"></span>
-              Session Parameters & Interaction Dynamics
-            </h2>
-            <div class="flex items-center gap-2">
-              <label class="text-xs text-slate-400 font-medium">Model Engine:</label>
-              <select id="input-model" class="bg-slate-800 text-brand-300 text-xs font-semibold rounded-lg px-2.5 py-1.5 border border-slate-700 focus:outline-none focus:border-brand-500">
-                <option value="XGBoost" selected>XGBoost Classifier</option>
-                <option value="Random Forest">Random Forest</option>
-                <option value="AdaBoost">AdaBoost Classifier</option>
+<!-- ═══ PAGES ═══ -->
+<main class="max-w-6xl mx-auto px-4 py-10">
+
+  <!-- ── LANDING ── -->
+  <div id="page-landing">
+    <div class="text-center mb-14">
+      <div class="inline-flex items-center gap-2 bg-sage-50 text-sage-700 px-4 py-2 rounded-full text-sm font-semibold mb-6">
+        <span>🎓</span> Strathmore University · BICS Year 4 Final Project
+      </div>
+      <h1 class="text-4xl sm:text-5xl font-extrabold text-slate2-900 leading-tight mb-4">
+        Grow with the right<br><span style="color:#40855d">mentor by your side</span>
+      </h1>
+      <p class="text-lg text-slate2-500 max-w-xl mx-auto mb-8">
+        INUA helps you find verified mentors, book sessions, and measure the impact of mentorship using AI-powered insights.
+      </p>
+      <div class="flex justify-center gap-3 flex-wrap">
+        <button onclick="showPage('register')" class="btn-primary px-8 py-3 text-base">Create Free Account</button>
+        <button onclick="showPage('login')" class="btn-secondary px-8 py-3 text-base">I already have an account</button>
+      </div>
+    </div>
+
+    <!-- How it works -->
+    <div class="grid sm:grid-cols-3 gap-6 mb-14">
+      <div class="card p-6 text-center">
+        <div class="text-4xl mb-3">🔍</div>
+        <h3 class="font-bold text-slate2-800 mb-2">1 · Discover Mentors</h3>
+        <p class="text-sm text-slate2-500">Browse verified industry professionals filtered by expertise and field.</p>
+      </div>
+      <div class="card p-6 text-center">
+        <div class="text-4xl mb-3">📅</div>
+        <h3 class="font-bold text-slate2-800 mb-2">2 · Book a Session</h3>
+        <p class="text-sm text-slate2-500">Pick a time, choose a goal area, and confirm your mentorship session instantly.</p>
+      </div>
+      <div class="card p-6 text-center">
+        <div class="text-4xl mb-3">🤖</div>
+        <h3 class="font-bold text-slate2-800 mb-2">3 · Get AI Insights</h3>
+        <p class="text-sm text-slate2-500">Our ML models score mentorship effectiveness and suggest improvement actions.</p>
+      </div>
+    </div>
+
+    <!-- API health check -->
+    <div class="card p-6 flex items-center justify-between flex-wrap gap-4">
+      <div>
+        <div class="font-bold text-slate2-800 mb-1">Platform Status</div>
+        <div id="health-text" class="text-sm text-slate2-500">Checking connection…</div>
+      </div>
+      <div id="health-dot" class="w-3 h-3 rounded-full bg-gray-300"></div>
+    </div>
+  </div>
+
+  <!-- ── REGISTER ── -->
+  <div id="page-register" class="section-hidden max-w-lg mx-auto">
+    <div class="mb-6">
+      <button onclick="showPage('landing')" class="text-sm text-sage-600 font-semibold hover:underline">← Back</button>
+    </div>
+    <div class="card p-8">
+      <div class="text-4xl mb-3">👋</div>
+      <h2 class="section-title mb-1">Create your account</h2>
+      <p class="section-sub mb-6">Join INUA as a mentee or mentor.</p>
+
+      <div id="reg-alert"></div>
+
+      <form id="reg-form" onsubmit="doRegister(event)">
+        <div class="field-row field-row-2 mb-4">
+          <div><label>Full Name</label><input id="reg-name" placeholder="e.g. Faith Wanjiku" required></div>
+          <div><label>Email Address</label><input id="reg-email" type="email" placeholder="you@strathmore.edu" required></div>
+        </div>
+        <div class="field-row field-row-2 mb-4">
+          <div><label>Password</label><input id="reg-password" type="password" placeholder="Min 8 characters" required></div>
+          <div>
+            <label>I am a…</label>
+            <select id="reg-role" onchange="toggleRoleFields()">
+              <option value="mentee">Mentee (student seeking guidance)</option>
+              <option value="mentor">Mentor (professional giving guidance)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Mentee fields -->
+        <div id="mentee-fields">
+          <div class="field-row field-row-2 mb-4">
+            <div><label>University</label><input id="reg-university" placeholder="Strathmore University"></div>
+            <div><label>Year / Stage</label><input id="reg-career-stage" placeholder="Year 4"></div>
+          </div>
+          <div class="mb-4">
+            <label>Career Interest</label>
+            <select id="reg-career-interest">
+              <option>Software Engineering</option><option>Data Science</option>
+              <option>Cloud Architecture</option><option>Product Management</option>
+              <option>Cybersecurity</option><option>Finance</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Mentor fields -->
+        <div id="mentor-fields" class="section-hidden">
+          <div class="field-row field-row-2 mb-4">
+            <div>
+              <label>Industry</label>
+              <select id="reg-industry">
+                <option>Technology</option><option>Finance</option><option>Healthcare</option>
+                <option>Education</option><option>Telecommunications</option>
               </select>
             </div>
+            <div><label>Area of Expertise</label><input id="reg-expertise" placeholder="e.g. Cloud Architecture"></div>
           </div>
-
-          <!-- Section 1: Mentee Demographics -->
-          <div>
-            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">1. Mentee Academic Profile</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div>
-                <label class="block text-xs font-medium text-slate-300 mb-1">Career Stage</label>
-                <select id="input-career-stage" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
-                  <option value="Year1">Year 1</option>
-                  <option value="Year2">Year 2</option>
-                  <option value="Year3">Year 3</option>
-                  <option value="Year4" selected>Year 4</option>
-                  <option value="Graduate">Graduate</option>
-                  <option value="EarlyCareer">Early Career</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-slate-300 mb-1">Field of Study</label>
-                <select id="input-field" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
-                  <option value="Computer Science" selected>Computer Science</option>
-                  <option value="Engineering">Engineering</option>
-                  <option value="Business">Business</option>
-                  <option value="Data Analytics">Data Analytics</option>
-                  <option value="Health Sciences">Health Sciences</option>
-                  <option value="Education">Education</option>
-                  <option value="Social Sciences">Social Sciences</option>
-                  <option value="Other STEM">Other STEM</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-slate-300 mb-1">Career Interest</label>
-                <select id="input-interest" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
-                  <option value="Software Engineering" selected>Software Engineering</option>
-                  <option value="Data Science">Data Science</option>
-                  <option value="Artificial Intelligence">Artificial Intelligence</option>
-                  <option value="Cybersecurity">Cybersecurity</option>
-                  <option value="Cloud Computing">Cloud Computing</option>
-                  <option value="UI/UX">UI/UX</option>
-                  <option value="Product Management">Product Management</option>
-                  <option value="Finance">Finance</option>
-                  <option value="Entrepreneurship">Entrepreneurship</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- Section 2: Mentor Profile -->
-          <div>
-            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">2. Mentor Professional Background</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-              <div>
-                <label class="block text-xs font-medium text-slate-300 mb-1">Experience (Years)</label>
-                <input id="input-experience" type="number" min="1" max="40" value="8" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-slate-300 mb-1">Industry</label>
-                <select id="input-industry" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
-                  <option value="Technology" selected>Technology</option>
-                  <option value="Banking & Finance">Banking & Finance</option>
-                  <option value="Academia">Academia</option>
-                  <option value="Healthcare">Healthcare</option>
-                  <option value="NGO">NGO</option>
-                  <option value="Government">Government</option>
-                  <option value="Entrepreneurship">Entrepreneurship</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-slate-300 mb-1">Specialization</label>
-                <input id="input-specialization" type="text" value="Backend Engineering" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-slate-300 mb-1">Availability</label>
-                <select id="input-availability" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
-                  <option value="High" selected>High</option>
-                  <option value="Medium">Medium</option>
-                  <option value="Low">Low</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <!-- Section 3: Session Execution Logistics -->
-          <div>
-            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">3. Session Execution Logistics</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
-              <div>
-                <label class="block text-xs font-medium text-slate-300 mb-1">Session Type</label>
-                <select id="input-session-type" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
-                  <option value="Interview Preparation" selected>Interview Preparation</option>
-                  <option value="Career Guidance">Career Guidance</option>
-                  <option value="CV Review">CV Review</option>
-                  <option value="Technical Coaching">Technical Coaching</option>
-                  <option value="Networking">Networking</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-slate-300 mb-1">Duration (Min)</label>
-                <input id="input-duration" type="number" min="15" max="180" value="65" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-slate-300 mb-1">Attendance</label>
-                <select id="input-attendance" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
-                  <option value="Attended" selected>Attended</option>
-                  <option value="Rescheduled">Rescheduled</option>
-                  <option value="Cancelled">Cancelled</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-slate-300 mb-1">Platform</label>
-                <select id="input-platform" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
-                  <option value="Teams" selected>Microsoft Teams</option>
-                  <option value="Zoom">Zoom</option>
-                  <option value="Meet">Google Meet</option>
-                  <option value="Physical">Physical In-Person</option>
-                </select>
-              </div>
-            </div>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
-              <div>
-                <label class="block text-xs font-medium text-slate-300 mb-1">Goal Category</label>
-                <select id="input-goal" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
-                  <option value="Internship" selected>Internship</option>
-                  <option value="Portfolio Development">Portfolio Development</option>
-                  <option value="Technical Skills">Technical Skills</option>
-                  <option value="Career Transition">Career Transition</option>
-                  <option value="Leadership">Leadership</option>
-                  <option value="Research">Research</option>
-                </select>
-              </div>
-              <div>
-                <label class="block text-xs font-medium text-slate-300 mb-1">Prior Completed Sessions</label>
-                <input id="input-prior" type="number" min="0" max="15" value="3" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 focus:border-brand-500 focus:outline-none">
-              </div>
-            </div>
-          </div>
-
-          <!-- Section 4: Psychometric Quality Likert Ratings (1-5) -->
-          <div>
-            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">4. Interaction Quality & Psychometrics (Likert 1–5)</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
-              
-              <div>
-                <div class="flex justify-between text-xs font-medium mb-1">
-                  <span class="text-slate-300">Career Support Guidance:</span>
-                  <span id="val-career" class="text-brand-300 font-bold">4 / 5</span>
-                </div>
-                <input id="input-career" type="range" min="1" max="5" value="4" oninput="updateRange('career', this.value)" class="w-full accent-brand-500">
-              </div>
-
-              <div>
-                <div class="flex justify-between text-xs font-medium mb-1">
-                  <span class="text-slate-300">Psychosocial & Motivation:</span>
-                  <span id="val-psycho" class="text-brand-300 font-bold">4 / 5</span>
-                </div>
-                <input id="input-psycho" type="range" min="1" max="5" value="4" oninput="updateRange('psycho', this.value)" class="w-full accent-brand-500">
-              </div>
-
-              <div>
-                <div class="flex justify-between text-xs font-medium mb-1">
-                  <span class="text-slate-300">Communication Quality:</span>
-                  <span id="val-comm" class="text-brand-300 font-bold">5 / 5</span>
-                </div>
-                <input id="input-comm" type="range" min="1" max="5" value="5" oninput="updateRange('comm', this.value)" class="w-full accent-brand-500">
-              </div>
-
-              <div>
-                <div class="flex justify-between text-xs font-medium mb-1">
-                  <span class="text-slate-300">Milestone Goal Progress:</span>
-                  <span id="val-goal" class="text-brand-300 font-bold">4 / 5</span>
-                </div>
-                <input id="input-goal-prog" type="range" min="1" max="5" value="4" oninput="updateRange('goal', this.value)" class="w-full accent-brand-500">
-              </div>
-
-              <div>
-                <div class="flex justify-between text-xs font-medium mb-1">
-                  <span class="text-slate-300">Self-Efficacy / Confidence:</span>
-                  <span id="val-conf" class="text-brand-300 font-bold">4 / 5</span>
-                </div>
-                <input id="input-conf" type="range" min="1" max="5" value="4" oninput="updateRange('conf', this.value)" class="w-full accent-brand-500">
-              </div>
-
-              <div>
-                <div class="flex justify-between text-xs font-medium mb-1">
-                  <span class="text-slate-300">Mentor Responsiveness:</span>
-                  <span id="val-resp" class="text-brand-300 font-bold">5 / 5</span>
-                </div>
-                <input id="input-resp" type="range" min="1" max="5" value="5" oninput="updateRange('resp', this.value)" class="w-full accent-brand-500">
-              </div>
-
-            </div>
-          </div>
-
-          <!-- Submit Button -->
-          <div class="pt-2">
-            <button onclick="evaluateLiveSession()" class="w-full py-3.5 px-6 rounded-xl font-bold text-white bg-gradient-to-r from-brand-600 via-indigo-600 to-purple-600 hover:from-brand-500 hover:to-indigo-500 shadow-lg shadow-brand-500/25 transition flex items-center justify-center gap-2">
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-              <span>Predict Session Effectiveness</span>
-            </button>
-          </div>
-
+          <div class="mb-4">
+            <label>Years of Experience</label>
+            <input id="reg-exp" type="number" min="1" max="40" placeholder="5"></div>
         </div>
 
-        <!-- Live Prediction Output (5 Cols) -->
-        <div class="lg:col-span-5 space-y-6">
-          
-          <div class="glass p-6 sm:p-8 rounded-2xl relative overflow-hidden border border-slate-700">
-            <div class="flex items-center justify-between pb-4 border-b border-slate-800">
-              <h2 class="text-lg font-bold text-white">Model Inference Outcome</h2>
-              <span id="res-badge" class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                Awaiting Execution
-              </span>
-            </div>
-
-            <!-- Probability Gauge Card -->
-            <div class="py-6 flex flex-col items-center justify-center text-center">
-              <div class="relative w-44 h-44 flex items-center justify-center">
-                <!-- SVG Circle Progress -->
-                <svg class="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                  <circle cx="50" cy="50" r="42" stroke="currentColor" stroke-width="10" class="text-slate-800 fill-none" />
-                  <circle id="prob-circle" cx="50" cy="50" r="42" stroke="currentColor" stroke-width="10" stroke-dasharray="264" stroke-dashoffset="2" stroke-linecap="round" class="text-brand-500 fill-none transition-all duration-700 ease-out" />
-                </svg>
-                <div class="absolute inset-0 flex flex-col items-center justify-center">
-                  <span id="res-probability" class="text-4xl font-extrabold text-white tracking-tight">--</span>
-                  <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider mt-0.5">Confidence</span>
-                </div>
-              </div>
-              <div class="mt-4 text-center">
-                <span id="res-model-badge" class="text-xs text-slate-400 font-medium">Evaluated using: <strong class="text-brand-300" id="res-model-name">XGBoost</strong></span>
-              </div>
-            </div>
-
-            <!-- Prescriptive Recommendation -->
-            <div class="space-y-4 pt-4 border-t border-slate-800">
-              <div>
-                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Pedagogical Recommendation</h4>
-                <p id="res-recommendation" class="text-sm text-slate-200 leading-relaxed bg-slate-900/60 p-3.5 rounded-xl border border-slate-800">
-                  Configure session attributes and click evaluate to generate intervention guidelines.
-                </p>
-              </div>
-
-              <!-- Risk Factor Alerts Container -->
-              <div>
-                <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Diagnostic Risk Alerts</h4>
-                <div id="res-risks-container" class="space-y-2 text-xs">
-                  <div class="p-3 rounded-xl bg-slate-900/40 text-slate-400 border border-slate-800/80">
-                    No risk flags identified.
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
-          </div>
-
-          <!-- Strathmore Academic Panel Card -->
-          <div class="glass-card p-5 rounded-2xl border border-slate-800 space-y-2">
-            <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Academic Dissertation Context</h4>
-            <p class="text-xs text-slate-400 leading-relaxed">
-              Target class ground truth is synthesized through Kram's Mentoring Framework (1985) and Bandura's Self-Efficacy construct (1997). Model excludes intermediate indices to prevent data leakage.
-            </p>
-          </div>
-
-        </div>
-
-      </div>
-
+        <button type="submit" class="btn-primary w-full mt-2" id="reg-btn">Create Account</button>
+        <p class="text-center text-sm text-slate2-500 mt-4">Already have an account? <button type="button" onclick="showPage('login')" class="text-sage-600 font-semibold hover:underline">Sign in</button></p>
+      </form>
     </div>
+  </div>
 
-    <!-- TAB 2: Model Benchmarks (Table 4.4) -->
-    <div id="tab-bench" class="hidden space-y-8">
-      <div class="glass p-6 rounded-2xl border-l-4 border-indigo-500">
-        <h2 class="text-2xl font-bold text-white">Comparative Model Benchmark Evaluation (Table 4.4)</h2>
-        <p class="text-sm text-slate-400 mt-1">Cross-validation stability and generalization metrics evaluated across Random Forest, AdaBoost, and XGBoost.</p>
-      </div>
-
-      <div class="glass p-6 rounded-2xl overflow-x-auto">
-        <table class="w-full text-left border-collapse text-sm">
-          <thead>
-            <tr class="border-b border-slate-700 text-xs font-bold uppercase tracking-wider text-slate-400">
-              <th class="py-3 px-4">Classifier</th>
-              <th class="py-3 px-4">5-Fold CV Accuracy</th>
-              <th class="py-3 px-4">5-Fold CV ROC-AUC</th>
-              <th class="py-3 px-4">Test Accuracy</th>
-              <th class="py-3 px-4">Test Precision</th>
-              <th class="py-3 px-4">Test Recall</th>
-              <th class="py-3 px-4">Test F1-Score</th>
-              <th class="py-3 px-4">Test ROC-AUC</th>
-            </tr>
-          </thead>
-          <tbody id="benchmark-table-body" class="divide-y divide-slate-800 font-medium text-slate-200">
-            <tr>
-              <td class="py-4 px-4 font-bold text-brand-300">AdaBoost</td>
-              <td class="py-4 px-4 text-emerald-400 font-bold">96.31% ± 1.21%</td>
-              <td class="py-4 px-4">0.9955</td>
-              <td class="py-4 px-4 text-emerald-400 font-bold">94.50%</td>
-              <td class="py-4 px-4">95.96%</td>
-              <td class="py-4 px-4">94.27%</td>
-              <td class="py-4 px-4 font-bold text-emerald-400">95.11%</td>
-              <td class="py-4 px-4 font-bold">0.9913</td>
-            </tr>
-            <tr>
-              <td class="py-4 px-4 font-bold text-brand-300">XGBoost</td>
-              <td class="py-4 px-4">95.81% ± 0.58%</td>
-              <td class="py-4 px-4">0.9941</td>
-              <td class="py-4 px-4">94.00%</td>
-              <td class="py-4 px-4">95.52%</td>
-              <td class="py-4 px-4">93.83%</td>
-              <td class="py-4 px-4">94.67%</td>
-              <td class="py-4 px-4">0.9898</td>
-            </tr>
-            <tr>
-              <td class="py-4 px-4 font-bold text-brand-300">Random Forest</td>
-              <td class="py-4 px-4">95.06% ± 1.02%</td>
-              <td class="py-4 px-4">0.9928</td>
-              <td class="py-4 px-4">94.00%</td>
-              <td class="py-4 px-4">94.71%</td>
-              <td class="py-4 px-4 font-bold text-emerald-400">94.71%</td>
-              <td class="py-4 px-4">94.71%</td>
-              <td class="py-4 px-4">0.9876</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="glass p-5 rounded-2xl border border-slate-800">
-          <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Top Generalization Performer</span>
-          <h3 class="text-xl font-extrabold text-white mt-1">AdaBoost Classifier</h3>
-          <p class="text-xs text-slate-400 mt-2">Achieved 96.31% cross-validation accuracy and 95.11% test F1-score with optimal regularization.</p>
-        </div>
-        <div class="glass p-5 rounded-2xl border border-slate-800">
-          <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Lowest Cross-Validation Variance</span>
-          <h3 class="text-xl font-extrabold text-white mt-1">XGBoost Classifier</h3>
-          <p class="text-xs text-slate-400 mt-2">Demonstrated minimal standard deviation (±0.58%), indicating high empirical stability across data splits.</p>
-        </div>
-        <div class="glass p-5 rounded-2xl border border-slate-800">
-          <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Maximum Sensitivity / Recall</span>
-          <h3 class="text-xl font-extrabold text-white mt-1">Random Forest</h3>
-          <p class="text-xs text-slate-400 mt-2">Highest true positive capture rate (94.71% Recall), minimizing missed positive mentorship interventions.</p>
-        </div>
-      </div>
+  <!-- ── LOGIN ── -->
+  <div id="page-login" class="section-hidden max-w-md mx-auto">
+    <div class="mb-6">
+      <button onclick="showPage('landing')" class="text-sm text-sage-600 font-semibold hover:underline">← Back</button>
     </div>
+    <div class="card p-8">
+      <div class="text-4xl mb-3">🔐</div>
+      <h2 class="section-title mb-1">Welcome back</h2>
+      <p class="section-sub mb-6">Sign in to access your mentorship dashboard.</p>
 
-    <!-- TAB 3: Chapter 4 Figures Gallery -->
-    <div id="tab-figs" class="hidden space-y-8">
-      <div class="glass p-6 rounded-2xl border-l-4 border-purple-500">
-        <h2 class="text-2xl font-bold text-white">Dissertation Chapter 4 Publication Figures (300 DPI)</h2>
-        <p class="text-sm text-slate-400 mt-1">Empirical visual evidence generated in Sprint 2 and Sprint 3 directly referenced in the dissertation thesis.</p>
+      <div id="login-alert"></div>
+
+      <form id="login-form" onsubmit="doLogin(event)">
+        <div class="mb-4"><label>Email Address</label><input id="login-email" type="email" placeholder="you@example.com" required></div>
+        <div class="mb-6"><label>Password</label><input id="login-password" type="password" placeholder="Your password" required></div>
+        <button type="submit" class="btn-primary w-full" id="login-btn">Sign In</button>
+      </form>
+
+      <div class="divider"></div>
+      <div class="bg-warm-50 border border-warm-200 rounded-xl p-4">
+        <p class="text-xs font-bold text-warm-700 mb-2 uppercase tracking-wider">Demo Accounts (all use Password123!)</p>
+        <div class="grid grid-cols-1 gap-1">
+          <button onclick="fillLogin('michelle.mutinda@strathmore.edu')" class="text-left text-sm text-warm-800 hover:text-warm-900 hover:underline py-0.5">🎓 Mentee — michelle.mutinda@strathmore.edu</button>
+          <button onclick="fillLogin('david.mwangi@safaricom.co.ke')" class="text-left text-sm text-warm-800 hover:text-warm-900 hover:underline py-0.5">💼 Mentor — david.mwangi@safaricom.co.ke</button>
+          <button onclick="fillLogin('admin@inua.strathmore.edu')" class="text-left text-sm text-warm-800 hover:text-warm-900 hover:underline py-0.5">🛡 Admin — admin@inua.strathmore.edu</button>
+        </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        
-        <!-- Figure 4.1 -->
-        <div class="glass p-5 rounded-2xl space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-bold text-white">Figure 4.1: Mentee Career Stage Distribution</h3>
-            <span class="text-xs text-brand-300 font-semibold">Sprint 2</span>
-          </div>
-          <img src="http://127.0.0.1:8000/api/v1/analytics/figures/figure_4_1_career_stage_distribution.png" alt="Figure 4.1" class="rounded-xl border border-slate-800 w-full object-cover">
-          <p class="text-xs text-slate-400">Illustrates final-year undergraduate skew (24.6% Year 4), validating chronological attachment urgency.</p>
-        </div>
-
-        <!-- Figure 4.4 -->
-        <div class="glass p-5 rounded-2xl space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-bold text-white">Figure 4.4: Mentor Experience vs Career Support</h3>
-            <span class="text-xs text-brand-300 font-semibold">Sprint 2</span>
-          </div>
-          <img src="http://127.0.0.1:8000/api/v1/analytics/figures/figure_4_4_mentor_exp_vs_career_support.png" alt="Figure 4.4" class="rounded-xl border border-slate-800 w-full object-cover">
-          <p class="text-xs text-slate-400">Validates Rule 3 logarithmic trajectory: senior mentors (16+ yrs) deliver higher instrumental support ratings.</p>
-        </div>
-
-        <!-- Figure 4.6 -->
-        <div class="glass p-5 rounded-2xl space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-bold text-white">Figure 4.6: Psychometric Correlation Heatmap</h3>
-            <span class="text-xs text-brand-300 font-semibold">Sprint 2</span>
-          </div>
-          <img src="http://127.0.0.1:8000/api/v1/analytics/figures/figure_4_6_correlation_heatmap.png" alt="Figure 4.6" class="rounded-xl border border-slate-800 w-full object-cover">
-          <p class="text-xs text-slate-400">Confirms strong relational correlation (r=0.93) between Communication Quality and Psychosocial Support.</p>
-        </div>
-
-        <!-- Figure 4.7 -->
-        <div class="glass p-5 rounded-2xl space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-bold text-white">Figure 4.7: Target Class & Attendance Breakdown</h3>
-            <span class="text-xs text-brand-300 font-semibold">Sprint 2</span>
-          </div>
-          <img src="http://127.0.0.1:8000/api/v1/analytics/figures/figure_4_7_target_class_distribution.png" alt="Figure 4.7" class="rounded-xl border border-slate-800 w-full object-cover">
-          <p class="text-xs text-slate-400">Target balance of 56.7% effective vs 43.3% ineffective, highlighting attendance impact.</p>
-        </div>
-
-        <!-- Figure 4.8 -->
-        <div class="glass p-5 rounded-2xl space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-bold text-white">Figure 4.8: Confusion Matrices Comparison</h3>
-            <span class="text-xs text-brand-300 font-semibold">Sprint 3</span>
-          </div>
-          <img src="http://127.0.0.1:8000/api/v1/analytics/figures/figure_4_8_confusion_matrices.png" alt="Figure 4.8" class="rounded-xl border border-slate-800 w-full object-cover">
-          <p class="text-xs text-slate-400">Detailed error distribution across 400 held-out test encounters for Random Forest, AdaBoost, and XGBoost.</p>
-        </div>
-
-        <!-- Figure 4.9 -->
-        <div class="glass p-5 rounded-2xl space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-bold text-white">Figure 4.9: Comparative ROC Curves</h3>
-            <span class="text-xs text-brand-300 font-semibold">Sprint 3</span>
-          </div>
-          <img src="http://127.0.0.1:8000/api/v1/analytics/figures/figure_4_9_roc_curves.png" alt="Figure 4.9" class="rounded-xl border border-slate-800 w-full object-cover">
-          <p class="text-xs text-slate-400">Demonstrates stellar discrimination capability (AUC = 0.988 - 0.991) across all decision thresholds.</p>
-        </div>
-
-        <!-- Figure 4.10 -->
-        <div class="glass p-5 rounded-2xl space-y-3 md:col-span-2">
-          <div class="flex items-center justify-between">
-            <h3 class="text-sm font-bold text-white">Figure 4.10: Predictive Feature Importances</h3>
-            <span class="text-xs text-brand-300 font-semibold">Sprint 3</span>
-          </div>
-          <img src="http://127.0.0.1:8000/api/v1/analytics/figures/figure_4_10_feature_importances.png" alt="Figure 4.10" class="rounded-xl border border-slate-800 w-full object-cover">
-          <p class="text-xs text-slate-400">Identifies goal progress score, career support rating, and cancelled attendance as the most dominant drivers of mentorship success.</p>
-        </div>
-
-      </div>
-
+      <p class="text-center text-sm text-slate2-500 mt-4">No account? <button type="button" onclick="showPage('register')" class="text-sage-600 font-semibold hover:underline">Get started</button></p>
     </div>
+  </div>
 
-  </main>
-
-  <!-- Footer -->
-  <footer class="glass border-t border-slate-800 py-6 mt-12">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-3">
+  <!-- ── MENTORS ── -->
+  <div id="page-mentors" class="section-hidden">
+    <div class="flex items-start justify-between flex-wrap gap-4 mb-6">
       <div>
-        <span>INUA Project · Bachelor of Business Information Technology / Computer Science</span>
-        <span class="mx-2">•</span>
-        <span>Strathmore University</span>
+        <h2 class="section-title">Find a Mentor</h2>
+        <p class="section-sub">Browse verified industry professionals ready to guide you.</p>
       </div>
-      <div>
-        <span>Student Researcher: Michelle (BICS Year 4)</span>
+      <div class="flex gap-2 flex-wrap">
+        <input id="mentor-filter-industry" placeholder="Filter by industry…" class="text-sm py-2 w-44" onkeyup="loadMentors()">
+        <input id="mentor-filter-expertise" placeholder="Filter by expertise…" class="text-sm py-2 w-44" onkeyup="loadMentors()">
       </div>
     </div>
-  </footer>
+    <div id="mentor-alert"></div>
+    <div id="mentor-grid" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+  </div>
 
-  <!-- Application Logic -->
-  <script>
-    const API_BASE = "http://127.0.0.1:8000/api/v1";
+  <!-- ── BOOK SESSION ── -->
+  <div id="page-book" class="section-hidden max-w-lg mx-auto">
+    <div class="mb-6">
+      <button onclick="showPage('mentors')" class="text-sm text-sage-600 font-semibold hover:underline">← Back to Mentors</button>
+    </div>
+    <div class="card p-8">
+      <div class="text-4xl mb-3">📅</div>
+      <h2 class="section-title mb-1">Book a Session</h2>
+      <p id="book-mentor-name" class="section-sub mb-6"></p>
 
-    function updateRange(id, val) {
-      document.getElementById(`val-${id}`).innerText = `${val} / 5`;
-    }
+      <div id="book-alert"></div>
 
-    function switchTab(tab) {
-      document.getElementById('tab-eval').classList.add('hidden');
-      document.getElementById('tab-bench').classList.add('hidden');
-      document.getElementById('tab-figs').classList.add('hidden');
+      <form id="book-form" onsubmit="doBookSession(event)">
+        <input type="hidden" id="book-mentor-id">
+        <div class="mb-4">
+          <label>Date &amp; Time</label>
+          <input id="book-date" type="datetime-local" required>
+        </div>
+        <div class="field-row field-row-2 mb-4">
+          <div>
+            <label>Duration</label>
+            <select id="book-duration">
+              <option value="30">30 minutes</option>
+              <option value="45">45 minutes</option>
+              <option value="60" selected>1 hour</option>
+              <option value="90">1.5 hours</option>
+              <option value="120">2 hours</option>
+            </select>
+          </div>
+          <div>
+            <label>Session Type</label>
+            <select id="book-type">
+              <option>Career Guidance</option>
+              <option>CV Review</option>
+              <option>Interview Preparation</option>
+              <option>Technical Coaching</option>
+              <option>Networking</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row field-row-2 mb-4">
+          <div>
+            <label>Meeting Platform</label>
+            <select id="book-platform">
+              <option>Teams</option><option>Zoom</option><option>Meet</option><option>Physical</option>
+            </select>
+          </div>
+          <div>
+            <label>Your Goal Area</label>
+            <select id="book-goal">
+              <option>Internship</option>
+              <option>Portfolio Development</option>
+              <option>Technical Skills</option>
+              <option>Career Transition</option>
+              <option>Leadership</option>
+              <option>Research</option>
+            </select>
+          </div>
+        </div>
+        <button type="submit" class="btn-primary w-full mt-2" id="book-btn">Confirm Booking</button>
+      </form>
+    </div>
+  </div>
 
-      document.getElementById('nav-eval-btn').className = "px-3.5 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition";
-      document.getElementById('nav-bench-btn').className = "px-3.5 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition";
-      document.getElementById('nav-figs-btn').className = "px-3.5 py-1.5 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition";
+  <!-- ── SESSIONS ── -->
+  <div id="page-sessions" class="section-hidden">
+    <div class="flex items-start justify-between flex-wrap gap-4 mb-6">
+      <div>
+        <h2 class="section-title">My Sessions</h2>
+        <p class="section-sub">All your mentorship sessions in one place.</p>
+      </div>
+      <div class="flex gap-2 flex-wrap items-center">
+        <select id="session-status-filter" onchange="loadSessions()" class="text-sm py-2 w-44">
+          <option value="">All Statuses</option>
+          <option>Scheduled</option><option>Completed</option>
+          <option>Cancelled</option><option>Rescheduled</option><option>Pending</option>
+        </select>
+        <button onclick="showPage('mentors')" class="btn-primary py-2 px-4 text-sm">+ Book New</button>
+      </div>
+    </div>
+    <div id="sessions-alert"></div>
+    <div id="sessions-list" class="flex flex-col gap-4"></div>
+  </div>
 
-      if (tab === 'eval') {
-        document.getElementById('tab-eval').classList.remove('hidden');
-        document.getElementById('nav-eval-btn').className = "px-3.5 py-1.5 rounded-lg text-sm font-semibold transition bg-brand-600 text-white shadow-md shadow-brand-600/30";
-      } else if (tab === 'bench') {
-        document.getElementById('tab-bench').classList.remove('hidden');
-        document.getElementById('nav-bench-btn').className = "px-3.5 py-1.5 rounded-lg text-sm font-semibold transition bg-brand-600 text-white shadow-md shadow-brand-600/30";
-      } else if (tab === 'figs') {
-        document.getElementById('tab-figs').classList.remove('hidden');
-        document.getElementById('nav-figs-btn').className = "px-3.5 py-1.5 rounded-lg text-sm font-semibold transition bg-brand-600 text-white shadow-md shadow-brand-600/30";
-      }
-    }
+  <!-- ── AI SCORE ── -->
+  <div id="page-predict" class="section-hidden max-w-xl mx-auto">
+    <div class="mb-6">
+      <h2 class="section-title">AI Effectiveness Score</h2>
+      <p class="section-sub">Enter session details to get a machine-learning prediction of mentorship quality.</p>
+    </div>
+    <div id="predict-alert"></div>
 
-    function loadPreset(type) {
-      if (type === 'strong') {
-        document.getElementById('input-career-stage').value = 'Year4';
-        document.getElementById('input-field').value = 'Computer Science';
-        document.getElementById('input-interest').value = 'Software Engineering';
-        document.getElementById('input-experience').value = 8;
-        document.getElementById('input-industry').value = 'Technology';
-        document.getElementById('input-specialization').value = 'Backend Engineering';
-        document.getElementById('input-availability').value = 'High';
-        document.getElementById('input-session-type').value = 'Interview Preparation';
-        document.getElementById('input-duration').value = 65;
-        document.getElementById('input-attendance').value = 'Attended';
-        document.getElementById('input-platform').value = 'Teams';
-        document.getElementById('input-goal').value = 'Internship';
-        document.getElementById('input-prior').value = 3;
+    <div class="card p-8 mb-6">
+      <form id="predict-form" onsubmit="doPredict(event)">
+        <div class="field-row field-row-2 mb-4">
+          <div>
+            <label>Number of sessions so far</label>
+            <input id="p-freq" type="number" min="1" max="100" value="3" required>
+          </div>
+          <div>
+            <label>Session duration (mins)</label>
+            <input id="p-dur" type="number" min="15" max="180" value="60" required>
+          </div>
+        </div>
+        <div class="field-row field-row-2 mb-4">
+          <div>
+            <label>Career support felt (1–5)</label>
+            <input id="p-career" type="number" min="1" max="5" step="0.1" value="4" required>
+          </div>
+          <div>
+            <label>Psychosocial support felt (1–5)</label>
+            <input id="p-psycho" type="number" min="1" max="5" step="0.1" value="3.5" required>
+          </div>
+        </div>
+        <div class="field-row field-row-2 mb-4">
+          <div>
+            <label>Session type</label>
+            <select id="p-type">
+              <option>Career Guidance</option><option>CV Review</option>
+              <option>Interview Preparation</option><option>Technical Coaching</option><option>Networking</option>
+            </select>
+          </div>
+          <div>
+            <label>Goal category</label>
+            <select id="p-goal">
+              <option>Internship</option><option>Portfolio Development</option>
+              <option>Technical Skills</option><option>Career Transition</option>
+              <option>Leadership</option><option>Research</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row field-row-2 mb-4">
+          <div>
+            <label>Mentor's years of experience</label>
+            <input id="p-exp" type="number" min="1" max="40" value="8" required>
+          </div>
+          <div>
+            <label>Meeting platform</label>
+            <select id="p-platform">
+              <option>Teams</option><option>Zoom</option><option>Meet</option><option>Physical</option>
+            </select>
+          </div>
+        </div>
+        <div class="field-row field-row-2 mb-4">
+          <div>
+            <label>Mentee career stage</label>
+            <select id="p-stage">
+              <option>Year1</option><option>Year2</option><option>Year3</option><option value="Year4" selected>Year4</option><option>Graduate</option><option>Professional</option>
+            </select>
+          </div>
+          <div>
+            <label>Mentor industry</label>
+            <select id="p-industry">
+              <option>Technology</option><option>Finance</option><option>Healthcare</option>
+              <option>Education</option><option>Telecommunications</option>
+            </select>
+          </div>
+        </div>
+        <div class="mb-4">
+          <label>AI Model</label>
+          <select id="p-model">
+            <option value="random_forest">Random Forest (recommended)</option>
+            <option value="xgboost">XGBoost</option>
+            <option value="adaboost">AdaBoost</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary w-full" id="predict-btn">Get AI Score</button>
+      </form>
+    </div>
 
-        document.getElementById('input-career').value = 4; updateRange('career', 4);
-        document.getElementById('input-psycho').value = 4; updateRange('psycho', 4);
-        document.getElementById('input-comm').value = 5; updateRange('comm', 5);
-        document.getElementById('input-goal-prog').value = 4; updateRange('goal', 4);
-        document.getElementById('input-conf').value = 4; updateRange('conf', 4);
-        document.getElementById('input-resp').value = 5; updateRange('resp', 5);
-      } else {
-        document.getElementById('input-career-stage').value = 'Year1';
-        document.getElementById('input-field').value = 'Business';
-        document.getElementById('input-interest').value = 'Finance';
-        document.getElementById('input-experience').value = 1;
-        document.getElementById('input-industry').value = 'Banking & Finance';
-        document.getElementById('input-specialization').value = 'Risk Management';
-        document.getElementById('input-availability').value = 'Low';
-        document.getElementById('input-session-type').value = 'Career Guidance';
-        document.getElementById('input-duration').value = 25;
-        document.getElementById('input-attendance').value = 'Rescheduled';
-        document.getElementById('input-platform').value = 'Meet';
-        document.getElementById('input-goal').value = 'Career Transition';
-        document.getElementById('input-prior').value = 0;
+    <div id="predict-result" class="section-hidden card p-8 text-center">
+      <div class="text-6xl mb-4" id="result-emoji">🎯</div>
+      <div class="text-4xl font-extrabold mb-2" id="result-score" style="color:#40855d"></div>
+      <div class="text-slate2-500 mb-4" id="result-label"></div>
+      <div class="grid grid-cols-3 gap-4 mt-4" id="result-breakdown"></div>
+    </div>
+  </div>
 
-        document.getElementById('input-career').value = 2; updateRange('career', 2);
-        document.getElementById('input-psycho').value = 2; updateRange('psycho', 2);
-        document.getElementById('input-comm').value = 2; updateRange('comm', 2);
-        document.getElementById('input-goal-prog').value = 1; updateRange('goal', 1);
-        document.getElementById('input-conf').value = 2; updateRange('conf', 2);
-        document.getElementById('input-resp').value = 1; updateRange('resp', 1);
-      }
-      evaluateLiveSession();
-    }
+  <!-- ── PROFILE ── -->
+  <div id="page-profile" class="section-hidden max-w-md mx-auto">
+    <div class="card p-8">
+      <div id="profile-avatar" class="avatar w-16 h-16 text-2xl text-white mx-auto mb-4" style="background:#40855d"></div>
+      <h2 id="profile-name" class="section-title text-center mb-1"></h2>
+      <p id="profile-email" class="section-sub text-center mb-2"></p>
+      <p id="profile-role" class="text-center text-sm font-bold text-sage-600 capitalize mb-6"></p>
+      <div id="profile-details" class="bg-slate2-50 rounded-xl p-4 text-sm text-slate2-700 space-y-2"></div>
+    </div>
+  </div>
 
-    async function evaluateLiveSession() {
-      const payload = {
-        career_stage: document.getElementById('input-career-stage').value,
-        field_of_study: document.getElementById('input-field').value,
-        career_interest: document.getElementById('input-interest').value,
-        prior_sessions: parseInt(document.getElementById('input-prior').value),
-        mentor_experience_years: parseInt(document.getElementById('input-experience').value),
-        mentor_industry: document.getElementById('input-industry').value,
-        mentor_specialization: document.getElementById('input-specialization').value,
-        mentor_availability: document.getElementById('input-availability').value,
-        session_type: document.getElementById('input-session-type').value,
-        session_duration_minutes: parseInt(document.getElementById('input-duration').value),
-        attendance_status: document.getElementById('input-attendance').value,
-        meeting_platform: document.getElementById('input-platform').value,
-        goal_category: document.getElementById('input-goal').value,
-        career_support_score: parseInt(document.getElementById('input-career').value),
-        psychosocial_support_score: parseInt(document.getElementById('input-psycho').value),
-        communication_quality: parseInt(document.getElementById('input-comm').value),
-        goal_progress_score: parseInt(document.getElementById('input-goal-prog').value),
-        confidence_growth_score: parseInt(document.getElementById('input-conf').value),
-        mentor_responsiveness_score: parseInt(document.getElementById('input-resp').value),
-        model_name: document.getElementById('input-model').value
-      };
+</main>
 
-      try {
-        const res = await fetch(`${API_BASE}/predict`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
+<!-- ═══ SESSION DETAIL MODAL ═══ -->
+<div id="modal-overlay" class="fixed inset-0 bg-black/40 z-50 section-hidden flex items-center justify-center px-4">
+  <div class="card max-w-md w-full p-8 relative">
+    <button onclick="closeModal()" class="absolute top-4 right-4 text-slate2-400 hover:text-slate2-700 text-xl">✕</button>
+    <div class="text-3xl mb-3" id="modal-icon">📋</div>
+    <h3 id="modal-title" class="section-title mb-1"></h3>
+    <p id="modal-sub" class="section-sub mb-6"></p>
+    <div id="modal-body"></div>
+  </div>
+</div>
 
-        if (!res.ok) throw new Error("API request failed");
-        const data = await res.json();
+<!-- ═══ FOOTER ═══ -->
+<footer class="border-t border-slate-100 mt-16 py-8 text-center text-sm text-slate2-400">
+  <p class="font-medium text-slate2-600 mb-1">INUA — Intelligent Mentorship Effectiveness Analytics</p>
+  <p>Michelle Mutinda · Admission No. 154727 · BICS Year 4 · Strathmore University</p>
+  <p class="mt-2">Supervised by <span class="font-medium">Dr. Dickson Owuor</span> &nbsp;·&nbsp; API: <a href="/docs" target="_blank" class="text-sage-600 hover:underline">Swagger Docs</a> &nbsp;·&nbsp; <a href="/api/v1/health" target="_blank" class="text-sage-600 hover:underline">Health Check</a></p>
+</footer>
 
-        // Update UI
-        const prob = Math.round(data.effectiveness_probability * 100);
-        document.getElementById('res-probability').innerText = `${prob}%`;
-        document.getElementById('res-model-name').innerText = data.model_used;
-        document.getElementById('res-recommendation').innerText = data.recommendation;
+<script>
+// ═══════════════════════════════════════════
+// State
+// ═══════════════════════════════════════════
+const API = '';   // same origin
+let token = localStorage.getItem('inua_token') || null;
+let currentUser = JSON.parse(localStorage.getItem('inua_user') || 'null');
 
-        const circle = document.getElementById('prob-circle');
-        const offset = 264 - (264 * prob) / 100;
-        circle.style.strokeDashoffset = offset;
+// ═══════════════════════════════════════════
+// Utils
+// ═══════════════════════════════════════════
+function toast(msg, type='info') {
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => el.remove(), 3800);
+}
 
-        const badge = document.getElementById('res-badge');
-        if (data.prediction === 1) {
-          badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
-          badge.innerText = "Effective Session";
-          circle.classList.remove('text-rose-500');
-          circle.classList.add('text-emerald-500');
-        } else {
-          badge.className = "px-3 py-1 rounded-full text-xs font-bold bg-rose-500/20 text-rose-400 border border-rose-500/30";
-          badge.innerText = "Intervention Advised";
-          circle.classList.remove('text-emerald-500');
-          circle.classList.add('text-rose-500');
-        }
+function setAlert(id, msg, type='error') {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (!msg) { el.innerHTML=''; return; }
+  const icons = { error:'⚠️', success:'✅', info:'ℹ️', warn:'🔔' };
+  el.innerHTML = `<div class="alert alert-${type}">${icons[type]||''} ${msg}</div>`;
+}
 
-        const risksCont = document.getElementById('res-risks-container');
-        if (data.risk_factors && data.risk_factors.length > 0) {
-          risksCont.innerHTML = data.risk_factors.map(r => `
-            <div class="p-2.5 rounded-xl bg-rose-500/10 text-rose-300 border border-rose-500/20 flex items-start gap-2">
-              <svg class="w-4 h-4 text-rose-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-              <span>${r}</span>
-            </div>
-          `).join('');
-        } else {
-          risksCont.innerHTML = `
-            <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 flex items-center gap-2">
-              <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-              <span>Zero developmental friction detected. Optimal flow.</span>
-            </div>
-          `;
-        }
+function setLoading(btnId, loading, text='') {
+  const btn = document.getElementById(btnId);
+  if (!btn) return;
+  btn.disabled = loading;
+  btn.innerHTML = loading ? '<span class="spinner"></span>' : text;
+}
 
-      } catch (err) {
-        console.error(err);
-        alert("Failed to connect to FastAPI backend at http://127.0.0.1:8000. Ensure 'python backend/run.py' is running!");
-      }
-    }
+function initials(name='?') {
+  return name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+}
 
-    // Auto-evaluate preset on load
-    window.addEventListener('DOMContentLoaded', () => {
-      evaluateLiveSession();
+function avatarColor(name='') {
+  const colors = ['#40855d','#2f6847','#c0642a','#4a6a85','#8B5CF6','#d67d3a'];
+  let h = 0; for (const c of name) h = c.charCodeAt(0)+h*31;
+  return colors[Math.abs(h) % colors.length];
+}
+
+async function apiFetch(path, options={}) {
+  const headers = { 'Content-Type': 'application/json', ...(options.headers||{}) };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  const res = await fetch(API+path, { ...options, headers });
+  const data = await res.json().catch(() => ({}));
+  return { ok: res.ok, status: res.status, data };
+}
+
+// ═══════════════════════════════════════════
+// Navigation
+// ═══════════════════════════════════════════
+const PAGES = ['landing','register','login','mentors','book','sessions','predict','profile'];
+
+function showPage(page) {
+  PAGES.forEach(p => {
+    const el = document.getElementById(`page-${p}`);
+    if (el) el.classList.toggle('section-hidden', p !== page);
+  });
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  const navEl = document.getElementById(`nav-${page}`);
+  if (navEl) navEl.classList.add('active');
+  window.scrollTo({ top:0, behavior:'smooth' });
+
+  if (page === 'mentors') loadMentors();
+  if (page === 'sessions') loadSessions();
+  if (page === 'profile') loadProfile();
+}
+
+function updateNav() {
+  const li = document.getElementById('nav-loggedin');
+  const lo = document.getElementById('nav-loggedout');
+  const ub = document.getElementById('userbar');
+  if (token && currentUser) {
+    li.classList.remove('hidden'); li.classList.add('flex');
+    lo.classList.add('hidden');
+    ub.style.display = 'flex';
+    const av = document.getElementById('nav-avatar');
+    av.textContent = initials(currentUser.name);
+    av.style.background = avatarColor(currentUser.name);
+    document.getElementById('nav-username').textContent = currentUser.name.split(' ')[0];
+    document.getElementById('nav-role').textContent = currentUser.role;
+  } else {
+    li.classList.add('hidden'); li.classList.remove('flex');
+    lo.classList.remove('hidden');
+    ub.style.display = 'none';
+  }
+}
+
+// ═══════════════════════════════════════════
+// Auth
+// ═══════════════════════════════════════════
+async function doRegister(e) {
+  e.preventDefault();
+  setAlert('reg-alert','');
+  const role = document.getElementById('reg-role').value;
+  const body = {
+    name: document.getElementById('reg-name').value,
+    email: document.getElementById('reg-email').value,
+    password: document.getElementById('reg-password').value,
+    role,
+  };
+  if (role === 'mentee') {
+    body.university    = document.getElementById('reg-university').value;
+    body.career_stage  = document.getElementById('reg-career-stage').value;
+    body.career_interest = document.getElementById('reg-career-interest').value;
+    body.experience_years = 0;
+    body.industry = 'N/A'; body.expertise = 'N/A';
+  } else {
+    body.industry        = document.getElementById('reg-industry').value;
+    body.expertise       = document.getElementById('reg-expertise').value;
+    body.experience_years= parseFloat(document.getElementById('reg-exp').value)||1;
+    body.university='N/A'; body.career_stage='Professional'; body.career_interest='N/A';
+  }
+  setLoading('reg-btn', true);
+  const { ok, data } = await apiFetch('/api/v1/auth/register', { method:'POST', body: JSON.stringify(body) });
+  setLoading('reg-btn', false, 'Create Account');
+  if (ok) {
+    token = data.access_token;
+    currentUser = data.user;
+    localStorage.setItem('inua_token', token);
+    localStorage.setItem('inua_user', JSON.stringify(currentUser));
+    updateNav();
+    toast(`Welcome, ${currentUser.name.split(' ')[0]}! 🎉`, 'success');
+    showPage(currentUser.role === 'mentee' ? 'mentors' : 'sessions');
+  } else {
+    setAlert('reg-alert', data.detail || 'Registration failed. Please try again.');
+  }
+}
+
+async function doLogin(e) {
+  e.preventDefault();
+  setAlert('login-alert','');
+  setLoading('login-btn', true);
+  const { ok, data } = await apiFetch('/api/v1/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email: document.getElementById('login-email').value, password: document.getElementById('login-password').value })
+  });
+  setLoading('login-btn', false, 'Sign In');
+  if (ok) {
+    token = data.access_token;
+    currentUser = data.user;
+    localStorage.setItem('inua_token', token);
+    localStorage.setItem('inua_user', JSON.stringify(currentUser));
+    updateNav();
+    toast(`Welcome back, ${currentUser.name.split(' ')[0]}! 👋`, 'success');
+    showPage(currentUser.role === 'mentee' ? 'mentors' : 'sessions');
+  } else {
+    setAlert('login-alert', data.detail || 'Invalid email or password.');
+  }
+}
+
+function fillLogin(email) {
+  document.getElementById('login-email').value = email;
+  document.getElementById('login-password').value = 'Password123!';
+}
+
+function logout() {
+  token = null; currentUser = null;
+  localStorage.removeItem('inua_token');
+  localStorage.removeItem('inua_user');
+  updateNav();
+  toast('Signed out successfully.', 'info');
+  showPage('landing');
+}
+
+function toggleRoleFields() {
+  const role = document.getElementById('reg-role').value;
+  document.getElementById('mentee-fields').classList.toggle('section-hidden', role !== 'mentee');
+  document.getElementById('mentor-fields').classList.toggle('section-hidden', role !== 'mentor');
+}
+
+// ═══════════════════════════════════════════
+// Mentors
+// ═══════════════════════════════════════════
+let mentorsData = [];
+
+async function loadMentors() {
+  const industry  = document.getElementById('mentor-filter-industry')?.value  || '';
+  const expertise = document.getElementById('mentor-filter-expertise')?.value || '';
+  let url = '/api/v1/mentors';
+  const params = [];
+  if (industry)  params.push(`industry=${encodeURIComponent(industry)}`);
+  if (expertise) params.push(`expertise=${encodeURIComponent(expertise)}`);
+  if (params.length) url += '?' + params.join('&');
+
+  document.getElementById('mentor-grid').innerHTML = `<div class="col-span-3 py-12 text-center text-slate2-400"><div class="spinner mx-auto mb-3"></div><p>Loading mentors…</p></div>`;
+  const { ok, data } = await apiFetch(url);
+  if (!ok) { setAlert('mentor-alert', 'Could not load mentors. Please log in first.'); return; }
+  mentorsData = data;
+  renderMentors(data);
+}
+
+function renderMentors(mentors) {
+  const grid = document.getElementById('mentor-grid');
+  if (!mentors.length) { grid.innerHTML = `<div class="col-span-3 py-12 text-center text-slate2-400">😕 No mentors match your filters.</div>`; return; }
+  grid.innerHTML = mentors.map(m => {
+    const bg = avatarColor(m.name);
+    const ini = initials(m.name);
+    return `
+    <div class="mentor-card" onclick="openBooking(${m.mentor_id}, '${m.name.replace(/'/g,"\\'")}', '${m.industry}', '${m.expertise}')">
+      <div class="flex items-center gap-3 mb-3">
+        <div class="avatar text-white text-base" style="background:${bg}">${ini}</div>
+        <div>
+          <div class="font-bold text-slate2-800 text-sm">${m.name}</div>
+          <div class="text-xs text-sage-600 font-semibold">${m.industry}</div>
+        </div>
+        <div class="ml-auto">
+          <span class="status-badge" style="background:#e0ede5;color:#265438;">✓ Verified</span>
+        </div>
+      </div>
+      <p class="text-sm text-slate2-600 mb-3"><span class="font-medium">Expertise:</span> ${m.expertise}</p>
+      <p class="text-sm text-slate2-500">${m.experience_years} year${m.experience_years!==1?'s':''} of experience</p>
+      <div class="mt-4 pt-3 border-t border-sage-100">
+        <button class="btn-primary w-full py-2 text-sm" onclick="event.stopPropagation();openBooking(${m.mentor_id},'${m.name.replace(/'/g,"\\'")}','${m.industry}','${m.expertise}')">
+          Book a Session →
+        </button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openBooking(mentorId, mentorName, industry, expertise) {
+  if (!token) { toast('Please sign in first to book a session.', 'error'); showPage('login'); return; }
+  if (currentUser?.role !== 'mentee') { toast('Only mentees can book sessions.', 'error'); return; }
+  document.getElementById('book-mentor-id').value = mentorId;
+  document.getElementById('book-mentor-name').textContent = `with ${mentorName} · ${expertise} · ${industry}`;
+  setAlert('book-alert', '');
+  // set default datetime to tomorrow at 10am
+  const d = new Date(); d.setDate(d.getDate()+1); d.setHours(10,0,0,0);
+  document.getElementById('book-date').value = d.toISOString().slice(0,16);
+  showPage('book');
+}
+
+async function doBookSession(e) {
+  e.preventDefault();
+  setAlert('book-alert','');
+  setLoading('book-btn', true);
+  const body = {
+    mentor_id:       parseInt(document.getElementById('book-mentor-id').value),
+    session_date:    document.getElementById('book-date').value,
+    duration:        parseInt(document.getElementById('book-duration').value),
+    session_type:    document.getElementById('book-type').value,
+    meeting_platform:document.getElementById('book-platform').value,
+    goal_category:   document.getElementById('book-goal').value,
+  };
+  const { ok, data } = await apiFetch('/api/v1/sessions/book', { method:'POST', body: JSON.stringify(body) });
+  setLoading('book-btn', false, 'Confirm Booking');
+  if (ok) {
+    toast('Session booked! 🎉 Check "My Sessions" for details.', 'success');
+    showPage('sessions');
+  } else {
+    const msg = data.detail || 'Booking failed. Please try a different time.';
+    setAlert('book-alert', msg, data.status===409 ? 'warn' : 'error');
+  }
+}
+
+// ═══════════════════════════════════════════
+// Sessions
+// ═══════════════════════════════════════════
+async function loadSessions() {
+  const statusF = document.getElementById('session-status-filter')?.value || '';
+  let url = '/api/v1/sessions';
+  if (statusF) url += `?status=${statusF}`;
+
+  document.getElementById('sessions-list').innerHTML = `<div class="py-12 text-center text-slate2-400"><div class="spinner mx-auto mb-3"></div><p>Loading sessions…</p></div>`;
+  const { ok, data } = await apiFetch(url);
+  if (!ok) { setAlert('sessions-alert', 'Could not load sessions.'); return; }
+
+  const sessions = data.sessions || [];
+  const list = document.getElementById('sessions-list');
+  if (!sessions.length) {
+    list.innerHTML = `<div class="card p-10 text-center text-slate2-400">
+      <div class="text-5xl mb-4">📭</div>
+      <p class="font-semibold mb-2">No sessions yet</p>
+      <p class="text-sm mb-4">Book your first mentorship session to get started.</p>
+      <button onclick="showPage('mentors')" class="btn-primary">Find a Mentor</button>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = sessions.map(s => {
+    const date = s.session_date ? new Date(s.session_date).toLocaleString('en-KE', { dateStyle:'medium', timeStyle:'short' }) : 'TBD';
+    const otherName = currentUser?.role === 'mentee' ? (s.mentor_name||`Mentor #${s.mentor_id}`) : (s.mentee_name||`Mentee #${s.mentee_id}`);
+    const otherLabel = currentUser?.role === 'mentee' ? 'Mentor' : 'Mentee';
+    const bg = avatarColor(otherName);
+    const ini = initials(otherName);
+    const canUpdate = !['Completed','Cancelled'].includes(s.status);
+    return `
+    <div class="session-row">
+      <div class="flex items-start gap-4 flex-wrap">
+        <div class="avatar text-white" style="background:${bg}">${ini}</div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 flex-wrap mb-1">
+            <span class="font-bold text-slate2-800">${otherLabel}: ${otherName}</span>
+            <span class="status-badge status-${s.status}">${statusEmoji(s.status)} ${s.status}</span>
+          </div>
+          <div class="text-sm text-slate2-500 flex flex-wrap gap-3 mt-1">
+            <span>📅 ${date}</span>
+            <span>⏱ ${s.duration} min</span>
+            <span>💬 ${s.session_type}</span>
+            <span>🎯 ${s.goal_category||'—'}</span>
+            <span>📡 ${s.meeting_platform}</span>
+          </div>
+        </div>
+        <div class="flex gap-2 ml-auto flex-wrap">
+          ${canUpdate ? `<button onclick="openStatusModal(${s.session_id},'${s.status}')" class="btn-secondary py-1.5 px-3 text-xs">Update Status</button>` : ''}
+          ${s.has_feedback ? `<span class="status-badge" style="background:#eff6ff;color:#1e40af;">💬 Feedback</span>` : ''}
+          ${s.has_prediction ? `<span class="status-badge" style="background:#f5f3ff;color:#5b21b6;">🤖 Scored</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function statusEmoji(s) {
+  return { Scheduled:'📅', Completed:'✅', Cancelled:'❌', Rescheduled:'🔄', Pending:'⏳' }[s] || '•';
+}
+
+// ═══════════════════════════════════════════
+// Status Update Modal
+// ═══════════════════════════════════════════
+function openStatusModal(sessionId, currentStatus) {
+  const transitions = {
+    Pending:     ['Scheduled','Cancelled'],
+    Scheduled:   ['Completed','Cancelled','Rescheduled'],
+    Rescheduled: ['Completed','Cancelled','Scheduled'],
+    Completed:   [], Cancelled: [],
+  };
+  const allowed = transitions[currentStatus] || [];
+
+  document.getElementById('modal-title').textContent = `Update Session #${sessionId}`;
+  document.getElementById('modal-sub').textContent = `Current status: ${currentStatus}`;
+  document.getElementById('modal-icon').textContent = '🔄';
+
+  if (!allowed.length) {
+    document.getElementById('modal-body').innerHTML = `<div class="alert alert-info">ℹ️ This session is in a terminal state (<b>${currentStatus}</b>) and cannot be updated further.</div>`;
+  } else {
+    document.getElementById('modal-body').innerHTML = `
+      <div id="status-modal-alert"></div>
+      <label class="mb-2">New Status</label>
+      <select id="modal-status" class="mb-4">
+        ${allowed.map(s=>`<option value="${s}">${s}</option>`).join('')}
+      </select>
+      <div id="reschedule-row" class="section-hidden mb-4">
+        <label>New Date &amp; Time</label>
+        <input type="datetime-local" id="modal-reschedule-date">
+      </div>
+      <button class="btn-primary w-full" onclick="submitStatusUpdate(${sessionId})">Confirm Update</button>
+    `;
+    document.getElementById('modal-status').addEventListener('change', function() {
+      document.getElementById('reschedule-row').classList.toggle('section-hidden', this.value !== 'Rescheduled');
     });
-  </script>
+  }
+
+  document.getElementById('modal-overlay').classList.remove('section-hidden');
+}
+
+async function submitStatusUpdate(sessionId) {
+  setAlert('status-modal-alert','');
+  const newStatus = document.getElementById('modal-status').value;
+  const body = { status: newStatus };
+  if (newStatus === 'Rescheduled') {
+    const rd = document.getElementById('modal-reschedule-date').value;
+    if (!rd) { setAlert('status-modal-alert','Please provide a new date for rescheduling.','warn'); return; }
+    body.rescheduled_date = rd;
+  }
+  const { ok, data } = await apiFetch(`/api/v1/sessions/${sessionId}/status`, { method:'PATCH', body: JSON.stringify(body) });
+  if (ok) {
+    toast(`Session updated to "${newStatus}" ✅`, 'success');
+    closeModal();
+    loadSessions();
+  } else {
+    setAlert('status-modal-alert', data.detail || 'Update failed.', 'error');
+  }
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.add('section-hidden');
+}
+
+// ═══════════════════════════════════════════
+// AI Score / Predict
+// ═══════════════════════════════════════════
+async function doPredict(e) {
+  e.preventDefault();
+  setAlert('predict-alert','');
+  document.getElementById('predict-result').classList.add('section-hidden');
+  setLoading('predict-btn', true);
+
+  const body = {
+    interaction_frequency: parseInt(document.getElementById('p-freq').value),
+    session_duration_minutes: parseInt(document.getElementById('p-dur').value),
+    career_support_score: parseFloat(document.getElementById('p-career').value),
+    psychosocial_support_score: parseFloat(document.getElementById('p-psycho').value),
+    session_type: document.getElementById('p-type').value,
+    goal_category: document.getElementById('p-goal').value,
+    mentor_experience_years: parseFloat(document.getElementById('p-exp').value),
+    meeting_platform: document.getElementById('p-platform').value,
+    mentee_career_stage: document.getElementById('p-stage').value,
+    mentor_industry: document.getElementById('p-industry').value,
+    model: document.getElementById('p-model').value,
+  };
+
+  const { ok, data } = await apiFetch('/api/v1/predict', { method:'POST', body: JSON.stringify(body) });
+  setLoading('predict-btn', false, 'Get AI Score');
+  if (!ok) { setAlert('predict-alert', data.detail || 'Prediction failed.'); return; }
+
+  const score = data.effectiveness_score ?? data.score ?? 0;
+  const pct = Math.round(score * 100);
+  const emoji = pct >= 75 ? '🌟' : pct >= 50 ? '👍' : '💡';
+  const label = pct >= 75 ? 'Highly Effective Mentorship' : pct >= 50 ? 'Moderately Effective' : 'Needs Improvement';
+  const color = pct >= 75 ? '#40855d' : pct >= 50 ? '#d67d3a' : '#c0642a';
+
+  document.getElementById('result-emoji').textContent = emoji;
+  document.getElementById('result-score').textContent = `${pct}% Effectiveness`;
+  document.getElementById('result-score').style.color = color;
+  document.getElementById('result-label').textContent = label + ` · Model: ${data.model_used || body.model}`;
+
+  const breakdown = data.all_scores || {};
+  document.getElementById('result-breakdown').innerHTML = Object.entries(breakdown).map(([k,v]) => {
+    const p = Math.round(v*100);
+    return `<div class="bg-sage-50 rounded-xl p-4">
+      <div class="text-lg font-bold" style="color:${p>=75?'#40855d':p>=50?'#d67d3a':'#c0642a'}">${p}%</div>
+      <div class="text-xs text-slate2-500 mt-1">${k}</div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('predict-result').classList.remove('section-hidden');
+  document.getElementById('predict-result').scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+// ═══════════════════════════════════════════
+// Profile
+// ═══════════════════════════════════════════
+async function loadProfile() {
+  const { ok, data } = await apiFetch('/api/v1/auth/me');
+  if (!ok) return;
+  const u = data;
+  document.getElementById('profile-name').textContent = u.name;
+  document.getElementById('profile-email').textContent = u.email;
+  document.getElementById('profile-role').textContent = u.role;
+  const av = document.getElementById('profile-avatar');
+  av.textContent = initials(u.name);
+  av.style.background = avatarColor(u.name);
+  const prof = u.profile || {};
+  const details = Object.entries(prof).filter(([k,v])=>v).map(([k,v])=>`<div><span class="font-semibold capitalize">${k.replace(/_/g,' ')}:</span> ${v}</div>`).join('');
+  document.getElementById('profile-details').innerHTML = details || '<p class="text-slate2-400">No additional profile info.</p>';
+}
+
+// ═══════════════════════════════════════════
+// Health Check
+// ═══════════════════════════════════════════
+async function checkHealth() {
+  try {
+    const { ok, data } = await apiFetch('/api/v1/health');
+    const dot = document.getElementById('health-dot');
+    const txt = document.getElementById('health-text');
+    if (ok) {
+      dot.className = 'w-3 h-3 rounded-full bg-green-500';
+      txt.textContent = `All systems operational · ML models loaded · ${data.models_loaded?.length || 0} model(s) ready`;
+    } else {
+      dot.className = 'w-3 h-3 rounded-full bg-red-500';
+      txt.textContent = 'Backend unreachable. Please start the server.';
+    }
+  } catch {
+    document.getElementById('health-dot').className = 'w-3 h-3 rounded-full bg-red-500';
+    document.getElementById('health-text').textContent = 'Cannot reach backend.';
+  }
+}
+
+// ═══════════════════════════════════════════
+// Init
+// ═══════════════════════════════════════════
+(function init() {
+  updateNav();
+  checkHealth();
+  if (token && currentUser) {
+    showPage(currentUser.role === 'mentee' ? 'mentors' : 'sessions');
+  } else {
+    showPage('landing');
+  }
+})();
+</script>
 </body>
 </html>
