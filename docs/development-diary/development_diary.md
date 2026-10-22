@@ -148,6 +148,40 @@ It is structured so that any supervisor, internal assessor, or external examiner
 
 ---
 
+### Phase 9: Session Booking, Lifecycle State Machine & Humanistic UI (Issue #6 / FR-02, FR-03 — CLOSED & MERGED)
+* **Branch:** `feat/sessions` (Merged into `main` via commit `cd23cfc`)
+* **Problem Addressed:** Allow mentees to discover verified mentors, book structured mentorship slots with automatic temporal conflict detection, and manage session status transitions.
+* **Deliverables Implemented:**
+  1. `backend/services/session_service.py`:
+     * Overlap conflict detection rejecting conflicting schedules for both mentor and mentee (`409 Conflict`).
+     * Permitted status transitions enforcement (`Scheduled` -> `Completed`, `Cancelled`, `Rescheduled`; terminal states validation).
+     * Dyadic interaction frequency counter updating with each booking.
+  2. `backend/routes/mentors.py` & `backend/routes/sessions.py`:
+     * `GET /api/v1/mentors`: Public directory filtered by industry/expertise.
+     * `POST /api/v1/sessions/book`: Mentee session booking.
+     * `GET /api/v1/sessions`: Role-filtered sessions listing.
+     * `PATCH /api/v1/sessions/{id}/status`: Lifecycle transitions with optional reschedule conflict validation.
+  3. `frontend/index.html`: Completely redesigned humanistic dashboard in warm sage green, featuring responsive booking forms, status timeline, and one-click demo credentials.
+  4. `backend/tests/test_sessions.py`: 37 automated test assertions (**100% PASS**).
+
+---
+
+### Phase 10: Post-Session Mentee Feedback Submission (Issue #7 / FR-04 — PR #20 OPEN)
+* **Branch:** `feat/feedback` (Pull Request #20 linked to Issue #7)
+* **Problem Addressed:** Implement mentee evaluation ratings and qualitative reflections following a completed mentorship session.
+* **Deliverables Implemented:**
+  1. `backend/services/feedback_service.py`:
+     * Pre-condition enforcement: only the assigned mentee can submit feedback and the session status must be `Completed` (`422 Unprocessable Content` if not completed, `403 Forbidden` if caller is not the mentee).
+     * Duplicate feedback prevention enforcing one evaluation per session (`409 Conflict`).
+  2. `backend/routes/feedback.py`:
+     * `POST /api/v1/sessions/{session_id}/feedback`: Submits Likert scores (communication, goal progress, confidence growth, overall rating) and optional qualitative reflections.
+     * `GET /api/v1/sessions/{session_id}/feedback`: Retrieves evaluation records with access restrictions (mentee, mentor, administrator).
+  3. `backend/models/schemas.py`: Added `FeedbackSubmitRequest` and `FeedbackResponse` with 1.0 to 5.0 range validation.
+  4. `frontend/index.html`: Added interactive 'Give Feedback' modal and 'View Feedback' score card to session cards.
+  5. `backend/tests/test_feedback.py`: 20 automated assertions (**100% PASS**). Total backend assertions: **76/76 PASS**.
+
+---
+
 ## 3. How to Run & Verify the Project (Examiner & Reviewer Guide)
 
 Follow these steps from a terminal to run and verify every layer of the system:
@@ -270,17 +304,14 @@ Provides an interactive client dashboard demonstrating live parameter adjustment
 * [x] **#2 `feat(ml): per-prediction feature explanations (NFR-05)`**
 * [x] **#3 `feat(db): create PostgreSQL schema from the logical schema`**
 * [x] **#4 `feat(backend): scaffold FastAPI app, folder structure, config`**
-* [x] **#5 `feat(backend): implement /auth/register and /auth/login (FR-01, IR-01, NFR-02)`** (Branch: `5-featbackend-implement-authregister-and-authlogin-fr-01`)
+* [x] **#5 `feat(backend): implement /auth/register and /auth/login (FR-01, IR-01, NFR-02)`** (PR #19 merged)
+* [x] **#6 `feat(backend): implement session booking and status endpoints (FR-02, FR-03)`** (PR merged as cd23cfc)
+* [x] **#7 `feat(backend): implement feedback submission endpoint (FR-04)`** (PR #20 open)
 
 ---
 
 ### Branching Strategy for Upcoming Issues:
 In accordance with professional software engineering practice and course requirements, each remaining issue will be developed on a **distinct feature branch**, tested independently, and merged into `main` via Pull Request:
-
-1. **Issue #6 (`feat/sessions-issue-6`)**:
-   * Session booking and status transition endpoints (FR-02, FR-03).
-3. **Issue #7 (`feat/feedback-issue-7`)**:
-   * Mentee feedback submission endpoint (FR-04).
 4. **Issue #8 (`feat/prediction-pipeline-issue-8`)**:
    * Wire automated prediction inference to feedback submission (FR-05, FR-06, IR-02).
 5. **Issue #9 (`feat/analytics-issue-9`)**:
