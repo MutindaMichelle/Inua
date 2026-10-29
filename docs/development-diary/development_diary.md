@@ -182,8 +182,8 @@ It is structured so that any supervisor, internal assessor, or external examiner
 
 ---
 
-### Phase 11: Machine Learning Prediction Pipeline & TreeSHAP Local Attributions (Issue #8 / FR-05, FR-06, IR-02 — PR #21 OPEN)
-* **Branch:** `feat/predictions` (Pull Request #21 linked to Issue #8)
+### Phase 11: Machine Learning Prediction Pipeline & TreeSHAP Local Attributions (Issue #8 / FR-05, FR-06, IR-02 — CLOSED & MERGED)
+* **Branch:** `feat/predictions` (PR #21 merged into `main` via commit `9ad52d5`, Issue #8 closed)
 * **Problem Addressed:** Connect trained ML models (XGBoost, Random Forest, AdaBoost) to a dedicated `/predictions` endpoint, evaluate session data, generate per-prediction TreeSHAP local explanations (NFR-05), and persist predictions in the relational schema.
 * **Deliverables Implemented:**
   1. `backend/services/prediction_service.py`:
@@ -199,6 +199,25 @@ It is structured so that any supervisor, internal assessor, or external examiner
   4. `backend/models/schemas.py`: Added `PredictionCreateRequest`, `StoredPredictionResponse`, and `PredictionDetailResponse`.
   5. `frontend/index.html`: Interactive 'View AI Diagnosis' modal displaying effectiveness status, confidence meter, recommendation, and signed TreeSHAP feature drivers.
   6. `backend/tests/test_predictions.py`: 34 automated assertions (**100% PASS**). Total backend suite: **110/110 PASS**.
+
+---
+
+### Phase 12: Mentor Quality Profiles & Administrator Analytics (Issue #9 / FR-07, FR-08 — PR #22 OPEN)
+* **Branch:** `feat/9-mentor-quality-admin-analytics` (Pull Request #22 linked to Issue #9)
+* **Problem Addressed:** Implement mentor longitudinal quality profiles based on completed sessions, student feedback, and AI evaluations, and provide platform-wide analytics for system administrators.
+* **Deliverables Implemented:**
+  1. `backend/services/mentor_quality_service.py`:
+     * `compute_mentor_quality`: Longitudinal metrics including total and completed session volume, unique mentees guided, Likert rating averages (communication, goal progress, confidence, overall rating), and updates `mentor_quality_profiles` table.
+     * `compute_all_mentor_profiles`: Ranked list of all verified mentor performance profiles.
+     * `compute_admin_analytics_overview`: System-wide aggregations across user cohorts, session statuses, feedback satisfaction, and prediction distributions.
+  2. `backend/routes/mentors.py`:
+     * `GET /api/v1/mentors/{mentor_id}/quality`: Individual mentor quality profile (FR-07).
+     * `GET /api/v1/mentors/quality-profiles`: Full verified mentor quality rankings directory.
+  3. `backend/routes/analytics.py`:
+     * `GET /api/v1/analytics/admin/overview`: System-wide statistics strictly guarded by `require_roles('administrator')` (FR-08).
+     * `GET /api/v1/analytics/admin/mentors`: Full mentor audit rankings for administrators.
+  4. `backend/models/schemas.py`: Added `MentorQualityProfileResponse` and `AdminAnalyticsOverviewResponse`.
+  5. `backend/tests/test_analytics_admin.py`: 29 automated assertions (**100% PASS**). Total backend test suite: **139/139 PASS**.
 
 ---
 
@@ -327,16 +346,15 @@ Provides an interactive client dashboard demonstrating live parameter adjustment
 * [x] **#5 `feat(backend): implement /auth/register and /auth/login (FR-01, IR-01, NFR-02)`** (PR #19 merged)
 * [x] **#6 `feat(backend): implement session booking and status endpoints (FR-02, FR-03)`** (PR merged as cd23cfc)
 * [x] **#7 `feat(backend): implement feedback submission endpoint (FR-04)`** (PR #20 merged as 7e1c135)
-* [x] **#8 `feat(backend,ml): connect prediction model to /predictions endpoint (FR-05, FR-06, IR-02)`** (PR #21 open)
+* [x] **#8 `feat(backend,ml): connect prediction model to /predictions endpoint (FR-05, FR-06, IR-02)`** (PR #21 merged as 9ad52d5)
+* [x] **#9 `feat(backend): implement mentor quality profiles and admin analytics (FR-07, FR-08)`** (PR #22 open)
 
 ---
 
 ### Branching Strategy for Upcoming Issues:
 In accordance with professional software engineering practice and course requirements, each remaining issue will be developed on a **distinct feature branch**, tested independently, and merged into `main` via Pull Request:
 
-1. **Issue #9 (`feat/analytics`)**:
-   * Mentor quality profile aggregation and admin platform analytics (FR-07, FR-08).
-2. **Issue #10 (`test/integration`)**:
+1. **Issue #10 (`test/10-integration-test-suite`)**:
    * End-to-end integration test suite.
 4. **Issue #8 (`feat/prediction-pipeline-issue-8`)**:
    * Wire automated prediction inference to feedback submission (FR-05, FR-06, IR-02).
