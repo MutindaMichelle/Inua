@@ -34,6 +34,14 @@ def _session_end(start: datetime, duration_minutes: int) -> datetime:
     return start + timedelta(minutes=duration_minutes)
 
 
+def _to_naive_utc(dt) -> "datetime":
+    """Normalize datetime to timezone-naive UTC for safe comparison."""
+    from datetime import timezone as _tz
+    if dt.tzinfo is not None:
+        return dt.astimezone(_tz.utc).replace(tzinfo=None)
+    return dt
+
+
 def check_session_conflict(
     db: Session,
     mentor_id: int,
@@ -47,7 +55,11 @@ def check_session_conflict(
     Returns a human-readable conflict message string, or None if clear.
     Two sessions conflict when their intervals overlap:
         max(start1, start2) < min(end1, end2)
+    All datetimes are normalized to naive UTC before comparison to avoid
+    TypeError from mixing offset-aware and offset-naive datetimes.
     """
+    # Normalize incoming datetime to naive UTC
+    start_time = _to_naive_utc(start_time)
     end_time = _session_end(start_time, duration_minutes)
     active_statuses = ("Scheduled", "Pending", "Rescheduled")
 
@@ -66,7 +78,8 @@ def check_session_conflict(
     ).all()
 
     for s in active_sessions:
-        s_start = s.session_date
+        # Normalize stored datetime to naive UTC for safe comparison
+        s_start = _to_naive_utc(s.session_date)
         s_end = _session_end(s_start, s.duration)
 
         # Overlap condition: max(start1, start2) < min(end1, end2)

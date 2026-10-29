@@ -362,3 +362,72 @@ In accordance with professional software engineering practice and course require
    * Mentor quality profile aggregation and admin platform analytics (FR-07, FR-08).
 6. **Issue #10 (`test/integration-issue-10`)**:
    * End-to-end integration test suite.
+
+
+---
+
+### Phase 13: End-to-End Integration Test Suite & Backend MVP Completion (Issue #10)
+
+**Date:** 29 October 2026
+**Branch:** `test/10-integration-core-api-workflows`
+**Requirements Covered:** All FR-01 to FR-08, IR-01, IR-02, NFR-02 (Full end-to-end verification)
+
+#### Problem Addressed
+With all six feature endpoints individually unit-tested and merged, Milestone 1 required a final integration sweep proving that all API layers compose correctly end-to-end -- that a full mentee lifecycle (register -> discover mentor -> book session -> complete -> submit feedback -> trigger ML prediction -> inspect quality profile -> admin analytics) works as a coherent system, not merely as isolated units.
+
+#### Engineering Work Executed
+
+**1. Datetime Normalization Fix (`session_service.py`)**
+- **Root cause:** `check_session_conflict()` compared incoming `start_time` (timezone-aware UTC from Pydantic ISO parsing) against `session_date` stored in SQLite (timezone-naive). Python raises `TypeError: can't compare offset-naive and offset-aware datetimes`.
+- **Fix:** Added `_to_naive_utc(dt)` helper that strips `tzinfo` after converting to UTC, normalizing both sides of the comparison to naive UTC before `max(...) < min(...)` overlap check.
+- **Files patched:** `backend/services/session_service.py` (both repos).
+
+**2. Integration Test Suite (`backend/tests/test_integration_workflows.py`)**
+Created a comprehensive 44-assertion, 8-stage end-to-end test script:
+
+| Stage | Workflow Verified | Assertions |
+|-------|-------------------|-----------|
+| 1 | Persona Registration & Authentication (mentee, mentor, admin) | 8 |
+| 2 | Mentor Discovery & Quality Profile Inspection | 3 |
+| 3 | Session Booking, Conflict Prevention & Lifecycle Transitions | 6 |
+| 4 | Post-Session Feedback Submission & Duplicate Prevention | 3 |
+| 5 | Automated ML Prediction & TreeSHAP Explanations | 7 |
+| 6 | Mentor Quality Profile Recalculation & Aggregation | 6 |
+| 7 | Administrator Analytics & Strict RBAC Enforcement | 8 |
+| 8 | Security, Boundary & Unauthorized Access Validations | 3 |
+| **Total** | | **44/44** |
+
+**3. Unified Test Runner (`backend/tests/run_all_tests.py`)**
+Created a master test runner that sequentially executes all 7 test suites and produces a consolidated pass/fail summary. Final verified results:
+
+```
+Total Test Suites Executed : 7
+Suites Passed              : 7
+Suites Failed              : 0
+ALL BACKEND MVP TEST SUITES PASSED WITH 100% SUCCESS!
+```
+
+#### Cumulative Test Coverage Across Milestone 1
+
+| Test Suite | Requirements | Assertions |
+|-----------|--------------|-----------|
+| `test_api.py` | Scaffold & Health | 5 |
+| `test_auth.py` | FR-01, IR-01, NFR-02 | 14 |
+| `test_sessions.py` | FR-02, FR-03 | 37 |
+| `test_feedback.py` | FR-04 | 20 |
+| `test_predictions.py` | FR-05, FR-06, IR-02 | 34 |
+| `test_analytics_admin.py` | FR-07, FR-08 | 29 |
+| `test_integration_workflows.py` | End-to-End (all FRs) | 44 |
+| **Grand Total** | | **183 assertions** |
+
+#### Milestone 1 -- Backend MVP: COMPLETE
+
+All 10 issues closed. All 8 functional requirements (FR-01 to FR-08) implemented, tested, and verified. All integration requirements (IR-01, IR-02) satisfied. NFR-02 (RBAC) enforced end-to-end across all endpoints.
+
+#### Completed Issues -- Milestone 1 Branch Map:
+1. Issue #5 (`feat/5-featbackend-implement-authregister-and-authlogin`) -> PR #19 merged (2271a1e)
+2. Issue #6 (`feat/sessions`) -> PR merged (cd23cfc)
+3. Issue #7 (`feat/feedback`) -> PR #20 merged (7e1c135)
+4. Issue #8 (`feat/predictions`) -> PR #21 merged (9ad52d5)
+5. Issue #9 (`feat/9-mentor-quality-admin-analytics`) -> PR #22 merged (c944338)
+6. Issue #10 (`test/10-integration-core-api-workflows`) -> PR #23 merged (Milestone 1 Complete)
