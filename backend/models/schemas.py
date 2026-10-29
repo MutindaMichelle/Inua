@@ -356,3 +356,50 @@ class PredictionDetailResponse(BaseModel):
     risk_factors: List[str] = []
     feature_contributions: List[dict] = []
     predicted_at: Optional[str] = None
+
+
+
+# ==========================================
+# Mentor Quality & Admin Analytics (FR-07, FR-08)
+# ==========================================
+
+class MentorQualityProfileResponse(BaseModel):
+    """Longitudinal mentor performance and feedback summary (FR-07)."""
+    mentor_id: int
+    name: str
+    email: str
+    industry: str
+    expertise: str
+    experience_years: float
+    is_verified: bool
+    total_sessions: int
+    completed_sessions: int
+    unique_mentees_count: int
+    average_communication_score: float
+    average_goal_progress: float
+    average_confidence_growth: float
+    average_overall_rating: float
+    total_feedback_count: int
+    effective_sessions_count: int
+    effectiveness_rate_percentage: float
+    aggregate_effectiveness_score: float
+    recent_comments: List[str] = []
+    last_update: Optional[str] = None
+
+
+class AdminAnalyticsOverviewResponse(BaseModel):
+    """Platform-wide system analytics and health statistics (FR-08)."""
+    total_users: int
+    users_by_role: Dict[str, int]
+    total_sessions: int
+    sessions_by_status: Dict[str, int]
+    total_feedback_entries: int
+    total_predictions: int
+    predictions_breakdown: Dict[str, int]
+    average_platform_satisfaction: float
+    average_communication_score: float
+    average_goal_progress: float
+    average_confidence_growth: float
+    active_mentors_count: int
+    active_mentees_count: int
+    top_performing_mentors: List[Dict[str, Any]] = []
