@@ -1,7 +1,7 @@
 """
-INUA Mentorship Platform: Mentor Directory Routes
+INUA Mentorship Platform: Mentor Directory & Quality Profile Routes
 Author: Michelle (Final Year Project - BICS Year 4, Strathmore University)
-Requirements: FR-02 (Mentor Discovery for Session Booking)
+Requirements: FR-02 (Mentor Discovery), FR-07 (Mentor Quality Profile)
 """
 
 import sys
@@ -17,8 +17,12 @@ if str(BACKEND_DIR) not in sys.path:
 
 from db.session import get_db
 from models.database import Mentor, User
-from models.schemas import MentorSummaryResponse
+from models.schemas import MentorSummaryResponse, MentorQualityProfileResponse
 from services.auth_service import get_current_user
+from services.mentor_quality_service import (
+    compute_mentor_quality,
+    compute_all_mentor_profiles,
+)
 
 router = APIRouter(prefix="/mentors", tags=["Mentors"])
 
@@ -58,6 +62,43 @@ def list_mentors(
         )
         for m in mentors
     ]
+
+
+@router.get(
+    "/quality-profiles",
+    response_model=List[MentorQualityProfileResponse],
+    summary="Get aggregated quality profiles for all verified mentors (FR-07)",
+)
+def get_all_mentor_quality_profiles(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Returns performance, feedback, and effectiveness rankings for all verified mentors.
+    Accessible to all authenticated users.
+    """
+    return compute_all_mentor_profiles(db)
+
+
+@router.get(
+    "/{mentor_id}/quality",
+    response_model=MentorQualityProfileResponse,
+    summary="Get longitudinal quality profile and feedback summary for a mentor (FR-07)",
+)
+def get_mentor_quality(
+    mentor_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Returns longitudinal metrics for a specific mentor including:
+    - Total and completed session counts
+    - Unique mentees guided
+    - Average Likert feedback ratings (communication, goal progress, confidence, overall)
+    - AI effectiveness rate and aggregate quality score
+    - Recent student comments
+    """
+    return compute_mentor_quality(db, mentor_id)
 
 
 @router.get(
