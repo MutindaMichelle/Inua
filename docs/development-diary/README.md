@@ -166,8 +166,8 @@ It is structured so that any supervisor, internal assessor, or external examiner
 
 ---
 
-### Phase 10: Post-Session Mentee Feedback Submission (Issue #7 / FR-04 — PR #20 OPEN)
-* **Branch:** `feat/feedback` (Pull Request #20 linked to Issue #7)
+### Phase 10: Post-Session Mentee Feedback Submission (Issue #7 / FR-04 — CLOSED & MERGED)
+* **Branch:** `feat/feedback` (PR #20 merged into `main` via commit `7e1c135`, Issue #7 closed)
 * **Problem Addressed:** Implement mentee evaluation ratings and qualitative reflections following a completed mentorship session.
 * **Deliverables Implemented:**
   1. `backend/services/feedback_service.py`:
@@ -179,6 +179,26 @@ It is structured so that any supervisor, internal assessor, or external examiner
   3. `backend/models/schemas.py`: Added `FeedbackSubmitRequest` and `FeedbackResponse` with 1.0 to 5.0 range validation.
   4. `frontend/index.html`: Added interactive 'Give Feedback' modal and 'View Feedback' score card to session cards.
   5. `backend/tests/test_feedback.py`: 20 automated assertions (**100% PASS**). Total backend assertions: **76/76 PASS**.
+
+---
+
+### Phase 11: Machine Learning Prediction Pipeline & TreeSHAP Local Attributions (Issue #8 / FR-05, FR-06, IR-02 — PR #21 OPEN)
+* **Branch:** `feat/predictions` (Pull Request #21 linked to Issue #8)
+* **Problem Addressed:** Connect trained ML models (XGBoost, Random Forest, AdaBoost) to a dedicated `/predictions` endpoint, evaluate session data, generate per-prediction TreeSHAP local explanations (NFR-05), and persist predictions in the relational schema.
+* **Deliverables Implemented:**
+  1. `backend/services/prediction_service.py`:
+     * `build_session_features`: Constructs the complete 18-feature input payload from dyad records (mentee, mentor, session, feedback).
+     * `predict_and_store_session`: Executes ML inference, computes probability, extracts top 5 TreeSHAP local feature attributions, and stores record in `predictions` table.
+     * Role-based access validation for prediction retrieval.
+  2. `backend/routes/predictions.py`:
+     * `POST /api/v1/predictions`: Evaluates session by `session_id` (with DB persistence) or raw features (stateless).
+     * `GET /api/v1/predictions`: Role-filtered prediction history (mentee, mentor, administrator).
+     * `GET /api/v1/predictions/{id}`: Direct prediction lookup.
+     * `GET /api/v1/sessions/{id}/prediction`: Dyad session outcome lookup.
+  3. `backend/routes/feedback.py`: Automated pipeline trigger evaluating session effectiveness upon feedback submission.
+  4. `backend/models/schemas.py`: Added `PredictionCreateRequest`, `StoredPredictionResponse`, and `PredictionDetailResponse`.
+  5. `frontend/index.html`: Interactive 'View AI Diagnosis' modal displaying effectiveness status, confidence meter, recommendation, and signed TreeSHAP feature drivers.
+  6. `backend/tests/test_predictions.py`: 34 automated assertions (**100% PASS**). Total backend suite: **110/110 PASS**.
 
 ---
 
@@ -306,12 +326,18 @@ Provides an interactive client dashboard demonstrating live parameter adjustment
 * [x] **#4 `feat(backend): scaffold FastAPI app, folder structure, config`**
 * [x] **#5 `feat(backend): implement /auth/register and /auth/login (FR-01, IR-01, NFR-02)`** (PR #19 merged)
 * [x] **#6 `feat(backend): implement session booking and status endpoints (FR-02, FR-03)`** (PR merged as cd23cfc)
-* [x] **#7 `feat(backend): implement feedback submission endpoint (FR-04)`** (PR #20 open)
+* [x] **#7 `feat(backend): implement feedback submission endpoint (FR-04)`** (PR #20 merged as 7e1c135)
+* [x] **#8 `feat(backend,ml): connect prediction model to /predictions endpoint (FR-05, FR-06, IR-02)`** (PR #21 open)
 
 ---
 
 ### Branching Strategy for Upcoming Issues:
 In accordance with professional software engineering practice and course requirements, each remaining issue will be developed on a **distinct feature branch**, tested independently, and merged into `main` via Pull Request:
+
+1. **Issue #9 (`feat/analytics`)**:
+   * Mentor quality profile aggregation and admin platform analytics (FR-07, FR-08).
+2. **Issue #10 (`test/integration`)**:
+   * End-to-end integration test suite.
 4. **Issue #8 (`feat/prediction-pipeline-issue-8`)**:
    * Wire automated prediction inference to feedback submission (FR-05, FR-06, IR-02).
 5. **Issue #9 (`feat/analytics-issue-9`)**:

@@ -314,3 +314,45 @@ class FeedbackResponse(BaseModel):
     overall_rating: float
     comments: Optional[str] = None
     submitted_at: Optional[str] = None
+
+
+
+# ==========================================
+# Prediction Schemas (FR-05, FR-06, IR-02)
+# ==========================================
+
+class PredictionCreateRequest(BaseModel):
+    """Payload to trigger an effectiveness prediction for a session or raw features."""
+    session_id: Optional[int] = Field(
+        None, description="ID of existing session to evaluate and save prediction for", example=1
+    )
+    model_name: Optional[Literal["XGBoost", "Random Forest", "AdaBoost"]] = Field(
+        "XGBoost", description="Ensemble classifier to use for inference"
+    )
+    session_features: Optional[MentorshipSessionInput] = Field(
+        None, description="Optional manual feature overrides"
+    )
+
+
+class StoredPredictionResponse(BaseModel):
+    """Database entity representation of a prediction record."""
+    prediction_id: int
+    session_id: int
+    effectiveness_label: str
+    probability: float
+    model_version: str
+    predicted_at: Optional[str] = None
+
+
+class PredictionDetailResponse(BaseModel):
+    """Comprehensive prediction outcome including explanations and recommendations."""
+    prediction_id: Optional[int] = None
+    session_id: Optional[int] = None
+    prediction: int = Field(..., description="1 = Effective, 0 = Ineffective")
+    status: str = Field(..., description="'Effective' or 'Ineffective / Needs Intervention'")
+    effectiveness_probability: float
+    model_used: str
+    recommendation: str
+    risk_factors: List[str] = []
+    feature_contributions: List[dict] = []
+    predicted_at: Optional[str] = None
