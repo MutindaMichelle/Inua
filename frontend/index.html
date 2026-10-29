@@ -802,7 +802,7 @@ async function loadSessions() {
           ${canUpdate ? `<button onclick="openStatusModal(${s.session_id},'${s.status}')" class="btn-secondary py-1.5 px-3 text-xs">Update Status</button>` : ''}
           ${currentUser?.role === 'mentee' && s.status === 'Completed' && !s.has_feedback ? `<button onclick="openFeedbackModal(${s.session_id})" class="btn-primary py-1.5 px-3 text-xs">Give Feedback</button>` : ''}
           ${s.has_feedback ? `<button onclick="viewFeedbackModal(${s.session_id})" class="status-badge cursor-pointer hover:underline" style="background:#eff6ff;color:#1e40af;">💬 View Feedback</button>` : ''}
-          ${s.has_prediction ? `<span class="status-badge" style="background:#f5f3ff;color:#5b21b6;">🤖 Scored</span>` : ''}
+          ${s.has_prediction ? `<button onclick="viewPredictionModal(${s.session_id})" class="status-badge cursor-pointer hover:underline" style="background:#f5f3ff;color:#5b21b6;">🤖 View AI Diagnosis</button>` : (s.status === 'Completed' ? `<button onclick="evaluateSessionPrediction(${s.session_id})" class="btn-secondary py-1.5 px-3 text-xs">Run AI Score</button>` : '')}
         </div>
       </div>
     </div>`;
@@ -999,6 +999,71 @@ async function viewFeedbackModal(sessionId) {
     ` + (d.comments ? `<div class="bg-slate-50 border border-slate-200 rounded-xl p-3 mb-4 text-xs text-slate-700 italic">"` + d.comments + `"</div>` : '') + `
     <p class="text-right text-xs text-slate2-400">Submitted: ` + (d.submitted_at ? new Date(d.submitted_at).toLocaleDateString() : 'N/A') + `</p>
   `;
+}
+
+
+// ═══════════════════════════════════════════
+// Prediction & Diagnosis Modal (FR-05, FR-06)
+// ═══════════════════════════════════════════
+async function viewPredictionModal(sessionId) {
+  document.getElementById('modal-title').textContent = 'AI Mentorship Diagnosis';
+  document.getElementById('modal-sub').textContent = 'Session #' + sessionId + ' Machine Learning Evaluation';
+  document.getElementById('modal-icon').textContent = '🤖';
+
+  document.getElementById('modal-body').innerHTML = '<div class="py-6 text-center"><div class="spinner mx-auto mb-2"></div><p class="text-xs text-slate2-400">Loading AI diagnostics...</p></div>';
+  document.getElementById('modal-overlay').style.display = 'flex';
+
+  const { ok, data } = await apiFetch('/api/v1/predictions', {
+    method: 'POST',
+    body: JSON.stringify({ session_id: sessionId, model_name: 'XGBoost' })
+  });
+
+  if (!ok) {
+    document.getElementById('modal-body').innerHTML = `<div class="alert alert-error">` + (data.detail || 'Could not retrieve AI diagnosis.') + `</div>`;
+    return;
+  }
+
+  const d = data;
+  const isEffective = d.prediction === 1;
+  const pct = Math.round(d.effectiveness_probability * 100);
+
+  let featHtml = '';
+  if (d.feature_contributions && d.feature_contributions.length > 0) {
+    featHtml = `
+      <div class="mt-4">
+        <div class="text-xs font-bold text-slate2-600 uppercase tracking-wider mb-2">Key Drivers (TreeSHAP Local Attribution)</div>
+        <div class="space-y-1.5">
+          ` + d.feature_contributions.map(f => {
+            const isPos = f.contribution > 0;
+            const color = isPos ? 'text-green-700 bg-green-50 border-green-200' : 'text-amber-800 bg-amber-50 border-amber-200';
+            const sign = isPos ? '+' : '';
+            return `<div class="flex items-center justify-between p-2 rounded-lg border text-xs ` + color + `">
+              <span class="font-medium">` + f.feature.replace(/_/g, ' ') + `</span>
+              <span class="font-bold">` + sign + f.contribution + `</span>
+            </div>`;
+          }).join('') + `
+        </div>
+      </div>
+    `;
+  }
+
+  document.getElementById('modal-body').innerHTML = `
+    <div class="card p-4 text-center mb-4 border border-slate-100">
+      <div class="text-3xl mb-1">` + (isEffective ? '🌟' : '⚠️') + `</div>
+      <div class="text-xl font-extrabold ` + (isEffective ? 'text-green-700' : 'text-amber-700') + `">` + d.status + `</div>
+      <div class="text-sm text-slate2-500 mt-1">Confidence: <b>` + pct + `%</b> · Model: ` + d.model_used + `</div>
+    </div>
+    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 mb-3 text-xs text-slate-700">
+      <span class="font-bold text-slate2-800">Recommendation:</span> ` + d.recommendation + `
+    </div>
+    ` + featHtml + `
+  `;
+}
+
+async function evaluateSessionPrediction(sessionId) {
+  toast('Running XGBoost inference with TreeSHAP explanations...', 'info');
+  await viewPredictionModal(sessionId);
+  loadSessions();
 }
 
 function closeModal() {

@@ -1,7 +1,7 @@
 """
 INUA Mentorship Platform: Feedback Endpoints
 Author: Michelle (Final Year Project - BICS Year 4, Strathmore University)
-Requirements: FR-04 (Feedback Submission), NFR-02 (RBAC)
+Requirements: FR-04 (Feedback Submission), NFR-02 (RBAC), IR-02 (ML Integration)
 """
 
 import sys
@@ -61,6 +61,7 @@ def submit_feedback(
     - Session status must be 'Completed'.
     - Duplicate feedback submissions for the same session are rejected with 409 Conflict.
     - All Likert scores validated in 1.0 - 5.0 range.
+    - Automatically triggers ML outcome prediction and saves prediction record (FR-05, IR-02).
     """
     if current_user.role != "mentee":
         raise HTTPException(
@@ -79,6 +80,13 @@ def submit_feedback(
         overall_rating=payload.overall_rating,
         comments=payload.comments,
     )
+
+    # Automatically trigger and persist ML prediction evaluation (FR-05, FR-06, IR-02)
+    try:
+        from services.prediction_service import predict_and_store_session
+        predict_and_store_session(db=db, session_id=session_id)
+    except Exception as e:
+        print(f"[PREDICTION] Notice: automatic prediction generation after feedback: {e}")
 
     return _feedback_to_response(feedback)
 
