@@ -431,3 +431,117 @@ All 10 issues closed. All 8 functional requirements (FR-01 to FR-08) implemented
 4. Issue #8 (`feat/predictions`) -> PR #21 merged (9ad52d5)
 5. Issue #9 (`feat/9-mentor-quality-admin-analytics`) -> PR #22 merged (c944338)
 6. Issue #10 (`test/10-integration-core-api-workflows`) -> PR #23 merged (Milestone 1 Complete)
+
+
+---
+
+### Phase 14: React SPA — Full Frontend Implementation (Milestone 2 / Working Prototype)
+
+**Date:** 5 November 2026
+**Branch:** `feat/frontend-working-prototype`
+**Requirements Covered:** All FR-01 to FR-08 exposed through browser UI; Milestone 2 (Working Prototype)
+
+#### Problem Addressed
+Milestone 1 delivered a fully-tested REST API. Milestone 2 requires a browser-navigable prototype where all three user personas (mentee, mentor, administrator) can complete their full workflows end-to-end without touching Swagger UI.
+
+#### Engineering Work Executed
+
+**1. Application Root & Router (`src/App.jsx`)**
+- Wraps the entire tree in `<AuthProvider>` and `<ToastProvider>`.
+- Declares all client-side routes via React Router v6 `<Routes>`.
+- Implements two reusable guards:
+  - `<Private>` — redirects unauthenticated users to `/login`.
+  - `<RoleGuard roles={[…]}>` — redirects users to `/` if their role is not in the allowed list.
+
+**2. Bug Fix — Navbar import paths**
+- `src/components/layout/Navbar.jsx` imported `AuthContext`, `ToastContext`, and `helpers` with single-level relative paths (`../`) that were incorrect for its nesting depth (`components/layout/`).
+- **Fix:** corrected all three imports to `../../context/…` and `../../utils/…`.
+
+**3. Public Pages**
+| File | Description |
+|------|-------------|
+| `src/pages/LandingPage.jsx` | Hero, features grid, research context note; role-aware CTA button |
+| `src/pages/LoginPage.jsx` | Sign-in form with one-click demo credential buttons (Mentee / Mentor / Admin); auto-redirects by role on success |
+| `src/pages/RegisterPage.jsx` | Role-toggle (Mentee / Mentor) with conditional form fields; auto-login after registration |
+
+**4. Mentee Pages**
+| File | Description |
+|------|-------------|
+| `src/pages/mentee/MentorsPage.jsx` | Live mentor directory grid with search; `BookingModal` for session booking (session type, date/time, duration, platform, goal category) |
+| `src/pages/mentee/SessionsPage.jsx` | Sessions list with status badges; inline status-transition buttons; `FeedbackModal` for submitting/viewing Likert feedback; `PredictionModal` for viewing AI TreeSHAP diagnosis |
+| `src/pages/mentee/PredictPage.jsx` | Manual AI Scorer — sliders for all 6 quality scores, context dropdowns, classifier selector; live XGBoost prediction result with confidence bar, TreeSHAP waterfall, risk factors, and recommendation |
+
+**5. Mentor Pages**
+| File | Description |
+|------|-------------|
+| `src/pages/mentor/MentorSessionsPage.jsx` | Sessions dashboard with filter tabs (All / Scheduled / Completed / Cancelled / Rescheduled); stats strip (total, upcoming, completed, cancelled); `FeedbackViewModal` to read student ratings |
+| `src/pages/mentor/MentorQualityPage.jsx` | Longitudinal quality profile: identity card, effectiveness rate banner with progress bar, Likert rating bars, volume stats, recent student comments |
+
+**6. Admin Pages**
+| File | Description |
+|------|-------------|
+| `src/pages/admin/AdminOverviewPage.jsx` | Platform overview: stat cards (users, sessions, predictions, avg satisfaction); average score bars; breakdown charts for user roles, session statuses, prediction outcomes; top-performing mentors table |
+| `src/pages/admin/AdminMentorsPage.jsx` | Sortable mentor audit table (sort by effectiveness / rating / sessions); search; `MentorDetailModal` with full quality breakdown |
+
+#### Build Verification
+
+```
+vite v5.4.21 building for production...
+✓ 107 modules transformed.
+dist/index.html                   0.73 kB │ gzip:  0.46 kB
+dist/assets/index-MHL5sxDM.css   25.06 kB │ gzip:  4.99 kB
+dist/assets/index-CNR5t3yQ.js   292.11 kB │ gzip: 89.97 kB
+✓ built in 4.31s
+```
+Zero build errors.
+
+#### Routing Map
+
+| Route | Guard | Actor | Endpoint(s) consumed |
+|-------|-------|-------|----------------------|
+| `/` | Public | All | — |
+| `/login` | Public | All | `POST /auth/login` |
+| `/register` | Public | All | `POST /auth/register`, `POST /auth/login` |
+| `/mentors` | Mentee | Mentee | `GET /mentors`, `POST /sessions/book` |
+| `/sessions` | Mentee | Mentee | `GET /sessions`, `PATCH /sessions/{id}/status`, `POST/GET /sessions/{id}/feedback`, `GET /sessions/{id}/prediction` |
+| `/predict` | Mentee | Mentee | `POST /predict` |
+| `/mentor/sessions` | Mentor | Mentor | `GET /sessions`, `PATCH /sessions/{id}/status`, `GET /sessions/{id}/feedback` |
+| `/mentor/quality` | Mentor | Mentor | `GET /mentors/quality-profiles` |
+| `/admin/overview` | Admin | Administrator | `GET /analytics/admin/overview` |
+| `/admin/mentors` | Admin | Administrator | `GET /analytics/admin/mentors` |
+
+#### Milestone 2 Status
+
+- [x] `feat(frontend): scaffold React app (Vite), routing, shared components` — complete (Phase prior)
+- [x] `feat(frontend): build mentee screens` — MentorsPage, SessionsPage, PredictPage
+- [x] `feat(frontend): build mentor screens` — MentorSessionsPage, MentorQualityPage
+- [x] `feat(frontend): build admin screens` — AdminOverviewPage, AdminMentorsPage
+- [x] `feat(frontend): connect all screens to backend REST endpoints` — all screens call live API
+- [x] `chore: production build verified` — 107 modules, 0 errors
+
+---
+
+### Phase 15: End-to-End API Contract Alignment, Bug Fixes & Final Polish (Milestone 2 Completion)
+
+**Date:** 8 November 2026
+**Branch:** `feat/11-frontend-scaffold-react-vite`
+**Requirements Covered:** End-to-end walkthrough (`test: manual end-to-end walkthrough`), bug resolution, and final documentation polish (`chore: final README pass, demo script, submission checklist`)
+
+#### Problem Addressed
+During the full-stack contract audit between the React SPA (`frontend/src/`) and the FastAPI Pydantic v2 schemas (`backend/models/schemas.py`), five subtle integration mismatches were identified that would affect live demo flows.
+
+#### Engineering Work Executed & Bugs Resolved
+1. **Demo Credentials Alignment (`src/pages/LoginPage.jsx`)**:
+   - Updated one-click demo buttons to match the exact emails seeded by `backend/db/seed.py` (`michelle.mutinda@strathmore.edu`, `david.mwangi@safaricom.co.ke`, `admin@inua.strathmore.edu`).
+2. **Administrator Navbar Role Guard (`src/components/layout/Navbar.jsx`)**:
+   - Fixed role check from `role === 'admin'` to `(role === 'administrator' || role === 'admin')` to match the backend RBAC role identifier (`administrator`).
+3. **Mentee Registration Payload Contract (`src/pages/RegisterPage.jsx`)**:
+   - Aligned mentee registration payload key to `career_stage` (matching `UserRegisterRequest.career_stage` in `backend/models/schemas.py`) and consumed the returned `TokenResponse` directly.
+4. **Session Lifecycle Status Transition Payload (`src/pages/mentee/SessionsPage.jsx` & `src/pages/mentor/MentorSessionsPage.jsx`)**:
+   - Corrected `PATCH /api/v1/sessions/{id}/status` request body from `{ new_status }` to `{ status }` to match `SessionStatusUpdateRequest`. Added `Pending -> Scheduled / Cancelled` transition buttons.
+5. **Full TreeSHAP Diagnosis Loading in Session Modal (`src/pages/mentee/SessionsPage.jsx`)**:
+   - Updated `PredictionModal` to invoke `POST /api/v1/predictions` with `{ session_id }` so the modal receives the full `PredictionDetailResponse` (including `feature_contributions` TreeSHAP attributions, `risk_factors`, and `recommendation`).
+6. **Windows Console UTF-8 Hardening (`backend/tests/run_all_tests.py`)**:
+   - Configured UTF-8 standard output and `PYTHONIOENCODING=utf-8` across child test processes to prevent `cp1252` `UnicodeEncodeError` on Windows PowerShell terminals.
+7. **Documentation Completion (`README.md`, `backend/README.md`, `frontend/README.md`)**:
+   - Updated all repository READMEs with final architecture diagrams, quick-start instructions, route tables, and pre-seeded demo credentials.
