@@ -1,5 +1,5 @@
 /**
- * INUA App — Root component with client-side routing.
+ * INUA App — Root component with client-side routing and layout shell.
  * Author: Michelle Mutinda (Adm 154727) — BICS Year 4, Strathmore University
  */
 import React from 'react'
@@ -45,33 +45,30 @@ export default function App() {
     <AuthProvider>
       <ToastProvider>
         <BrowserRouter>
-          <div className="min-h-screen flex flex-col">
-            <Navbar />
-            <main className="flex-1">
-              <Routes>
-                {/* ── Public ── */}
-                <Route path="/"         element={<LandingPage />} />
-                <Route path="/login"    element={<LoginPage />} />
-                <Route path="/register" element={<RegisterPage />} />
+          <Navbar>
+            <Routes>
+              {/* ── Public ── */}
+              <Route path="/"         element={<LandingPage />} />
+              <Route path="/login"    element={<LoginPage />} />
+              <Route path="/register" element={<RegisterPage />} />
 
-                {/* ── Mentee ── */}
-                <Route path="/mentors"  element={<Private><RoleGuard roles={['mentee']}><MentorsPage /></RoleGuard></Private>} />
-                <Route path="/sessions" element={<Private><RoleGuard roles={['mentee']}><SessionsPage /></RoleGuard></Private>} />
-                <Route path="/predict"  element={<Private><RoleGuard roles={['mentee']}><PredictPage /></RoleGuard></Private>} />
+              {/* ── Mentee ── */}
+              <Route path="/mentors"  element={<Private><RoleGuard roles={['mentee']}><MentorsPage /></RoleGuard></Private>} />
+              <Route path="/sessions" element={<Private><RoleGuard roles={['mentee']}><SessionsPage /></RoleGuard></Private>} />
+              <Route path="/predict"  element={<Private><RoleGuard roles={['mentee']}><PredictPage /></RoleGuard></Private>} />
 
-                {/* ── Mentor ── */}
-                <Route path="/mentor/sessions" element={<Private><RoleGuard roles={['mentor']}><MentorSessionsPage /></RoleGuard></Private>} />
-                <Route path="/mentor/quality"  element={<Private><RoleGuard roles={['mentor']}><MentorQualityPage /></RoleGuard></Private>} />
+              {/* ── Mentor ── */}
+              <Route path="/mentor/sessions" element={<Private><RoleGuard roles={['mentor']}><MentorSessionsPage /></RoleGuard></Private>} />
+              <Route path="/mentor/quality"  element={<Private><RoleGuard roles={['mentor']}><MentorQualityPage /></RoleGuard></Private>} />
 
-                {/* ── Admin ── */}
-                <Route path="/admin/overview" element={<Private><RoleGuard roles={['administrator']}><AdminOverviewPage /></RoleGuard></Private>} />
-                <Route path="/admin/mentors"  element={<Private><RoleGuard roles={['administrator']}><AdminMentorsPage /></RoleGuard></Private>} />
+              {/* ── Admin ── */}
+              <Route path="/admin/overview" element={<Private><RoleGuard roles={['administrator', 'admin']}><AdminOverviewPage /></RoleGuard></Private>} />
+              <Route path="/admin/mentors"  element={<Private><RoleGuard roles={['administrator', 'admin']}><AdminMentorsPage /></RoleGuard></Private>} />
 
-                {/* ── Fallback ── */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </main>
-          </div>
+              {/* ── Fallback ── */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Navbar>
         </BrowserRouter>
       </ToastProvider>
     </AuthProvider>
