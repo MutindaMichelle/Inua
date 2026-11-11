@@ -1,6 +1,7 @@
 /**
  * INUA Mentee Dashboard & Mentor Directory — implements
- * design/wireframes/2-mentee-dashboard.png and 3-book-mentorship-session.png.
+ * design/wireframes/2-mentee-dashboard.png and 3-book-mentorship-session.png
+ * with verified mentor credential badges.
  */
 import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -175,7 +176,6 @@ export default function MentorsPage() {
     load()
   }, [])
 
-  // Compute live KPI metrics for the Mentee Dashboard header (matching 2-mentee-dashboard.png)
   const completedSessions = sessions.filter((s) => s.status === 'Completed')
   const upcomingSessions = sessions.filter((s) => s.status === 'Scheduled' || s.status === 'Pending')
   const totalMinutes = completedSessions.reduce((acc, s) => acc + (s.duration || 60), 0)
@@ -187,7 +187,8 @@ export default function MentorsPage() {
     const matchesSearch =
       m.name?.toLowerCase().includes(q) ||
       m.industry?.toLowerCase().includes(q) ||
-      m.expertise?.toLowerCase().includes(q)
+      m.expertise?.toLowerCase().includes(q) ||
+      m.credential_issuer?.toLowerCase().includes(q)
     const matchesTrack =
       track === 'All Tracks' ||
       m.industry?.toLowerCase().includes(track.toLowerCase()) ||
@@ -214,7 +215,7 @@ export default function MentorsPage() {
             HOURS IN COACHING SESSIONS
           </div>
           <div className="text-3xl font-extrabold text-[#0B1324] mt-2">{totalHours}h</div>
-          <div className="text-xs text-slate-400 mt-1">Logged across verified advisors</div>
+          <div className="text-xs text-slate-400 mt-1">Logged across credential-verified advisors</div>
         </div>
 
         <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
@@ -230,7 +231,7 @@ export default function MentorsPage() {
         </div>
       </div>
 
-      {/* ═══ AI BREAKTHROUGH BANNER (matches 2-mentee-dashboard.png) ═══ */}
+      {/* ═══ AI BREAKTHROUGH BANNER ═══ */}
       <div className="rounded-2xl bg-[#FFFBEB] border border-[#FDE68A] p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
           <div className="w-14 h-14 rounded-full bg-[#0D9488] text-white font-extrabold text-sm flex items-center justify-center shrink-0 shadow-sm">
@@ -241,8 +242,7 @@ export default function MentorsPage() {
               Highly Probable Career Breakthrough Anticipated
             </div>
             <p className="text-xs text-slate-600 mt-0.5 leading-relaxed">
-              Based on structured progress across 18 XGBoost & TreeSHAP criteria, your mentorship
-              sessions show strong goal alignment and self-efficacy growth.
+              Every mentor in this directory has been vetted by the Platform Administrator through verified academic degrees, professional certifications, or employer letters.
             </p>
           </div>
         </div>
@@ -254,7 +254,7 @@ export default function MentorsPage() {
         </Link>
       </div>
 
-      {/* ═══ TRACK FILTER PILLS & SEARCH (matches 3-book-mentorship-session.png) ═══ */}
+      {/* ═══ TRACK FILTER PILLS & SEARCH ═══ */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
         <div className="flex items-center gap-2 flex-wrap">
           {TRACK_FILTERS.map((t) => (
@@ -275,20 +275,20 @@ export default function MentorsPage() {
 
         <input
           className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs w-full sm:w-64 focus:outline-none focus:border-[#0B1324]"
-          placeholder="Search advisor by name or skill…"
+          placeholder="Search advisor by name, firm, or skill…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
-      {/* ═══ SUGGESTED VETTED MENTORS LIST (matches 2-mentee-dashboard.png & 3-book-mentorship-session.png) ═══ */}
+      {/* ═══ SUGGESTED VETTED MENTORS LIST ═══ */}
       <div className="bg-white rounded-2xl border border-slate-200/80 p-6 shadow-xs">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-extrabold text-[#0B1324]">
             Available Vetted Advisors & Mentors
           </h2>
           <span className="text-xs text-slate-400 font-semibold">
-            {filtered.length} verified mentor{filtered.length !== 1 ? 's' : ''}
+            {filtered.length} Admin-verified mentor{filtered.length !== 1 ? 's' : ''}
           </span>
         </div>
 
@@ -312,18 +312,24 @@ export default function MentorsPage() {
                     {initials(m.name)}
                   </div>
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-extrabold text-[#0B1324] text-sm">{m.name}</span>
                       {m.is_verified && (
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#E0F2F1] text-[#0F766E]">
-                          ✓ Verified
+                          ✓ Verified Credential
                         </span>
                       )}
                     </div>
                     <div className="text-xs text-slate-500 mt-0.5">
                       {m.industry} · {m.expertise} · {m.experience_years} yrs experience
                     </div>
-                    <div className="flex items-center gap-2 mt-1.5">
+                    {(m.credential_type || m.credential_issuer) && (
+                      <div className="text-[11px] text-slate-500 mt-0.5">
+                        🛡️ <span className="font-semibold text-slate-700">{m.credential_type || 'Verified Credential'}:</span>{' '}
+                        {m.credential_issuer || m.industry}
+                      </div>
+                    )}
+                    <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                       <span className="inline-block text-[10px] font-bold px-2.5 py-0.5 rounded bg-[#E0F2F1] text-[#0F766E]">
                         {m.expertise?.split('&')[0]?.trim()}
                       </span>

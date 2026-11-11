@@ -217,7 +217,7 @@ class UserRegisterRequest(BaseModel):
         None, description="Target career interest (required if role is mentee)", example="Software Engineering"
     )
 
-    # Mentor-specific fields
+    # Mentor-specific fields & Credential Proof
     experience_years: Optional[float] = Field(
         None, ge=0.5, le=50.0, description="Years of professional experience (required if role is mentor)", example=6.5
     )
@@ -226,6 +226,30 @@ class UserRegisterRequest(BaseModel):
     )
     expertise: Optional[str] = Field(
         None, description="Primary domain specialization (required if role is mentor)", example="Cloud Architecture"
+    )
+    credential_type: Optional[str] = Field(
+        None,
+        max_length=100,
+        description="Proof of expertise category (Academic Degree / Diploma, Professional Certification, Employer Verification Letter, Consultancy / Firm Registration)",
+        example="Professional Certification",
+    )
+    credential_issuer: Optional[str] = Field(
+        None,
+        max_length=150,
+        description="Issuing university, certification body, employer, or registered firm name",
+        example="Safaricom PLC / AWS Training & Certification",
+    )
+    credential_reference: Optional[str] = Field(
+        None,
+        max_length=255,
+        description="Certificate number, employer letter reference, or consultancy registration ID",
+        example="AWS-SAP-2024-88392",
+    )
+    credential_document_url: Optional[str] = Field(
+        None,
+        max_length=500,
+        description="Verification link or uploaded credential document URL",
+        example="https://www.credly.com/badges/inua-mentor-proof",
     )
 
 
@@ -238,6 +262,20 @@ class UserProfileUpdateRequest(BaseModel):
     experience_years: Optional[float] = Field(None, ge=0.5, le=50.0)
     industry: Optional[str] = Field(None, max_length=100)
     expertise: Optional[str] = Field(None, max_length=150)
+    credential_type: Optional[str] = Field(None, max_length=100)
+    credential_issuer: Optional[str] = Field(None, max_length=150)
+    credential_reference: Optional[str] = Field(None, max_length=255)
+    credential_document_url: Optional[str] = Field(None, max_length=500)
+
+
+class MentorVerificationRequest(BaseModel):
+    """Admin payload to approve or reject a mentor's submitted credentials."""
+    status: Literal["Verified", "Rejected", "Pending"] = Field(
+        ..., description="New credential verification status"
+    )
+    verification_notes: Optional[str] = Field(
+        None, max_length=500, description="Admin review notes or reason for approval/rejection"
+    )
 
 
 class UserLoginRequest(BaseModel):
@@ -304,6 +342,12 @@ class MentorSummaryResponse(BaseModel):
     expertise: str
     experience_years: float
     is_verified: bool
+    verification_status: str = "Verified"
+    credential_type: Optional[str] = None
+    credential_issuer: Optional[str] = None
+    credential_reference: Optional[str] = None
+    credential_document_url: Optional[str] = None
+    verification_notes: Optional[str] = None
 
 
 class SessionBookingRequest(BaseModel):
@@ -451,6 +495,12 @@ class MentorQualityProfileResponse(BaseModel):
     expertise: str
     experience_years: float
     is_verified: bool
+    verification_status: str = "Verified"
+    credential_type: Optional[str] = None
+    credential_issuer: Optional[str] = None
+    credential_reference: Optional[str] = None
+    credential_document_url: Optional[str] = None
+    verification_notes: Optional[str] = None
     total_sessions: int
     completed_sessions: int
     unique_mentees_count: int

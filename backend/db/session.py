@@ -9,7 +9,7 @@ import sys
 from pathlib import Path
 from typing import Generator
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent
@@ -62,6 +62,26 @@ def get_db() -> Generator[Session, None, None]:
 
 
 def init_db() -> None:
-    """Creates all defined database tables if they do not already exist."""
+    """Creates all defined database tables if they do not already exist and migrates new mentor columns."""
     from models import database  # noqa: F401
     Base.metadata.create_all(bind=engine)
+
+    # Auto-migrate mentor verification columns on existing SQLite / PostgreSQL databases
+    try:
+        inspector = inspect(engine)
+        if "mentors" in inspector.get_table_names():
+            existing_cols = {col["name"] for col in inspector.get_columns("mentors")}
+            migrations = [
+                ("verification_status", "VARCHAR(30) DEFAULT 'Verified' NOT NULL"),
+                ("credential_type", "VARCHAR(100) DEFAULT 'Professional Certification'"),
+                ("credential_issuer", "VARCHAR(150)"),
+                ("credential_reference", "VARCHAR(255)"),
+                ("credential_document_url", "VARCHAR(500)"),
+                ("verification_notes", "TEXT"),
+            ]
+            with engine.begin() as conn:
+                for col_name, col_def in migrations:
+                    if col_name not in existing_cols:
+                        conn.execute(text(f"ALTER TABLE mentors ADD COLUMN {col_name} {col_def}"))
+    except Exception as e:
+        print(f"[DB Migration Notice] {e}")

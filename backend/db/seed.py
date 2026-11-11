@@ -76,7 +76,7 @@ def seed_database(db: Session = None, reset: bool = True) -> None:
         db.add(admin_user)
         db.flush()
 
-        # 2. Mentors
+        # 2. Mentors (4 Verified + 2 Pending Admin Credential Approval)
         mentors_data = [
             {
                 "name": "Dr. Joseph K. Mutua",
@@ -85,6 +85,13 @@ def seed_database(db: Session = None, reset: bool = True) -> None:
                 "experience_years": 12.0,
                 "industry": "Technology",
                 "expertise": "Cloud Architecture & Distributed Systems",
+                "is_verified": True,
+                "verification_status": "Verified",
+                "credential_type": "Academic Degree / Diploma",
+                "credential_issuer": "Strathmore University — School of Computing & Engineering Sciences",
+                "credential_reference": "SU-SCES-FAC-00419 (PhD Distributed Systems)",
+                "credential_document_url": "https://sces.strathmore.edu/faculty/joseph-mutua-credentials",
+                "verification_notes": "Verified Senior Faculty appointment & PhD degree certificate.",
             },
             {
                 "name": "David Mwangi",
@@ -93,6 +100,13 @@ def seed_database(db: Session = None, reset: bool = True) -> None:
                 "experience_years": 8.0,
                 "industry": "Technology",
                 "expertise": "Backend Engineering & API Design",
+                "is_verified": True,
+                "verification_status": "Verified",
+                "credential_type": "Employer Verification Letter",
+                "credential_issuer": "Safaricom PLC — M-PESA Core Platform Engineering",
+                "credential_reference": "SAF-HR-VER-2025-8831",
+                "credential_document_url": "https://www.safaricom.co.ke/verify/mentor/SAF-HR-VER-2025-8831",
+                "verification_notes": "Verified Employer Letter & AWS Certified Solutions Architect Professional badge.",
             },
             {
                 "name": "Grace Ochieng",
@@ -101,6 +115,13 @@ def seed_database(db: Session = None, reset: bool = True) -> None:
                 "experience_years": 6.0,
                 "industry": "Technology",
                 "expertise": "Machine Learning & AI Engineering",
+                "is_verified": True,
+                "verification_status": "Verified",
+                "credential_type": "Professional Certification",
+                "credential_issuer": "Microsoft Africa Development Centre (ADC) Nairobi",
+                "credential_reference": "MS-ADC-AI-99204",
+                "credential_document_url": "https://learn.microsoft.com/en-us/users/graceochieng/credentials/MS-ADC-AI-99204",
+                "verification_notes": "Verified Microsoft Senior Applied AI Engineer credential & Azure AI certification.",
             },
             {
                 "name": "Sarah Wambui",
@@ -109,6 +130,43 @@ def seed_database(db: Session = None, reset: bool = True) -> None:
                 "experience_years": 7.0,
                 "industry": "Finance",
                 "expertise": "FinTech Systems & Data Analytics",
+                "is_verified": True,
+                "verification_status": "Verified",
+                "credential_type": "Employer Verification Letter",
+                "credential_issuer": "Equity Group Holdings PLC — FinTech & Analytics Division",
+                "credential_reference": "EQB-HR-2025-4410",
+                "credential_document_url": "https://equitygroupholdings.com/verify/EQB-HR-2025-4410",
+                "verification_notes": "Verified Lead Data Analyst employment confirmation letter.",
+            },
+            {
+                "name": "Eng.samuel Ndung'u",
+                "email": "samuel.ndungu@apexconsult.co.ke",
+                "role": "mentor",
+                "experience_years": 9.0,
+                "industry": "Consulting",
+                "expertise": "Cybersecurity & Enterprise Risk Advisory",
+                "is_verified": False,
+                "verification_status": "Pending",
+                "credential_type": "Consultancy / Firm Registration",
+                "credential_issuer": "Business Registration Service (BRS) Kenya & ISACA CISM",
+                "credential_reference": "PVT-2021-094812 / ISACA-CISM-77319",
+                "credential_document_url": "https://brs.go.ke/verify/PVT-2021-094812",
+                "verification_notes": "Submitted Certificate of Incorporation (Apex Cyber Advisory Ltd) and ISACA CISM license; awaiting Administrator review.",
+            },
+            {
+                "name": "Amina Hassan",
+                "email": "amina.hassan@kcbbankgroup.com",
+                "role": "mentor",
+                "experience_years": 5.0,
+                "industry": "Finance",
+                "expertise": "Product Management & Digital Banking",
+                "is_verified": False,
+                "verification_status": "Pending",
+                "credential_type": "Employer Verification Letter",
+                "credential_issuer": "KCB Bank Group — Digital Financial Services",
+                "credential_reference": "KCB-DFS-EMP-2026-119",
+                "credential_document_url": "https://ke.kcbbankgroup.com/verify/KCB-DFS-EMP-2026-119",
+                "verification_notes": "Submitted Employer Confirmation Letter & PMI-ACP Product Management Certificate; awaiting Administrator review.",
             },
         ]
 
@@ -128,7 +186,13 @@ def seed_database(db: Session = None, reset: bool = True) -> None:
                 experience_years=m_data["experience_years"],
                 industry=m_data["industry"],
                 expertise=m_data["expertise"],
-                is_verified=True,
+                is_verified=m_data["is_verified"],
+                verification_status=m_data["verification_status"],
+                credential_type=m_data["credential_type"],
+                credential_issuer=m_data["credential_issuer"],
+                credential_reference=m_data["credential_reference"],
+                credential_document_url=m_data["credential_document_url"],
+                verification_notes=m_data["verification_notes"],
             )
             db.add(mentor)
             db.flush()
@@ -432,9 +496,8 @@ def seed_database(db: Session = None, reset: bool = True) -> None:
         db.add(MentorQualityProfile(mentor_id=created_mentors[3].mentor_id, aggregate_effectiveness_score=3.35, total_sessions=2))
 
         db.commit()
-        print(f"[SEED SUCCESS] Seeded 1 admin, {len(created_mentors)} mentors, {len(created_mentees)} mentees, "
-              f"{len(goals_data)} goals, 8 sessions (5 completed with feedback & predictions, 3 upcoming/pending), "
-              f"and 4 mentor quality profiles.")
+        print(f"[SEED SUCCESS] Seeded 1 admin, {len(created_mentors)} mentors (4 verified, 2 pending review), "
+              f"{len(created_mentees)} mentees, {len(goals_data)} goals, 8 sessions, and 4 mentor quality profiles.")
     except Exception as e:
         db.rollback()
         print(f"[SEED ERROR] Failed to seed database: {e}")

@@ -1,5 +1,5 @@
 /**
- * INUA Register Page — split-screen layout matching 1-mentee-login-register.png.
+ * INUA Register Page — split-screen layout with Mentor Credential Proof submission.
  */
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -15,6 +15,12 @@ const FIELDS_OF_STUDY = [
 const INDUSTRIES = [
   'Technology', 'Finance', 'Healthcare', 'Education',
   'Consulting', 'Energy', 'Government', 'Non-Profit', 'Other',
+]
+const CREDENTIAL_TYPES = [
+  'Professional Certification',
+  'Academic Degree / Diploma',
+  'Employer Verification Letter',
+  'Consultancy / Firm Registration',
 ]
 
 export default function RegisterPage() {
@@ -36,7 +42,10 @@ export default function RegisterPage() {
     industry: 'Technology',
     expertise: '',
     experience_years: 5,
-    bio: '',
+    credential_type: 'Professional Certification',
+    credential_issuer: '',
+    credential_reference: '',
+    credential_document_url: '',
   })
 
   function set(k, v) {
@@ -58,6 +67,10 @@ export default function RegisterPage() {
         payload.industry = form.industry
         payload.expertise = form.expertise
         payload.experience_years = Number(form.experience_years)
+        payload.credential_type = form.credential_type
+        payload.credential_issuer = form.credential_issuer
+        payload.credential_reference = form.credential_reference
+        payload.credential_document_url = form.credential_document_url || undefined
       }
       const { data } = await api.post('/auth/register', payload)
       if (data?.access_token && data?.user) {
@@ -66,9 +79,13 @@ export default function RegisterPage() {
         const loginRes = await api.post('/auth/login', { email: form.email, password: form.password })
         login(loginRes.data.access_token, loginRes.data.user)
       }
-      toast(`Welcome to INUA, ${form.name.split(' ')[0]}!`, 'success')
-      if (role === 'mentee') navigate('/mentors')
-      else navigate('/mentor/quality')
+      if (role === 'mentee') {
+        toast(`Welcome to INUA, ${form.name.split(' ')[0]}!`, 'success')
+        navigate('/mentors')
+      } else {
+        toast('Account created! Your credentials have been submitted for Admin verification.', 'info')
+        navigate('/profile')
+      }
     } catch (err) {
       setError(apiError(err))
     } finally {
@@ -94,8 +111,8 @@ export default function RegisterPage() {
             Your Professional Growth Journey
           </h1>
           <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-            Join Kenya’s intelligent mentorship ecosystem. Set structured career milestones and
-            receive real-time XGBoost & TreeSHAP effectiveness diagnostics.
+            Join Kenya’s intelligent mentorship ecosystem. Set structured career milestones,
+            connect with credential-verified industry mentors, and receive real-time XGBoost & TreeSHAP effectiveness diagnostics.
           </p>
         </div>
 
@@ -106,7 +123,7 @@ export default function RegisterPage() {
 
       {/* Right Half: White Registration Form */}
       <div className="lg:col-span-7 flex items-center justify-center p-6 sm:p-12">
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-lg">
           <div className="bg-slate-100 p-1 rounded-xl flex gap-1 mb-6">
             {['mentee', 'mentor'].map((r) => (
               <button
@@ -119,14 +136,18 @@ export default function RegisterPage() {
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                {r === 'mentee' ? 'Mentee Account' : 'Mentor Account'}
+                {r === 'mentee' ? 'Mentee Account' : 'Mentor Account (Verified Experts)'}
               </button>
             ))}
           </div>
 
           <div className="mb-5">
             <h2 className="text-2xl font-extrabold text-[#0B1324]">Create Your Account</h2>
-            <p className="text-xs text-slate-500 mt-1">Register your profile on the INUA platform</p>
+            <p className="text-xs text-slate-500 mt-1">
+              {role === 'mentee'
+                ? 'Register your student or early-career mentee profile on INUA'
+                : 'Apply as an industry or faculty mentor with verifiable proof of expertise'}
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-3.5">
@@ -153,7 +174,7 @@ export default function RegisterPage() {
                 <input
                   type="email"
                   className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-sm"
-                  placeholder="you@strathmore.edu"
+                  placeholder={role === 'mentee' ? 'you@strathmore.edu' : 'you@company.co.ke'}
                   value={form.email}
                   onChange={(e) => set('email', e.target.value)}
                   required
@@ -255,7 +276,7 @@ export default function RegisterPage() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Domain Expertise</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Domain Specialization</label>
                   <input
                     className="w-full rounded-lg border border-slate-200 bg-slate-50/70 px-3.5 py-2.5 text-sm"
                     placeholder="e.g. Cloud Architecture & Distributed Systems"
@@ -263,6 +284,77 @@ export default function RegisterPage() {
                     onChange={(e) => set('expertise', e.target.value)}
                     required
                   />
+                </div>
+
+                {/* Credential Verification Proof Box */}
+                <div className="rounded-xl border border-amber-200 bg-amber-50/60 p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="text-xs font-extrabold text-amber-900">
+                        🛡️ Proof of Expertise & Credential Verification
+                      </div>
+                      <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
+                        To protect mentorship quality, all mentors must submit proof of qualification
+                        (degree certificate, employer verification letter, or consultancy registration)
+                        for Administrator review before appearing in the mentee directory.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Credential Proof Category</label>
+                    <select
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                      value={form.credential_type}
+                      onChange={(e) => set('credential_type', e.target.value)}
+                      required
+                    >
+                      {CREDENTIAL_TYPES.map((ct) => (
+                        <option key={ct} value={ct}>{ct}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Issuing Body / Employer / Firm
+                      </label>
+                      <input
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                        placeholder="e.g. Safaricom PLC / AWS / BRS Kenya"
+                        value={form.credential_issuer}
+                        onChange={(e) => set('credential_issuer', e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Certificate / Letter / Registration Ref #
+                      </label>
+                      <input
+                        className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                        placeholder="e.g. AWS-SAP-88392 or PVT-2022048"
+                        value={form.credential_reference}
+                        onChange={(e) => set('credential_reference', e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Verification Link or Document URL (Credly / LinkedIn / Drive PDF)
+                    </label>
+                    <input
+                      type="url"
+                      className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+                      placeholder="https://www.credly.com/badges/... or https://drive.google.com/..."
+                      value={form.credential_document_url}
+                      onChange={(e) => set('credential_document_url', e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
               </>
             )}
@@ -272,7 +364,11 @@ export default function RegisterPage() {
               disabled={loading}
               className="w-full py-3.5 px-5 rounded-lg bg-[#0B1324] hover:bg-slate-800 text-white font-bold text-xs tracking-wide transition-all cursor-pointer mt-2"
             >
-              {loading ? <span className="spinner" /> : 'Create Account'}
+              {loading
+                ? <span className="spinner" />
+                : role === 'mentor'
+                ? 'Submit Mentor Application & Credentials'
+                : 'Create Account'}
             </button>
           </form>
 

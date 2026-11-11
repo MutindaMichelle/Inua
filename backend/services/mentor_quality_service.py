@@ -145,6 +145,12 @@ def compute_mentor_quality(db: Session, mentor_id: int) -> MentorQualityProfileR
         expertise=mentor.expertise,
         experience_years=mentor.experience_years,
         is_verified=mentor.is_verified,
+        verification_status=mentor.verification_status or ("Verified" if mentor.is_verified else "Pending"),
+        credential_type=mentor.credential_type,
+        credential_issuer=mentor.credential_issuer,
+        credential_reference=mentor.credential_reference,
+        credential_document_url=mentor.credential_document_url,
+        verification_notes=mentor.verification_notes,
         total_sessions=total_sessions,
         completed_sessions=completed_sessions,
         unique_mentees_count=unique_mentees,
@@ -161,11 +167,14 @@ def compute_mentor_quality(db: Session, mentor_id: int) -> MentorQualityProfileR
     )
 
 
-def compute_all_mentor_profiles(db: Session) -> List[MentorQualityProfileResponse]:
-    """Retrieves computed quality profiles for all verified mentors."""
-    mentors = db.query(Mentor).filter(Mentor.is_verified == True).all()
+def compute_all_mentor_profiles(db: Session, include_unverified: bool = False) -> List[MentorQualityProfileResponse]:
+    """Retrieves computed quality profiles for mentors (verified only by default, or all for Admin audit)."""
+    query = db.query(Mentor)
+    if not include_unverified:
+        query = query.filter(Mentor.is_verified == True)
+    mentors = query.all()
     profiles = [compute_mentor_quality(db, m.mentor_id) for m in mentors]
-    profiles.sort(key=lambda p: (p.aggregate_effectiveness_score, p.completed_sessions), reverse=True)
+    profiles.sort(key=lambda p: (not p.is_verified, p.aggregate_effectiveness_score, p.completed_sessions), reverse=True)
     return profiles
 
 
@@ -211,8 +220,8 @@ def compute_admin_analytics_overview(db: Session) -> AdminAnalyticsOverviewRespo
     active_mentors = db.query(func.count(distinct(MentorshipSession.mentor_id))).scalar() or 0
     active_mentees = db.query(func.count(distinct(MentorshipSession.mentee_id))).scalar() or 0
 
-    # 6. Top mentors
-    all_profiles = compute_all_mentor_profiles(db)
+    # 6. Top mentors (verified only)
+    all_profiles = compute_all_mentor_profiles(db, include_unverified=False)
     top_mentors = [
         {
             "mentor_id": p.mentor_id,
