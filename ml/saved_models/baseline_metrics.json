@@ -1,0 +1,52 @@
+[
+  {
+    "Model": "Heuristic Baseline",
+    "Accuracy": 0.8425,
+    "Precision": 0.8833,
+    "Recall": 0.8731,
+    "F1-Score": 0.8781,
+    "ROC-AUC": 0.8371,
+    "5-Fold CV Acc Mean": 0.8425,
+    "5-Fold CV Acc Std": 0.0
+  },
+  {
+    "Model": "Decision Tree",
+    "Accuracy": 0.83,
+    "Precision": 0.8404,
+    "Recall": 0.9115,
+    "F1-Score": 0.8745,
+    "ROC-AUC": 0.8501,
+    "5-Fold CV Acc Mean": 0.8045,
+    "5-Fold CV Acc Std": 0.0396
+  },
+  {
+    "Model": "AdaBoost",
+    "Accuracy": 0.865,
+    "Precision": 0.8815,
+    "Recall": 0.9154,
+    "F1-Score": 0.8981,
+    "ROC-AUC": 0.8914,
+    "5-Fold CV Acc Mean": 0.8256,
+    "5-Fold CV Acc Std": 0.027
+  },
+  {
+    "Model": "Random Forest",
+    "Accuracy": 0.855,
+    "Precision": 0.8412,
+    "Recall": 0.9577,
+    "F1-Score": 0.8957,
+    "ROC-AUC": 0.8911,
+    "5-Fold CV Acc Mean": 0.8188,
+    "5-Fold CV Acc Std": 0.0195
+  },
+  {
+    "Model": "XGBoost",
+    "Accuracy": 0.8525,
+    "Precision": 0.8681,
+    "Recall": 0.9115,
+    "F1-Score": 0.8893,
+    "ROC-AUC": 0.8864,
+    "5-Fold CV Acc Mean": 0.8233,
+    "5-Fold CV Acc Std": 0.028
+  }
+]

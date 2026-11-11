@@ -5,7 +5,6 @@ from typing import Dict, Any, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-# Ensure backend root is on sys.path
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
@@ -16,6 +15,7 @@ from models.database import User, Mentee, Mentor
 from models.schemas import (
     UserRegisterRequest,
     UserLoginRequest,
+    UserProfileUpdateRequest,
     TokenResponse,
     UserResponse,
 )
@@ -46,18 +46,6 @@ def _extract_user_profile(user: User) -> Optional[Dict[str, Any]]:
     summary="Register a new platform user (Mentee, Mentor, or Administrator)",
 )
 def register(payload: UserRegisterRequest, db: Session = Depends(get_db)):
-    """
-    Registers a new user into the INUA platform.
-    
-    * Validates unique email address (409 Conflict if taken).
-    * Requires specific profile details based on role:
-      - `mentee`: Requires `career_stage` and `career_interest`.
-      - `mentor`: Requires `experience_years`, `industry`, and `expertise`.
-      - `administrator`: Requires standard credentials.
-    * Automatically hashes password using bcrypt with salt.
-    * Issues an HS256-signed JWT access token (IR-01).
-    """
-    # 1. Uniqueness check
     existing_user = db.query(User).filter(User.email == payload.email.lower().strip()).first()
     if existing_user:
         raise HTTPException(
@@ -65,7 +53,6 @@ def register(payload: UserRegisterRequest, db: Session = Depends(get_db)):
             detail=f"An account with email '{payload.email}' already exists.",
         )
 
-    # 2. Role-specific profile validation
     if payload.role == "mentee":
         if not payload.career_stage or not payload.career_interest:
             raise HTTPException(
@@ -79,7 +66,6 @@ def register(payload: UserRegisterRequest, db: Session = Depends(get_db)):
                 detail="Mentors must provide 'experience_years', 'industry', and 'expertise'.",
             )
 
-    # 3. Create User record with hashed password
     password_hash = hash_password(payload.password)
     user = User(
         name=payload.name.strip(),
@@ -88,9 +74,8 @@ def register(payload: UserRegisterRequest, db: Session = Depends(get_db)):
         role=payload.role,
     )
     db.add(user)
-    db.flush()  # Populates user.user_id
+    db.flush()
 
-    # 4. Create linked specialization profile
     profile_data = None
     if payload.role == "mentee":
         mentee = Mentee(
@@ -117,7 +102,6 @@ def register(payload: UserRegisterRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(user)
 
-    # 5. Issue JWT bearer token (IR-01)
     token_claims = {
         "sub": str(user.user_id),
         "email": user.email,
@@ -147,9 +131,6 @@ def register(payload: UserRegisterRequest, db: Session = Depends(get_db)):
     summary="Authenticate with email and password",
 )
 def login(payload: UserLoginRequest, db: Session = Depends(get_db)):
-    """
-    Authenticates a user and issues a JWT Bearer token upon credentials verification.
-    """
     user = db.query(User).filter(User.email == payload.email.lower().strip()).first()
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(
@@ -188,7 +169,6 @@ def login(payload: UserLoginRequest, db: Session = Depends(get_db)):
     summary="Get current authenticated user identity and profile",
 )
 def get_me(current_user: User = Depends(get_current_user)):
-    """Returns profile and credentials details for the active Bearer token session."""
     return UserResponse(
         user_id=current_user.user_id,
         name=current_user.name,
@@ -199,14 +179,61 @@ def get_me(current_user: User = Depends(get_current_user)):
     )
 
 
-# ==========================================
-# RBAC Validation Endpoints (NFR-02 Verification)
-# ==========================================
-
 @router.get(
-    "/mentee-only",
-    summary="RBAC test endpoint: Mentee access only",
+    "/profile",
+    response_model=UserResponse,
+    summary="Get current user profile details",
 )
+def get_profile(current_user: User = Depends(get_current_user)):
+    return get_me(current_user)
+
+
+@router.put(
+    "/profile",
+    response_model=UserResponse,
+    summary="Update current user profile details (Mentee or Mentor)",
+)
+def update_profile(
+    payload: UserProfileUpdateRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    user = db.query(User).filter(User.user_id == current_user.user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found.")
+
+    if payload.name:
+        user.name = payload.name.strip()
+
+    if user.role == "mentee" and user.mentee_profile:
+        if payload.university:
+            user.mentee_profile.university = payload.university.strip()
+        if payload.career_stage:
+            user.mentee_profile.career_stage = payload.career_stage
+        if payload.career_interest:
+            user.mentee_profile.career_interest = payload.career_interest.strip()
+    elif user.role == "mentor" and user.mentor_profile:
+        if payload.experience_years is not None:
+            user.mentor_profile.experience_years = float(payload.experience_years)
+        if payload.industry:
+            user.mentor_profile.industry = payload.industry.strip()
+        if payload.expertise:
+            user.mentor_profile.expertise = payload.expertise.strip()
+
+    db.commit()
+    db.refresh(user)
+
+    return UserResponse(
+        user_id=user.user_id,
+        name=user.name,
+        email=user.email,
+        role=user.role,
+        created_at=user.created_at.isoformat() if user.created_at else None,
+        profile=_extract_user_profile(user),
+    )
+
+
+@router.get("/mentee-only", summary="RBAC test endpoint: Mentee access only")
 def mentee_only_route(current_user: User = Depends(require_roles("mentee"))):
     return {
         "status": "success",
@@ -215,10 +242,7 @@ def mentee_only_route(current_user: User = Depends(require_roles("mentee"))):
     }
 
 
-@router.get(
-    "/mentor-only",
-    summary="RBAC test endpoint: Mentor access only",
-)
+@router.get("/mentor-only", summary="RBAC test endpoint: Mentor access only")
 def mentor_only_route(current_user: User = Depends(require_roles("mentor"))):
     return {
         "status": "success",
@@ -227,10 +251,7 @@ def mentor_only_route(current_user: User = Depends(require_roles("mentor"))):
     }
 
 
-@router.get(
-    "/admin-only",
-    summary="RBAC test endpoint: Administrator access only",
-)
+@router.get("/admin-only", summary="RBAC test endpoint: Administrator access only")
 def admin_only_route(current_user: User = Depends(require_roles("administrator"))):
     return {
         "status": "success",

@@ -1,43 +1,72 @@
 """
-INUA Mentorship Platform: Feature Preprocessing Pipeline
+INUA Mentorship Platform: Pre-Session Feature Preprocessing Pipeline (U-CS 5)
 Author: Michelle (Final Year Project - BICS Year 4, Strathmore University)
-Sprint: Sprint 3 · Machine Learning Pipeline
-Deliverable: Preprocessed training and test partitions & serialized preprocessor
+Deliverable: Preprocessed chronological training (80%) and test (20%) partitions & serialized preprocessor
 
-Prevents Data Leakage:
-- `session_id` is an arbitrary identifier and is dropped.
-- `effectiveness_index` is an outcome proxy and is dropped to prevent target leakage.
-- Preprocessing transformers (StandardScaler, OneHotEncoder) are fitted strictly
-  on the training partition (80%) and applied to the test partition (20%).
+Prevents Target & Post-Session Leakage (U-CS 5 Mandate):
+- All post-session feedback and execution variables (`career_support_score`,
+  `psychosocial_support_score`, `communication_quality`, `goal_progress_score`,
+  `confidence_growth_score`, `mentor_responsiveness_score`, `attendance_status`,
+  `session_duration_minutes`, `effectiveness_index`) are strictly excluded from X.
+- Only pre-session features known BEFORE the session happens (`leadTimeHours`,
+  `hasAgenda`, `isFirstSession`, `mentor_experience_years`, `prior_sessions`, and
+  dyad profile context) are included in X.
+- Dataset is split chronologically on `created_at` (earliest 80% train, most recent 20% test).
 """
 
 import os
 import joblib
 import pandas as pd
 import numpy as np
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.compose import ColumnTransformer
 
 
+POST_SESSION_LEAKAGE_COLS = [
+    "session_id",
+    "created_at",
+    "effectiveness_index",
+    "mentor_experience_level_encoded",
+    "career_support_score",
+    "psychosocial_support_score",
+    "communication_quality",
+    "goal_progress_score",
+    "confidence_growth_score",
+    "mentor_responsiveness_score",
+    "attendance_status",
+    "session_duration_minutes",
+]
+
+PRE_SESSION_NUMERICAL_COLS = [
+    "leadTimeHours",
+    "hasAgenda",
+    "isFirstSession",
+    "mentor_experience_years",
+    "prior_sessions",
+]
+
+PRE_SESSION_CATEGORICAL_COLS = [
+    "career_stage",
+    "field_of_study",
+    "career_interest",
+    "mentor_industry",
+    "mentor_specialization",
+    "mentor_availability",
+    "session_type",
+    "meeting_platform",
+    "goal_category",
+]
+
+
 def build_preprocessor(categorical_cols: list, numerical_cols: list) -> ColumnTransformer:
-    """Creates a ColumnTransformer pipeline handling categorical and continuous features."""
-    preprocessor = ColumnTransformer(
+    """Creates a ColumnTransformer pipeline handling pre-session categorical and numerical features."""
+    return ColumnTransformer(
         transformers=[
-            (
-                "num",
-                StandardScaler(),
-                numerical_cols,
-            ),
-            (
-                "cat",
-                OneHotEncoder(handle_unknown="ignore", sparse_output=False),
-                categorical_cols,
-            ),
+            ("num", StandardScaler(), numerical_cols),
+            ("cat", OneHotEncoder(handle_unknown="ignore", sparse_output=False), categorical_cols),
         ],
         remainder="drop",
     )
-    return preprocessor
 
 
 def run_preprocessing(
@@ -48,8 +77,9 @@ def run_preprocessing(
     random_state: int = 42,
 ):
     """
-    Executes full data preprocessing, creates stratified train-test splits,
-    saves the fitted preprocessor, and exports processed datasets.
+    Executes pre-session feature selection, performs a chronological 80/20 train-test split
+    sorted by `created_at`, fits the preprocessor strictly on the training partition,
+    and serializes all artifacts.
     """
     cur_dir = os.path.dirname(os.path.abspath(__file__))
     base_dir = os.path.dirname(cur_dir) if os.path.basename(cur_dir) == "scripts" else cur_dir
@@ -63,76 +93,51 @@ def run_preprocessing(
     os.makedirs(output_dir, exist_ok=True)
     os.makedirs(models_dir, exist_ok=True)
 
-    print("=" * 60)
-    print("INUA SPRINT 3: FEATURE PREPROCESSING PIPELINE")
-    print("=" * 60)
+    print("=" * 65)
+    print("INUA U-CS 5: PRE-SESSION FEATURE PREPROCESSING & TIME SPLIT")
+    print("=" * 65)
 
     df = pd.read_csv(csv_path)
-    print(f"[PREPROCESS] Raw dataset loaded: {df.shape[0]} rows, {df.shape[1]} columns")
+    print(f"[PREPROCESS] Synthetic dataset loaded: {df.shape[0]} rows, {df.shape[1]} columns")
 
-    # Target variable and columns to drop
+    # Sort chronologically by created_at (Time-Series Split Rule)
+    if "created_at" in df.columns:
+        df = df.sort_values("created_at", ascending=True).reset_index(drop=True)
+        print(f"[PREPROCESS] Sorted chronologically by created_at: {df['created_at'].iloc[0]} -> {df['created_at'].iloc[-1]}")
+
     target_col = "session_effectiveness"
-    leakage_cols = [
-        "session_id",
-        "effectiveness_index",
-        "mentor_experience_level_encoded",  # Dropped per NFR-05 (duplicates mentor_experience_years)
-    ]
-    
-    # Feature columns
-    feature_cols = [c for c in df.columns if c not in [target_col] + leakage_cols]
-    
-    categorical_cols = [
-        "career_stage",
-        "field_of_study",
-        "career_interest",
-        "mentor_industry",
-        "mentor_specialization",
-        "mentor_availability",
-        "session_type",
-        "attendance_status",
-        "meeting_platform",
-        "goal_category",
-    ]
-    
-    numerical_cols = [
-        "prior_sessions",
-        "mentor_experience_years",
-        "session_duration_minutes",
-        "career_support_score",
-        "psychosocial_support_score",
-        "communication_quality",
-        "goal_progress_score",
-        "confidence_growth_score",
-        "mentor_responsiveness_score",
-    ]
+    categorical_cols = list(PRE_SESSION_CATEGORICAL_COLS)
+    numerical_cols = list(PRE_SESSION_NUMERICAL_COLS)
+    feature_cols = numerical_cols + categorical_cols
 
-    print(f"[PREPROCESS] Identified {len(categorical_cols)} categorical features & {len(numerical_cols)} numerical features")
-    print(f"[PREPROCESS] Excluding target leakage variables: {leakage_cols}")
+    print(f"[PREPROCESS] Pre-session numerical features ({len(numerical_cols)}): {numerical_cols}")
+    print(f"[PREPROCESS] Pre-session categorical features ({len(categorical_cols)}): {categorical_cols}")
+    print(f"[PREPROCESS] Excluded post-session / leakage columns: {POST_SESSION_LEAKAGE_COLS}")
 
-    X = df[feature_cols]
-    y = df[target_col]
+    X = df[feature_cols].copy()
+    y = df[target_col].copy()
 
-    # Stratified Train-Test split
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=test_size, random_state=random_state, stratify=y
-    )
-    print(f"[PREPROCESS] Train split: {len(X_train)} samples ({1-test_size:.0%})")
-    print(f"[PREPROCESS] Test split:  {len(X_test)} samples ({test_size:.0%})")
+    # Chronological 80/20 split (earliest 80% train, most recent 20% held-out test)
+    split_idx = int(len(df) * (1.0 - test_size))
+    X_train = X.iloc[:split_idx].reset_index(drop=True)
+    X_test = X.iloc[split_idx:].reset_index(drop=True)
+    y_train = y.iloc[:split_idx].reset_index(drop=True)
+    y_test = y.iloc[split_idx:].reset_index(drop=True)
 
-    # Fit preprocessor strictly on training data
+    print(f"[PREPROCESS] Chronological Train split (earliest {1-test_size:.0%}): {len(X_train)} samples")
+    print(f"[PREPROCESS] Chronological Test split  (latest   {test_size:.0%}): {len(X_test)} samples")
+
+    # Fit preprocessor strictly on chronological training partition
     preprocessor = build_preprocessor(categorical_cols, numerical_cols)
     preprocessor.fit(X_train)
 
-    # Transform both splits
     X_train_trans = preprocessor.transform(X_train)
     X_test_trans = preprocessor.transform(X_test)
 
-    # Get feature names after one-hot encoding
     encoded_cat_names = preprocessor.named_transformers_["cat"].get_feature_names_out(categorical_cols)
     transformed_feature_names = numerical_cols + list(encoded_cat_names)
-    print(f"[PREPROCESS] Transformed feature space dimensionality: {len(transformed_feature_names)} features")
+    print(f"[PREPROCESS] Transformed pre-session feature space dimensionality: {len(transformed_feature_names)} features")
 
-    # Save processed DataFrames
     train_processed_df = pd.DataFrame(X_train_trans, columns=transformed_feature_names)
     train_processed_df["session_effectiveness"] = y_train.values
 
@@ -142,9 +147,8 @@ def run_preprocessing(
     full_processed_df = pd.concat([train_processed_df, test_processed_df], axis=0).reset_index(drop=True)
     processed_csv_path = os.path.join(output_dir, "processed_dataset.csv")
     full_processed_df.to_csv(processed_csv_path, index=False)
-    print(f"[PREPROCESS] Saved full processed dataset -> {processed_csv_path}")
+    print(f"[PREPROCESS] Saved processed dataset -> {processed_csv_path}")
 
-    # Serialize preprocessor and feature schema
     preprocessor_path = os.path.join(models_dir, "preprocessor.pkl")
     joblib.dump(preprocessor, preprocessor_path)
     print(f"[PREPROCESS] Serialized preprocessor pipeline -> {preprocessor_path}")
@@ -153,6 +157,9 @@ def run_preprocessing(
         "categorical_cols": categorical_cols,
         "numerical_cols": numerical_cols,
         "transformed_feature_names": transformed_feature_names,
+        "leakage_cols_removed": POST_SESSION_LEAKAGE_COLS,
+        "split_method": "chronological_created_at_80_20",
+        "X_test_raw": X_test.to_dict(orient="list"),
     }
     meta_path = os.path.join(models_dir, "feature_metadata.pkl")
     joblib.dump(meta, meta_path)

@@ -13,11 +13,13 @@ import Navbar                   from './components/layout/Navbar'
 import LandingPage   from './pages/LandingPage'
 import LoginPage     from './pages/LoginPage'
 import RegisterPage  from './pages/RegisterPage'
+import ProfilePage   from './pages/ProfilePage'
 
 // Mentee pages
 import MentorsPage   from './pages/mentee/MentorsPage'
 import SessionsPage  from './pages/mentee/SessionsPage'
 import PredictPage   from './pages/mentee/PredictPage'
+import GoalsPage     from './pages/mentee/GoalsPage'
 
 // Mentor pages
 import MentorSessionsPage from './pages/mentor/MentorSessionsPage'
@@ -52,9 +54,13 @@ export default function App() {
               <Route path="/login"    element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
 
+              {/* ── Shared Authenticated Profile ── */}
+              <Route path="/profile"  element={<Private><ProfilePage /></Private>} />
+
               {/* ── Mentee ── */}
               <Route path="/mentors"  element={<Private><RoleGuard roles={['mentee']}><MentorsPage /></RoleGuard></Private>} />
               <Route path="/sessions" element={<Private><RoleGuard roles={['mentee']}><SessionsPage /></RoleGuard></Private>} />
+              <Route path="/goals"    element={<Private><RoleGuard roles={['mentee']}><GoalsPage /></RoleGuard></Private>} />
               <Route path="/predict"  element={<Private><RoleGuard roles={['mentee']}><PredictPage /></RoleGuard></Private>} />
 
               {/* ── Mentor ── */}

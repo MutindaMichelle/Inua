@@ -1,7 +1,8 @@
 """
 INUA Mentorship Platform: Database Engine & Session Management
 Author: Michelle (Final Year Project - BICS Year 4, Strathmore University)
-Sprint: Week 1 · Database Infrastructure (feat(db))
+Supports live PostgreSQL (primary production/staging database via DATABASE_URL)
+with graceful SQLite fallback for isolated local test execution.
 """
 
 import sys
@@ -11,27 +12,36 @@ from typing import Generator
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
-# Ensure backend root is on sys.path
 BACKEND_DIR = Path(__file__).resolve().parent.parent
 if str(BACKEND_DIR) not in sys.path:
     sys.path.insert(0, str(BACKEND_DIR))
 
 from app.config import DATABASE_URL
 
-# Handle SQLite concurrency & connection arguments
-connect_args = {}
-if DATABASE_URL.startswith("sqlite"):
-    connect_args["check_same_thread"] = False
+# Normalize Render/Heroku style postgres:// URI to SQLAlchemy 2.0 postgresql://
+normalized_db_url = DATABASE_URL
+if normalized_db_url.startswith("postgres://"):
+    normalized_db_url = normalized_db_url.replace("postgres://", "postgresql://", 1)
 
-# Create Engine
+connect_args = {}
+engine_kwargs = {
+    "echo": False,
+    "future": True,
+    "pool_pre_ping": True,
+}
+
+if normalized_db_url.startswith("sqlite"):
+    connect_args["check_same_thread"] = False
+else:
+    engine_kwargs["pool_size"] = 5
+    engine_kwargs["max_overflow"] = 10
+
 engine = create_engine(
-    DATABASE_URL,
+    normalized_db_url,
     connect_args=connect_args,
-    echo=False,
-    future=True,
+    **engine_kwargs,
 )
 
-# Session Factory
 SessionLocal = sessionmaker(
     autocommit=False,
     autoflush=False,
@@ -39,7 +49,6 @@ SessionLocal = sessionmaker(
     future=True,
 )
 
-# Declarative Base for ORM Entities
 Base = declarative_base()
 
 
@@ -54,6 +63,5 @@ def get_db() -> Generator[Session, None, None]:
 
 def init_db() -> None:
     """Creates all defined database tables if they do not already exist."""
-    # Import all models to ensure they are registered with Base.metadata
     from models import database  # noqa: F401
     Base.metadata.create_all(bind=engine)

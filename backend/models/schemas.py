@@ -1,6 +1,7 @@
 """
 INUA Platform: Pydantic Data Models & API Contracts
 Author: Michelle (Final Year Project - BICS Year 4, Strathmore University)
+Use Case: U-CS 5 (session-value) — Career Mentor OS
 """
 
 from datetime import datetime
@@ -8,10 +9,54 @@ from typing import List, Optional, Literal, Dict, Any
 from pydantic import BaseModel, Field
 
 
+# ==========================================
+# U-CS 5 Platform Grader Contract Schemas
+# ==========================================
+
+class UCS5PredictRequest(BaseModel):
+    """
+    Platform Grader Contract for U-CS 5 (session-value):
+    in : { "menteeId": "...", "mentorId": "...", "leadTimeHours": 0, "hasAgenda": false, "isFirstSession": true }
+    """
+    menteeId: Optional[str] = Field("...", description="Mentee identifier")
+    mentorId: Optional[str] = Field("...", description="Mentor identifier")
+    leadTimeHours: int = Field(0, ge=0, description="Hours between booking and scheduled start")
+    hasAgenda: bool = Field(False, description="Whether an agenda was submitted beforehand")
+    isFirstSession: bool = Field(True, description="Whether this is the pair's initial meeting")
+    method: Optional[str] = Field(None, description="Optional override ('baseline' or 'xgboost')")
+    model_config = {"extra": "allow"}
+
+
+class UCS5PredictResponse(BaseModel):
+    """
+    Platform Grader Contract for U-CS 5 (session-value):
+    out: { "probability": 0.0, "factors": [], "suggestedIntervention": "...", "isSynthetic": true, "method": "xgboost" }
+    """
+    probability: float = Field(..., description="Predicted effectiveness probability [0.0, 1.0]")
+    factors: List[str] = Field(default_factory=list, description="Top driving factors with signed contributions")
+    suggestedIntervention: str = Field(..., description="Actionable pre-session intervention")
+    isSynthetic: bool = Field(True, description="Synthetic data compliance flag")
+    method: str = Field("xgboost", description="Inference method ('baseline' or 'xgboost')")
+    model_config = {"extra": "allow"}
+
+
+# ==========================================
+# INUA Pre-Session & Legacy Prediction Schemas
+# ==========================================
+
 class MentorshipSessionInput(BaseModel):
-    """Input payload representing a completed or simulated mentorship interaction."""
+    """Input payload representing a mentorship interaction (pre-session features prioritized)."""
+    leadTimeHours: Optional[int] = Field(
+        None, ge=0, le=720, description="Hours between booking and scheduled session start", example=48
+    )
+    hasAgenda: Optional[bool] = Field(
+        None, description="Whether a session agenda was submitted beforehand", example=True
+    )
+    isFirstSession: Optional[bool] = Field(
+        None, description="Whether this is the pair's initial meeting", example=False
+    )
     career_stage: Literal["Year1", "Year2", "Year3", "Year4", "Graduate", "EarlyCareer"] = Field(
-        ..., description="Mentee academic or professional progression stage", example="Year4"
+        "Year4", description="Mentee academic or professional progression stage", example="Year4"
     )
     field_of_study: Literal[
         "Computer Science",
@@ -22,7 +67,7 @@ class MentorshipSessionInput(BaseModel):
         "Education",
         "Social Sciences",
         "Other STEM",
-    ] = Field(..., description="Undergraduate field of study", example="Computer Science")
+    ] = Field("Computer Science", description="Undergraduate field of study", example="Computer Science")
     career_interest: Literal[
         "Data Science",
         "Software Engineering",
@@ -33,19 +78,19 @@ class MentorshipSessionInput(BaseModel):
         "Product Management",
         "Finance",
         "Entrepreneurship",
-    ] = Field(..., description="Target career interest", example="Software Engineering")
+    ] = Field("Software Engineering", description="Target career interest", example="Software Engineering")
     prior_sessions: int = Field(
-        ..., ge=0, le=20, description="Count of prior mentorship encounters", example=3
+        3, ge=0, le=20, description="Count of prior mentorship encounters (historical_interaction_frequency)", example=3
     )
     mentor_experience_years: int = Field(
-        ..., ge=1, le=40, description="Mentor years of experience", example=8
+        8, ge=1, le=40, description="Mentor years of industry experience", example=8
     )
-    mentor_industry: str = Field(..., description="Mentor industry sector", example="Technology")
+    mentor_industry: str = Field("Technology", description="Mentor industry sector", example="Technology")
     mentor_specialization: str = Field(
-        ..., description="Mentor specific domain focus", example="Backend Engineering"
+        "Backend Engineering", description="Mentor specific domain focus", example="Backend Engineering"
     )
     mentor_availability: Literal["High", "Medium", "Low"] = Field(
-        ..., description="Mentor availability band", example="High"
+        "High", description="Mentor availability band", example="High"
     )
     session_type: Literal[
         "Career Guidance",
@@ -53,15 +98,15 @@ class MentorshipSessionInput(BaseModel):
         "Interview Preparation",
         "Technical Coaching",
         "Networking",
-    ] = Field(..., description="Mentorship intervention type", example="Interview Preparation")
-    session_duration_minutes: int = Field(
-        ..., ge=15, le=180, description="Session duration in minutes", example=65
+    ] = Field("Interview Preparation", description="Mentorship intervention type", example="Interview Preparation")
+    session_duration_minutes: Optional[int] = Field(
+        60, ge=15, le=180, description="Planned session duration in minutes", example=65
     )
-    attendance_status: Literal["Attended", "Rescheduled", "Cancelled"] = Field(
-        ..., description="Session completion status", example="Attended"
+    attendance_status: Optional[Literal["Attended", "Rescheduled", "Cancelled"]] = Field(
+        "Attended", description="Legacy status field (excluded from ML feature vector X)", example="Attended"
     )
     meeting_platform: Literal["Teams", "Zoom", "Meet", "Physical"] = Field(
-        ..., description="Platform modality", example="Teams"
+        "Teams", description="Platform modality", example="Teams"
     )
     goal_category: Literal[
         "Internship",
@@ -70,30 +115,33 @@ class MentorshipSessionInput(BaseModel):
         "Career Transition",
         "Leadership",
         "Research",
-    ] = Field(..., description="Stated session learning objective", example="Internship")
-    career_support_score: int = Field(
-        ..., ge=1, le=5, description="Instrumental career guidance rating (1-5)", example=4
+    ] = Field("Internship", description="Stated session learning objective", example="Internship")
+    career_support_score: Optional[int] = Field(
+        4, ge=1, le=5, description="Post-session construct (excluded from ML feature vector X)", example=4
     )
-    psychosocial_support_score: int = Field(
-        ..., ge=1, le=5, description="Emotional and motivational support rating (1-5)", example=4
+    psychosocial_support_score: Optional[int] = Field(
+        4, ge=1, le=5, description="Post-session construct (excluded from ML feature vector X)", example=4
     )
-    communication_quality: int = Field(
-        ..., ge=1, le=5, description="Communication clarity and flow (1-5)", example=5
+    communication_quality: Optional[int] = Field(
+        4, ge=1, le=5, description="Post-session construct (excluded from ML feature vector X)", example=5
     )
-    goal_progress_score: int = Field(
-        ..., ge=1, le=5, description="Advancement toward goal (1-5)", example=4
+    goal_progress_score: Optional[int] = Field(
+        4, ge=1, le=5, description="Post-session construct (excluded from ML feature vector X)", example=4
     )
-    confidence_growth_score: int = Field(
-        ..., ge=1, le=5, description="Post-session self-efficacy growth (1-5)", example=4
+    confidence_growth_score: Optional[int] = Field(
+        4, ge=1, le=5, description="Post-session construct (excluded from ML feature vector X)", example=4
     )
-    mentor_responsiveness_score: int = Field(
-        ..., ge=1, le=5, description="Mentor turnaround and responsiveness (1-5)", example=5
+    mentor_responsiveness_score: Optional[int] = Field(
+        4, ge=1, le=5, description="Post-session construct (excluded from ML feature vector X)", example=5
     )
+
+
+MODEL_CHOICES = Literal["XGBoost", "Random Forest", "AdaBoost", "Decision Tree", "Heuristic Baseline"]
 
 
 class SessionPredictionRequest(MentorshipSessionInput):
     """Payload for single session prediction with optional model selector."""
-    model_name: Optional[Literal["XGBoost", "Random Forest", "AdaBoost"]] = Field(
+    model_name: Optional[MODEL_CHOICES] = Field(
         "XGBoost", description="Classifier to use for inference"
     )
 
@@ -110,12 +158,13 @@ class SessionPredictionResponse(BaseModel):
         default_factory=list,
         description="Local per-prediction feature contributions explaining this outcome (NFR-05)"
     )
+    isSynthetic: bool = Field(True, description="Synthetic data compliance flag")
 
 
 class BatchPredictionRequest(BaseModel):
     """Payload for multiple session predictions."""
     sessions: List[MentorshipSessionInput]
-    model_name: Optional[Literal["XGBoost", "Random Forest", "AdaBoost"]] = "XGBoost"
+    model_name: Optional[MODEL_CHOICES] = "XGBoost"
 
 
 class BatchPredictionResponse(BaseModel):
@@ -180,6 +229,17 @@ class UserRegisterRequest(BaseModel):
     )
 
 
+class UserProfileUpdateRequest(BaseModel):
+    """Payload for updating a mentee or mentor user profile."""
+    name: Optional[str] = Field(None, min_length=2, max_length=120)
+    university: Optional[str] = Field(None, max_length=150)
+    career_stage: Optional[Literal["Year1", "Year2", "Year3", "Year4", "Graduate", "EarlyCareer"]] = None
+    career_interest: Optional[str] = Field(None, max_length=100)
+    experience_years: Optional[float] = Field(None, ge=0.5, le=50.0)
+    industry: Optional[str] = Field(None, max_length=100)
+    expertise: Optional[str] = Field(None, max_length=150)
+
+
 class UserLoginRequest(BaseModel):
     """Payload for user authentication."""
     email: str = Field(
@@ -207,6 +267,28 @@ class TokenResponse(BaseModel):
     token_type: str = Field("bearer", description="Token authentication scheme")
     expires_in: int = Field(..., description="Access token lifetime in seconds")
     user: UserResponse
+
+
+# ==========================================
+# Goal Progression Schemas
+# ==========================================
+
+class GoalCreateRequest(BaseModel):
+    goal_title: str = Field(..., min_length=3, max_length=255, example="Complete AWS Solutions Architect Associate lab")
+    progress_percentage: int = Field(0, ge=0, le=100, example=25)
+
+
+class GoalUpdateRequest(BaseModel):
+    goal_title: Optional[str] = Field(None, min_length=3, max_length=255)
+    progress_percentage: Optional[int] = Field(None, ge=0, le=100)
+
+
+class GoalResponse(BaseModel):
+    goal_id: int
+    mentee_id: int
+    goal_title: str
+    progress_percentage: int
+    created_at: Optional[str] = None
 
 
 # ==========================================
@@ -280,7 +362,6 @@ class SessionListResponse(BaseModel):
     sessions: List[SessionDetailResponse]
 
 
-
 # ==========================================
 # Feedback Schemas (FR-04)
 # ==========================================
@@ -316,7 +397,6 @@ class FeedbackResponse(BaseModel):
     submitted_at: Optional[str] = None
 
 
-
 # ==========================================
 # Prediction Schemas (FR-05, FR-06, IR-02)
 # ==========================================
@@ -326,7 +406,7 @@ class PredictionCreateRequest(BaseModel):
     session_id: Optional[int] = Field(
         None, description="ID of existing session to evaluate and save prediction for", example=1
     )
-    model_name: Optional[Literal["XGBoost", "Random Forest", "AdaBoost"]] = Field(
+    model_name: Optional[MODEL_CHOICES] = Field(
         "XGBoost", description="Ensemble classifier to use for inference"
     )
     session_features: Optional[MentorshipSessionInput] = Field(
@@ -356,7 +436,6 @@ class PredictionDetailResponse(BaseModel):
     risk_factors: List[str] = []
     feature_contributions: List[dict] = []
     predicted_at: Optional[str] = None
-
 
 
 # ==========================================
