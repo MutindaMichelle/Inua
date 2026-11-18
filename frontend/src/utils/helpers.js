@@ -31,6 +31,9 @@ export function formatDate(iso) {
   })
 }
 
+/** Alias of formatDate (used by Goals page). */
+export const fmtDate = formatDate
+
 /** Status badge CSS class. */
 export function statusClass(status = '') {
   const map = {
