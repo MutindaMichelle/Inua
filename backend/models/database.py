@@ -82,7 +82,7 @@ class Mentee(Base):
 
 
 class Mentor(Base):
-    """Industry professional or faculty mentor profile entity."""
+    """Industry professional or faculty mentor profile entity with credential verification."""
     __tablename__ = "mentors"
 
     mentor_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
@@ -90,7 +90,13 @@ class Mentor(Base):
     experience_years = Column(Float, nullable=False, default=1.0)
     industry = Column(String(100), nullable=False)  # Technology, Finance, Consulting, etc.
     expertise = Column(String(150), nullable=False)  # Backend Engineering, Machine Learning, etc.
-    is_verified = Column(Boolean, default=True, nullable=False)
+    is_verified = Column(Boolean, default=False, nullable=False)
+    verification_status = Column(String(30), default="Pending", nullable=False)  # 'Pending', 'Verified', 'Rejected'
+    credential_type = Column(String(100), nullable=True, default="Professional Certification")
+    credential_issuer = Column(String(150), nullable=True)
+    credential_reference = Column(String(255), nullable=True)
+    credential_document_url = Column(String(500), nullable=True)
+    verification_notes = Column(Text, nullable=True)
 
     # Relationships
     user = relationship("User", back_populates="mentor_profile")
@@ -107,6 +113,12 @@ class Mentor(Base):
             "industry": self.industry,
             "expertise": self.expertise,
             "is_verified": self.is_verified,
+            "verification_status": self.verification_status or ("Verified" if self.is_verified else "Pending"),
+            "credential_type": self.credential_type,
+            "credential_issuer": self.credential_issuer,
+            "credential_reference": self.credential_reference,
+            "credential_document_url": self.credential_document_url,
+            "verification_notes": self.verification_notes,
         }
 
 

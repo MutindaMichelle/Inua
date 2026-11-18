@@ -1,11 +1,11 @@
 """
 INUA Mentorship Platform: End-to-End Core API Workflow Integration Tests
 Author: Michelle (Final Year Project - BICS Year 4, Strathmore University)
-Requirements: Issue #10 (Milestone 1 - Backend MVP Completion)
+Requirements: Issue #10 (Milestone 1 - Backend MVP Completion) & Mentor Credential Verification
 
 Tests:
-  1. Mentee & Mentor Registration and Login
-  2. Mentor Discovery & Quality Profile Inspection
+  1. Mentee & Mentor Registration (with Credential Proof) and Login
+  2. Mentor Credential Verification Gate & Administrator Approval Workflow
   3. Session Booking, Conflict Prevention & Lifecycle Transition to Completed
   4. Post-Session Feedback Submission & Duplicate Prevention
   5. Automated Machine Learning Outcome Prediction & TreeSHAP Local Attributions
@@ -85,7 +85,7 @@ run("Register new Mentee returns 201 Created", r_mentee_reg.status_code == 201, 
 mentee_token = r_mentee_reg.json().get("access_token") if r_mentee_reg.status_code == 201 else None
 run("Mentee registration issues JWT access token", bool(mentee_token))
 
-# 2. Register new Mentor
+# 2. Register new Mentor with Credential Proof (starts Pending Admin Approval)
 mentor_reg_payload = {
     "name": f"Dr. Angela Waweru {run_id}",
     "email": mentor_email,
@@ -94,11 +94,19 @@ mentor_reg_payload = {
     "industry": "Technology",
     "expertise": "Cloud Architecture & Scalability",
     "experience_years": 10.0,
+    "credential_type": "Employer Verification Letter",
+    "credential_issuer": "Safaricom PLC Cloud Division",
+    "credential_reference": f"SAF-CLOUD-{run_id}",
+    "credential_document_url": f"https://www.safaricom.co.ke/verify/SAF-CLOUD-{run_id}",
 }
 r_mentor_reg = client.post("/api/v1/auth/register", json=mentor_reg_payload)
 run("Register new Mentor returns 201 Created", r_mentor_reg.status_code == 201, r_mentor_reg.text[:120])
 mentor_token = r_mentor_reg.json().get("access_token") if r_mentor_reg.status_code == 201 else None
 run("Mentor registration issues JWT access token", bool(mentor_token))
+if r_mentor_reg.status_code == 201:
+    m_prof = r_mentor_reg.json()["user"]["profile"]
+    run("New Mentor starts with is_verified=False (Pending Admin Review)", m_prof.get("is_verified") is False)
+    run("New Mentor verification_status is 'Pending'", m_prof.get("verification_status") == "Pending")
 
 # 3. Log in both personas to verify credential round-trip
 r_mentee_login = client.post("/api/v1/auth/login", json={"email": mentee_email, "password": shared_password})
@@ -125,24 +133,9 @@ run("Resolved new Mentor and Mentee primary keys", new_mentor_id is not None and
 
 
 # ═══════════════════════════════════════════════════════════════════
-# Stage 2: Mentor Discovery & Quality Inspection
+# Stage 2: Mentor Credential Verification & Admin Approval Workflow
 # ═══════════════════════════════════════════════════════════════════
-print("\n>> Stage 2: Mentor Discovery & Quality Profile Inspection")
-
-r_mentors = client.get("/api/v1/mentors", headers=auth(mentee_token))
-run("Mentee browses mentor catalog (200 OK)", r_mentors.status_code == 200)
-
-r_quality_init = client.get(f"/api/v1/mentors/{new_mentor_id}/quality", headers=auth(mentee_token))
-run("Inspect new mentor quality profile (200 OK)", r_quality_init.status_code == 200)
-if r_quality_init.status_code == 200:
-    q_data = r_quality_init.json()
-    run("New mentor begins with 0 completed sessions", q_data.get("completed_sessions") == 0)
-
-
-# ═══════════════════════════════════════════════════════════════════
-# Stage 3: Session Booking, Conflict Guarding & Status Transitions
-# ═══════════════════════════════════════════════════════════════════
-print("\n>> Stage 3: Session Booking & Lifecycle Management")
+print("\n>> Stage 2: Mentor Credential Verification & Quality Profile Inspection")
 
 session_start_time = (datetime.now(timezone.utc) + timedelta(days=2)).replace(minute=0, second=0, microsecond=0)
 booking_payload = {
@@ -154,9 +147,54 @@ booking_payload = {
     "goal_category": "Technical Skills",
 }
 
-# 1. Book session
+# 1. Unverified mentor cannot be booked before Admin approves credentials
+r_unverified_book = client.post("/api/v1/sessions/book", json=booking_payload, headers=auth(mentee_token))
+run("Booking unverified mentor rejected before Admin approval (404 Not Found)", r_unverified_book.status_code == 404)
+
+# 2. Non-admin cannot approve mentor credentials
+r_mentee_verify = client.post(
+    f"/api/v1/mentors/{new_mentor_id}/verify",
+    json={"status": "Verified"},
+    headers=auth(mentee_token),
+)
+run("Mentee blocked from verifying mentor credentials (403 Forbidden)", r_mentee_verify.status_code == 403)
+
+# 3. Administrator inspects pending mentors & approves new mentor's credentials
+r_pending_list = client.get("/api/v1/mentors/pending?status=Pending", headers=auth(admin_token))
+run("Admin lists pending mentor applications (200 OK)", r_pending_list.status_code == 200)
+
+r_admin_verify = client.post(
+    f"/api/v1/mentors/{new_mentor_id}/verify",
+    json={
+        "status": "Verified",
+        "verification_notes": "Verified Safaricom Cloud Division employer letter and AWS credentials.",
+    },
+    headers=auth(admin_token),
+)
+run("Administrator approves mentor credentials (200 OK)", r_admin_verify.status_code == 200)
+if r_admin_verify.status_code == 200:
+    v_data = r_admin_verify.json()
+    run("Mentor is now verified (is_verified=True)", v_data.get("is_verified") is True)
+    run("Mentor verification_status updated to 'Verified'", v_data.get("verification_status") == "Verified")
+
+r_mentors = client.get("/api/v1/mentors", headers=auth(mentee_token))
+run("Mentee browses verified mentor catalog (200 OK)", r_mentors.status_code == 200)
+
+r_quality_init = client.get(f"/api/v1/mentors/{new_mentor_id}/quality", headers=auth(mentee_token))
+run("Inspect newly verified mentor quality profile (200 OK)", r_quality_init.status_code == 200)
+if r_quality_init.status_code == 200:
+    q_data = r_quality_init.json()
+    run("New mentor begins with 0 completed sessions", q_data.get("completed_sessions") == 0)
+
+
+# ═══════════════════════════════════════════════════════════════════
+# Stage 3: Session Booking, Conflict Guarding & Status Transitions
+# ═══════════════════════════════════════════════════════════════════
+print("\n>> Stage 3: Session Booking & Lifecycle Management")
+
+# 1. Book session (now succeeds after Admin credential verification)
 r_book = client.post("/api/v1/sessions/book", json=booking_payload, headers=auth(mentee_token))
-run("Mentee books session (201 Created)", r_book.status_code == 201, r_book.text[:120])
+run("Mentee books session with verified mentor (201 Created)", r_book.status_code == 201, r_book.text[:120])
 session_id = r_book.json().get("session_id") if r_book.status_code == 201 else None
 run("Session status is initialized as Scheduled", r_book.json().get("status") == "Scheduled")
 

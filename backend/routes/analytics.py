@@ -83,13 +83,7 @@ def get_admin_overview(
     current_admin: User = Depends(require_roles("administrator")),
 ):
     """
-    Aggregates live database statistics across the platform:
-    - User counts by role (mentees, mentors, administrators)
-    - Session counts by status (Scheduled, Completed, Cancelled, Rescheduled, Pending)
-    - Feedback ratings across all 4 Likert dimensions
-    - ML prediction counts and effectiveness breakdown
-    - Top performing mentors by aggregate effectiveness score
-
+    Aggregates live database statistics across the platform.
     Strictly restricted to users with the 'administrator' role (NFR-02).
     """
     return compute_admin_analytics_overview(db)
@@ -98,14 +92,14 @@ def get_admin_overview(
 @router.get(
     "/admin/mentors",
     response_model=List[MentorQualityProfileResponse],
-    summary="Get full mentor quality audit rankings (FR-07, FR-08 - Admin only)",
+    summary="Get full mentor quality audit rankings & credential review queue (FR-07, FR-08 - Admin only)",
 )
 def get_admin_mentors_ranking(
     db: Session = Depends(get_db),
     current_admin: User = Depends(require_roles("administrator")),
 ):
     """
-    Returns ranked quality audit profiles for all mentors on the platform.
-    Strictly restricted to administrators (NFR-02).
+    Returns ranked quality audit profiles and credential verification records for all mentors
+    (including Pending, Verified, and Rejected mentors) for Administrator review (NFR-02).
     """
-    return compute_all_mentor_profiles(db)
+    return compute_all_mentor_profiles(db, include_unverified=True)

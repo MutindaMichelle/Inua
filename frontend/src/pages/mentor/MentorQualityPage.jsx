@@ -1,10 +1,10 @@
 /**
- * INUA Mentor Quality Profile Page — mentor view: longitudinal performance dashboard.
+ * INUA Mentor Quality Profile Page — mentor view: longitudinal performance & credential verification dashboard.
  */
 import React, { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import api from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
-import { useToast } from '../../context/ToastContext'
 import { apiError } from '../../utils/helpers'
 
 function StatCard({ label, value, unit = '', icon, color = 'bg-slate2-50' }) {
@@ -38,24 +38,37 @@ function RatingBar({ label, value }) {
 
 export default function MentorQualityPage() {
   const { user } = useAuth()
-  const toast    = useToast()
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState('')
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    // Load this mentor's quality profile
-    api.get('/mentors/quality-profiles')
-      .then(({ data }) => {
-        const profiles = Array.isArray(data) ? data : data.profiles ?? []
-        // Find by current user's email or name
-        const mine = profiles.find(
-          (p) => p.email === user?.email || p.name === user?.name
-        ) ?? profiles[0]
-        setProfile(mine ?? null)
-      })
-      .catch((err) => setError(apiError(err)))
-      .finally(() => setLoading(false))
+    async function loadMyQuality() {
+      setLoading(true)
+      try {
+        const mentorId = user?.profile?.mentor_id
+        if (mentorId) {
+          const { data } = await api.get(`/mentors/${mentorId}/quality`)
+          setProfile(data)
+        } else {
+          const { data: meData } = await api.get('/auth/me')
+          if (meData?.profile?.mentor_id) {
+            const { data } = await api.get(`/mentors/${meData.profile.mentor_id}/quality`)
+            setProfile(data)
+          } else {
+            const { data } = await api.get('/mentors/quality-profiles')
+            const profiles = Array.isArray(data) ? data : data.profiles ?? []
+            const mine = profiles.find((p) => p.email === user?.email || p.name === user?.name) ?? profiles[0]
+            setProfile(mine ?? null)
+          }
+        }
+      } catch (err) {
+        setError(apiError(err))
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadMyQuality()
   }, [user])
 
   if (loading) return (
@@ -83,39 +96,74 @@ export default function MentorQualityPage() {
   const effectivenessColor =
     profile.effectiveness_rate_percentage >= 70 ? 'text-green-700' :
     profile.effectiveness_rate_percentage >= 40 ? 'text-amber-700' : 'text-red-700'
+  const vStatus = profile.verification_status || (profile.is_verified ? 'Verified' : 'Pending')
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-10">
+      {/* Credential Verification Status Banner for Unverified Mentors */}
+      {vStatus !== 'Verified' && (
+        <div className="card p-5 mb-6 border-l-4 border-l-amber-500 bg-amber-50/70 flex items-center justify-between gap-4 flex-wrap">
+          <div>
+            <div className="text-sm font-extrabold text-amber-900">
+              {vStatus === 'Pending'
+                ? '⏳ Your Mentor Credentials Are Pending Administrator Verification'
+                : '⚠️ Credential Verification Requires Attention'}
+            </div>
+            <p className="text-xs text-amber-800 mt-1">
+              {profile.verification_notes ||
+                'Once an Administrator verifies your submitted degree, certification, or employer letter, your profile will become bookable by mentees.'}
+            </p>
+          </div>
+          <Link to="/profile" className="btn-secondary text-xs py-2 px-3">
+            Update Credential Proof →
+          </Link>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-8 flex items-center gap-4">
         <div className="card p-5 flex-1">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl flex items-center justify-center font-extrabold text-white text-xl"
-                 style={{ background: 'linear-gradient(135deg,#40855d,#2f6847)' }}>
+          <div className="flex items-center gap-4 flex-wrap">
+            <div
+              className="w-14 h-14 rounded-2xl flex items-center justify-center font-extrabold text-white text-xl"
+              style={{ background: 'linear-gradient(135deg,#40855d,#2f6847)' }}
+            >
               {profile.name?.split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2)}
             </div>
-            <div>
+            <div className="flex-1 min-w-0">
               <div className="text-xl font-extrabold text-slate2-900">{profile.name}</div>
               <div className="text-sm text-slate2-500">{profile.expertise} · {profile.industry}</div>
-              <div className="text-xs text-slate2-400 mt-0.5">{profile.experience_years} yrs experience</div>
-            </div>
-            {profile.is_verified && (
-              <div className="ml-auto">
-                <span className="bg-sage-100 text-sage-700 text-xs font-bold px-3 py-1 rounded-full">
-                  ✓ Verified
-                </span>
+              <div className="text-xs text-slate2-400 mt-0.5">
+                {profile.experience_years} yrs experience
+                {profile.credential_type ? ` · ${profile.credential_type}` : ''}
+                {profile.credential_issuer ? ` (${profile.credential_issuer})` : ''}
               </div>
-            )}
+            </div>
+            <div className="ml-auto">
+              {vStatus === 'Verified' ? (
+                <span className="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">
+                  ✓ Verified Credential
+                </span>
+              ) : vStatus === 'Rejected' ? (
+                <span className="bg-red-100 text-red-800 text-xs font-bold px-3 py-1 rounded-full">
+                  ✕ Verification Rejected
+                </span>
+              ) : (
+                <span className="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full">
+                  ⏳ Pending Admin Review
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-        <StatCard icon="📅" label="Total Sessions"     value={profile.total_sessions}      color="bg-slate2-50" />
-        <StatCard icon="✅" label="Completed"           value={profile.completed_sessions}  color="bg-blue-50" />
-        <StatCard icon="🎓" label="Unique Mentees"      value={profile.unique_mentees_count} color="bg-purple-50" />
-        <StatCard icon="⭐" label="Overall Rating"      value={profile.average_overall_rating} unit="/5" color="bg-amber-50" />
+        <StatCard icon="📅" label="Total Sessions" value={profile.total_sessions} color="bg-slate2-50" />
+        <StatCard icon="✅" label="Completed" value={profile.completed_sessions} color="bg-blue-50" />
+        <StatCard icon="🎓" label="Unique Mentees" value={profile.unique_mentees_count} color="bg-purple-50" />
+        <StatCard icon="⭐" label="Overall Rating" value={profile.average_overall_rating} unit="/5" color="bg-amber-50" />
       </div>
 
       {/* Effectiveness banner */}
@@ -137,8 +185,12 @@ export default function MentorQualityPage() {
               className="h-full rounded-full transition-all"
               style={{
                 width: `${profile.effectiveness_rate_percentage}%`,
-                background: profile.effectiveness_rate_percentage >= 70 ? '#40855d' :
-                            profile.effectiveness_rate_percentage >= 40 ? '#d67d3a' : '#dc2626',
+                background:
+                  profile.effectiveness_rate_percentage >= 70
+                    ? '#40855d'
+                    : profile.effectiveness_rate_percentage >= 40
+                    ? '#d67d3a'
+                    : '#dc2626',
               }}
             />
           </div>
@@ -149,10 +201,10 @@ export default function MentorQualityPage() {
       <div className="card p-6 mb-6">
         <h2 className="font-bold text-slate2-900 mb-4">Feedback Scores</h2>
         <div className="flex flex-col gap-4">
-          <RatingBar label="Communication Quality"  value={profile.average_communication_score} />
-          <RatingBar label="Goal Progress"           value={profile.average_goal_progress} />
-          <RatingBar label="Confidence Growth"       value={profile.average_confidence_growth} />
-          <RatingBar label="Overall Rating"          value={profile.average_overall_rating} />
+          <RatingBar label="Communication Quality" value={profile.average_communication_score} />
+          <RatingBar label="Goal Progress" value={profile.average_goal_progress} />
+          <RatingBar label="Confidence Growth" value={profile.average_confidence_growth} />
+          <RatingBar label="Overall Rating" value={profile.average_overall_rating} />
         </div>
         <p className="text-xs text-slate2-400 mt-4">
           Based on {profile.total_feedback_count} feedback submission{profile.total_feedback_count !== 1 ? 's' : ''}

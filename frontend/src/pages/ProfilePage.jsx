@@ -1,5 +1,5 @@
 /**
- * INUA Profile Management Page — Mentee & Mentor profile view and edit screen.
+ * INUA Profile Management Page — Mentee & Mentor profile view, credential proof management, and status banner.
  * Author: Michelle Mutinda (Adm 154727) — BICS Year 4, Strathmore University
  */
 import React, { useEffect, useState } from 'react'
@@ -22,12 +22,21 @@ const CAREER_INTERESTS = [
 ]
 const INDUSTRIES = [
   'Technology',
+  'Finance',
   'Banking & Finance',
+  'Consulting',
   'Academia',
   'Healthcare',
+  'Education',
   'NGO',
   'Government',
   'Entrepreneurship',
+]
+const CREDENTIAL_TYPES = [
+  'Professional Certification',
+  'Academic Degree / Diploma',
+  'Employer Verification Letter',
+  'Consultancy / Firm Registration',
 ]
 
 export default function ProfilePage() {
@@ -46,6 +55,10 @@ export default function ProfilePage() {
     industry: 'Technology',
     expertise: 'Backend Engineering',
     experience_years: 6,
+    credential_type: 'Professional Certification',
+    credential_issuer: '',
+    credential_reference: '',
+    credential_document_url: '',
   })
 
   useEffect(() => {
@@ -63,6 +76,10 @@ export default function ProfilePage() {
           industry: p.industry || 'Technology',
           expertise: p.expertise || 'Backend Engineering',
           experience_years: p.experience_years ?? 6,
+          credential_type: p.credential_type || 'Professional Certification',
+          credential_issuer: p.credential_issuer || '',
+          credential_reference: p.credential_reference || '',
+          credential_document_url: p.credential_document_url || '',
         })
       } catch (err) {
         setError(apiError(err))
@@ -91,10 +108,14 @@ export default function ProfilePage() {
         payload.industry = form.industry
         payload.expertise = form.expertise
         payload.experience_years = Number(form.experience_years)
+        payload.credential_type = form.credential_type
+        payload.credential_issuer = form.credential_issuer
+        payload.credential_reference = form.credential_reference
+        payload.credential_document_url = form.credential_document_url
       }
       const { data } = await api.put('/auth/profile', payload)
       setProfileData(data)
-      toast('Profile updated successfully!', 'success')
+      toast('Profile & credential details updated!', 'success')
     } catch (err) {
       setError(apiError(err))
       toast(apiError(err), 'error')
@@ -108,15 +129,70 @@ export default function ProfilePage() {
   }
 
   const role = profileData?.role || user?.role
+  const mentorProfile = profileData?.profile || {}
+  const verificationStatus =
+    mentorProfile.verification_status || (mentorProfile.is_verified ? 'Verified' : 'Pending')
 
   return (
     <div className="max-w-3xl mx-auto">
       <div className="mb-6">
         <h1 className="section-title">👤 Profile & Pre-Session Attributes</h1>
         <p className="section-sub">
-          Manage your institutional identity and domain attributes used by the U-CS 5 pre-session effectiveness model.
+          Manage your institutional identity, domain specialization, and professional credentials.
         </p>
       </div>
+
+      {/* Mentor Verification Status Banner */}
+      {role === 'mentor' && (
+        <div
+          className={`card p-5 mb-6 border-l-4 ${
+            verificationStatus === 'Verified'
+              ? 'border-l-emerald-600 bg-emerald-50/60'
+              : verificationStatus === 'Rejected'
+              ? 'border-l-red-600 bg-red-50/60'
+              : 'border-l-amber-500 bg-amber-50/70'
+          }`}
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+                {verificationStatus === 'Verified' && (
+                  <span className="text-emerald-700">✓ Verified Industry / Faculty Mentor</span>
+                )}
+                {verificationStatus === 'Pending' && (
+                  <span className="text-amber-800">⏳ Pending Administrator Credential Verification</span>
+                )}
+                {verificationStatus === 'Rejected' && (
+                  <span className="text-red-700">⚠️ Credential Verification Rejected — Action Required</span>
+                )}
+              </div>
+              <p className="text-xs text-slate-600 mt-1">
+                {verificationStatus === 'Verified'
+                  ? 'Your academic or professional credentials have been verified. Your profile is active and bookable by mentees.'
+                  : verificationStatus === 'Rejected'
+                  ? 'Your submitted credential proof could not be verified. Please update your certificate, employer letter, or consultancy registration details below to request re-evaluation.'
+                  : 'Your mentor profile is currently under review by the Platform Administrator. Once your submitted degree, certification, employer letter, or firm registration is verified, mentees will be able to book sessions with you.'}
+              </p>
+              {mentorProfile.verification_notes && (
+                <div className="mt-2.5 text-xs bg-white/80 rounded-lg px-3 py-2 border border-slate-200 text-slate-700">
+                  <span className="font-bold">Admin Review Note:</span> {mentorProfile.verification_notes}
+                </div>
+              )}
+            </div>
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-extrabold whitespace-nowrap ${
+                verificationStatus === 'Verified'
+                  ? 'bg-emerald-100 text-emerald-800'
+                  : verificationStatus === 'Rejected'
+                  ? 'bg-red-100 text-red-800'
+                  : 'bg-amber-200 text-amber-900'
+              }`}
+            >
+              {verificationStatus}
+            </span>
+          </div>
+        </div>
+      )}
 
       <div className="card p-6 mb-6 flex items-center gap-4">
         <div className="w-14 h-14 rounded-2xl bg-[#0B1324] text-white flex items-center justify-center font-extrabold text-lg">
@@ -188,48 +264,109 @@ export default function ProfilePage() {
         )}
 
         {role === 'mentor' && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="field-label">Industry Sector</label>
-              <select
-                className="field-input"
-                value={form.industry}
-                onChange={(e) => setField('industry', e.target.value)}
-              >
-                {INDUSTRIES.map((ind) => (
-                  <option key={ind} value={ind}>
-                    {ind}
-                  </option>
-                ))}
-              </select>
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="field-label">Industry Sector</label>
+                <select
+                  className="field-input"
+                  value={form.industry}
+                  onChange={(e) => setField('industry', e.target.value)}
+                >
+                  {INDUSTRIES.map((ind) => (
+                    <option key={ind} value={ind}>
+                      {ind}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="field-label">Domain Specialization</label>
+                <input
+                  type="text"
+                  className="field-input"
+                  value={form.expertise}
+                  onChange={(e) => setField('expertise', e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="field-label">Industry Tenure (Years)</label>
+                <input
+                  type="number"
+                  step="0.5"
+                  min="0.5"
+                  max="50"
+                  className="field-input"
+                  value={form.experience_years}
+                  onChange={(e) => setField('experience_years', e.target.value)}
+                />
+              </div>
             </div>
-            <div>
-              <label className="field-label">Domain Specialization</label>
-              <input
-                type="text"
-                className="field-input"
-                value={form.expertise}
-                onChange={(e) => setField('expertise', e.target.value)}
-              />
+
+            <div className="border-t border-slate-100 pt-4 mt-1">
+              <h3 className="text-sm font-extrabold text-slate-900 mb-1">
+                🛡️ Professional Credential Proof (Admin Verification Dossier)
+              </h3>
+              <p className="text-xs text-slate-500 mb-4">
+                Provide your degree, certification, employer confirmation letter, or consultancy firm registration details.
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="field-label">Credential Proof Category</label>
+                  <select
+                    className="field-input"
+                    value={form.credential_type}
+                    onChange={(e) => setField('credential_type', e.target.value)}
+                  >
+                    {CREDENTIAL_TYPES.map((ct) => (
+                      <option key={ct} value={ct}>
+                        {ct}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="field-label">Issuing Institution / Employer / Firm</label>
+                  <input
+                    type="text"
+                    className="field-input"
+                    placeholder="e.g. Safaricom PLC / AWS / BRS Kenya"
+                    value={form.credential_issuer}
+                    onChange={(e) => setField('credential_issuer', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="field-label">Certificate / Letter / Registration Ref #</label>
+                  <input
+                    type="text"
+                    className="field-input"
+                    placeholder="e.g. AWS-SAP-2024-88392"
+                    value={form.credential_reference}
+                    onChange={(e) => setField('credential_reference', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="field-label">Verification URL / Document Link</label>
+                  <input
+                    type="url"
+                    className="field-input"
+                    placeholder="https://www.credly.com/badges/..."
+                    value={form.credential_document_url}
+                    onChange={(e) => setField('credential_document_url', e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
-            <div>
-              <label className="field-label">Industry Tenure (Years)</label>
-              <input
-                type="number"
-                step="0.5"
-                min="0.5"
-                max="50"
-                className="field-input"
-                value={form.experience_years}
-                onChange={(e) => setField('experience_years', e.target.value)}
-              />
-            </div>
-          </div>
+          </>
         )}
 
         <div className="flex justify-end pt-2">
           <button type="submit" className="btn-primary" disabled={saving}>
-            {saving ? 'Saving Profile…' : 'Save Profile Changes'}
+            {saving ? 'Saving Profile…' : 'Save Profile & Credentials'}
           </button>
         </div>
       </form>

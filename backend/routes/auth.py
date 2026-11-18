@@ -88,12 +88,19 @@ def register(payload: UserRegisterRequest, db: Session = Depends(get_db)):
         db.flush()
         profile_data = mentee.to_dict()
     elif payload.role == "mentor":
+        # New mentors enter Pending Admin Review until their credential proof is verified
         mentor = Mentor(
             user_id=user.user_id,
             experience_years=payload.experience_years,
             industry=payload.industry,
             expertise=payload.expertise,
-            is_verified=True,
+            is_verified=False,
+            verification_status="Pending",
+            credential_type=payload.credential_type or "Professional Certification",
+            credential_issuer=payload.credential_issuer or payload.industry,
+            credential_reference=payload.credential_reference or "Pending Submission",
+            credential_document_url=payload.credential_document_url,
+            verification_notes="Submitted upon registration; awaiting Administrator credential review.",
         )
         db.add(mentor)
         db.flush()
@@ -219,6 +226,23 @@ def update_profile(
             user.mentor_profile.industry = payload.industry.strip()
         if payload.expertise:
             user.mentor_profile.expertise = payload.expertise.strip()
+        cred_updated = False
+        if payload.credential_type is not None:
+            user.mentor_profile.credential_type = payload.credential_type.strip()
+            cred_updated = True
+        if payload.credential_issuer is not None:
+            user.mentor_profile.credential_issuer = payload.credential_issuer.strip()
+            cred_updated = True
+        if payload.credential_reference is not None:
+            user.mentor_profile.credential_reference = payload.credential_reference.strip()
+            cred_updated = True
+        if payload.credential_document_url is not None:
+            user.mentor_profile.credential_document_url = payload.credential_document_url.strip()
+            cred_updated = True
+        # If a rejected mentor updates their credentials, move them back to Pending review
+        if cred_updated and user.mentor_profile.verification_status == "Rejected":
+            user.mentor_profile.verification_status = "Pending"
+            user.mentor_profile.verification_notes = "Updated credentials submitted for Administrator re-evaluation."
 
     db.commit()
     db.refresh(user)
