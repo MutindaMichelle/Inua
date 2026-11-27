@@ -24,5 +24,6 @@
   "explorer.fileNesting.patterns": {
     "*.py": "${capture}.pyc",
     "requirements.txt": "requirements-*.txt"
-  }
+  },
+  "workbench.colorTheme": "Light 2026"
 }

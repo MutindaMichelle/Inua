@@ -7,6 +7,7 @@ import api from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { apiError } from '../utils/helpers'
+import InuaLogo from '../components/common/InuaLogo'
 
 const FIELDS_OF_STUDY = [
   'Computer Science', 'Engineering', 'Business',
@@ -104,15 +105,15 @@ export default function RegisterPage() {
         </div>
 
         <div className="my-auto py-10 text-center max-w-md mx-auto">
-          <div className="w-14 h-14 rounded-2xl bg-[#D97706] text-white font-extrabold text-2xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-            I
+          <div className="flex justify-center mb-6">
+            <InuaLogo size={56} showText={false} />
           </div>
           <h1 className="text-3xl sm:text-4xl font-serif font-normal tracking-tight text-white mb-4">
             Your Professional Growth Journey
           </h1>
-          <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
             Join Kenya’s intelligent mentorship ecosystem. Set structured career milestones,
-            connect with credential-verified industry mentors, and receive real-time XGBoost & TreeSHAP effectiveness diagnostics.
+            connect with credential-verified industry mentors, and receive data-driven session guidance.
           </p>
         </div>
 

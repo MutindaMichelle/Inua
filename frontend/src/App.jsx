@@ -22,8 +22,12 @@ import PredictPage   from './pages/mentee/PredictPage'
 import GoalsPage     from './pages/mentee/GoalsPage'
 
 // Mentor pages
-import MentorSessionsPage from './pages/mentor/MentorSessionsPage'
-import MentorQualityPage  from './pages/mentor/MentorQualityPage'
+import MentorSessionsPage    from './pages/mentor/MentorSessionsPage'
+import MentorQualityPage     from './pages/mentor/MentorQualityPage'
+import MentorMenteeGoalsPage from './pages/mentor/MentorMenteeGoalsPage'
+
+// Advisory Communication Channel (Mentee & Mentor)
+import AdvisoryChannelPage   from './pages/common/AdvisoryChannelPage'
 
 // Admin pages
 import AdminOverviewPage from './pages/admin/AdminOverviewPage'
@@ -54,8 +58,9 @@ export default function App() {
               <Route path="/login"    element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
 
-              {/* ── Shared Authenticated Profile ── */}
+              {/* ── Shared Authenticated Profile & Advisory Channel ── */}
               <Route path="/profile"  element={<Private><ProfilePage /></Private>} />
+              <Route path="/advisory" element={<Private><RoleGuard roles={['mentee', 'mentor']}><AdvisoryChannelPage /></RoleGuard></Private>} />
 
               {/* ── Mentee ── */}
               <Route path="/mentors"  element={<Private><RoleGuard roles={['mentee']}><MentorsPage /></RoleGuard></Private>} />
@@ -65,6 +70,7 @@ export default function App() {
 
               {/* ── Mentor ── */}
               <Route path="/mentor/sessions" element={<Private><RoleGuard roles={['mentor']}><MentorSessionsPage /></RoleGuard></Private>} />
+              <Route path="/mentor/goals"    element={<Private><RoleGuard roles={['mentor']}><MentorMenteeGoalsPage /></RoleGuard></Private>} />
               <Route path="/mentor/quality"  element={<Private><RoleGuard roles={['mentor']}><MentorQualityPage /></RoleGuard></Private>} />
 
               {/* ── Admin ── */}

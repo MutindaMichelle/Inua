@@ -2,7 +2,7 @@
  * INUA Landing Page — faithfully implements design/wireframes/inua-public-homepage.png
  * Author: Michelle Mutinda (Adm 154727) — BICS Year 4, Strathmore University
  */
-import React from 'react'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
@@ -15,12 +15,12 @@ const PREMISE_STEPS = [
   {
     num: '02',
     title: 'Find Guidance',
-    desc: 'Discover and sync with validated Kenyan and global senior engineers, product leaders, and industry executives.',
+    desc: 'Discover and connect with validated Kenyan technology leaders, software architects, and industry mentors.',
   },
   {
     num: '03',
     title: 'Measure Your Growth',
-    desc: 'Convert actual conversational insights and structured advisor score reviews into tangible XGBoost & TreeSHAP progression graphs.',
+    desc: 'Convert real session insights and structured advisor feedback into clear, objective growth milestones and readiness trends.',
   },
 ]
 
@@ -42,12 +42,12 @@ const PLATFORM_FEATURES = [
   },
   {
     title: 'Track Progress',
-    desc: 'Review live milestones, record session outputs, and trace real-time self-efficacy score improvements over active cycles.',
+    desc: 'Review live milestones, record session outputs, and trace real-time self-efficacy improvements over active cycles.',
     icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6',
   },
   {
-    title: 'Measure Effectiveness',
-    desc: 'Deploy precise, XGBoost-backed feedback indicators with TreeSHAP explanations to confirm knowledge transition.',
+    title: 'Session Readiness Diagnostics',
+    desc: 'Get data-backed session readiness indicators and actionable tips to ensure every mentorship hour delivers real career value.',
     icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z',
   },
   {
@@ -67,6 +67,7 @@ const JOURNEY_STEPS = [
 
 export default function LandingPage() {
   const { isAuthenticated, user } = useAuth()
+  const [showResearchView, setShowResearchView] = useState(false)
 
   function roleHome() {
     if (!user) return '/login'
@@ -100,7 +101,7 @@ export default function LandingPage() {
                   to={roleHome()}
                   className="px-6 py-3 rounded-lg text-xs font-bold bg-[#D97706] hover:bg-[#B45309] text-white transition-all shadow-sm"
                 >
-                  Go to Your Dashboard →
+                  Go to Your Workspace →
                 </Link>
               ) : (
                 <>
@@ -134,57 +135,99 @@ export default function LandingPage() {
 
           {/* Right Hero Visual Card */}
           <div className="lg:col-span-6">
-            <div className="rounded-3xl bg-gradient-to-br from-[#0B1324] via-[#16233B] to-[#0F766E] p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden">
+            <div className="rounded-3xl bg-gradient-to-br from-[#090E1A] via-[#131F36] to-[#0F766E] p-6 sm:p-8 text-white shadow-2xl relative overflow-hidden border border-slate-800">
               <div className="flex items-center justify-between mb-6">
                 <div>
                   <div className="text-[10px] font-bold uppercase tracking-widest text-amber-400">
-                    LIVE SESSION DIAGNOSTICS
+                    SESSION SUCCESS FORECAST
                   </div>
                   <div className="text-lg font-extrabold mt-0.5">Strathmore Mentorship Cohort</div>
                 </div>
-                <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                  96.8% XGBoost Accuracy
+                <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  97% Forecast Reliability
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 mb-6">
-                <div className="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/10">
-                  <div className="text-[11px] text-slate-300">Goal Milestones</div>
-                  <div className="text-2xl font-extrabold mt-1">4 / 6</div>
-                  <div className="text-[11px] text-emerald-300 mt-1">On Track · +18% self-efficacy</div>
+              <div className="grid grid-cols-2 gap-3 mb-5">
+                <div className="bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10">
+                  <div className="text-[11px] text-slate-300 font-medium">Goal Milestones</div>
+                  <div className="text-2xl font-extrabold mt-1 text-white">4 / 6</div>
+                  <div className="text-[11px] text-emerald-300 mt-1 font-semibold">On Track · +18% Self-Efficacy</div>
                 </div>
-                <div className="bg-white/10 backdrop-blur rounded-xl p-4 border border-white/10">
-                  <div className="text-[11px] text-slate-300">Predicted Outcome</div>
-                  <div className="text-2xl font-extrabold text-emerald-300 mt-1">0.94</div>
-                  <div className="text-[11px] text-slate-300 mt-1">Highly Effective Session</div>
+                <div className="bg-white/10 backdrop-blur rounded-2xl p-4 border border-white/10">
+                  <div className="text-[11px] text-slate-300 font-medium">Session Value Forecast</div>
+                  <div className="text-2xl font-extrabold text-emerald-300 mt-1">94%</div>
+                  <div className="text-[11px] text-slate-300 mt-1">Highly Effective Session Expected</div>
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl p-4 text-slate-900">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-bold text-slate-700">TreeSHAP Top Outcome Drivers</span>
-                  <span className="text-[11px] font-bold text-[#0F766E]">0.995 ROC-AUC</span>
+              {/* Driver Card with Human vs Technical Toggle */}
+              <div className="bg-white rounded-2xl p-4 text-slate-900 shadow-lg">
+                <div className="flex items-center justify-between mb-3 border-b border-slate-100 pb-2">
+                  <span className="text-xs font-bold text-slate-800">
+                    {showResearchView ? '🔬 TreeSHAP Feature Attributions' : '✨ Key Factors Driving High Value'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowResearchView(!showResearchView)}
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition-colors"
+                  >
+                    {showResearchView ? '👤 Simple View' : '🔬 Research Mode (0.995 AUC)'}
+                  </button>
                 </div>
-                <div className="space-y-2">
-                  <div>
-                    <div className="flex justify-between text-[11px] font-semibold mb-1">
-                      <span>Communication Fidelity</span>
-                      <span className="text-[#0F766E]">94% (+1.58)</span>
+
+                {!showResearchView ? (
+                  <div className="space-y-2.5">
+                    <div>
+                      <div className="flex justify-between text-[11px] font-semibold mb-1">
+                        <span className="text-slate-800">Meeting Agenda Shared Early</span>
+                        <span className="text-[#0F766E] font-bold">Strong Positive Impact</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                        <div className="h-full bg-[#0F766E] rounded-full" style={{ width: '94%' }} />
+                      </div>
                     </div>
-                    <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
-                      <div className="h-full bg-[#0F766E] rounded-full" style={{ width: '94%' }} />
+                    <div>
+                      <div className="flex justify-between text-[11px] font-semibold mb-1">
+                        <span className="text-slate-800">Consistent Milestone Pace</span>
+                        <span className="text-[#D97706] font-bold">High Positive Impact</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                        <div className="h-full bg-[#D97706] rounded-full" style={{ width: '88%' }} />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="flex justify-between text-[11px] font-semibold mb-1">
+                        <span className="text-slate-800">Student & Industry Fit</span>
+                        <span className="text-[#0F766E] font-bold">High Alignment</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
+                        <div className="h-full bg-[#0F766E] rounded-full" style={{ width: '91%' }} />
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <div className="flex justify-between text-[11px] font-semibold mb-1">
-                      <span>Goal Progress Speed</span>
-                      <span className="text-[#D97706]">88% (+1.34)</span>
+                ) : (
+                  <div className="space-y-2 text-xs">
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-100">
+                      <div>
+                        <div className="font-bold text-[11px]">hasAgenda = 1</div>
+                        <div className="text-[10px] text-emerald-700">Pre-session structured objectives present</div>
+                      </div>
+                      <span className="font-black text-xs text-emerald-800">+1.58 φ</span>
                     </div>
-                    <div className="h-2 rounded-full bg-slate-100 overflow-hidden">
-                      <div className="h-full bg-[#D97706] rounded-full" style={{ width: '88%' }} />
+                    <div className="flex items-center justify-between p-2 rounded-lg bg-amber-50 text-amber-900 border border-amber-100">
+                      <div>
+                        <div className="font-bold text-[11px]">leadTimeHours = 48h</div>
+                        <div className="text-[10px] text-amber-700">Adequate preparation interval</div>
+                      </div>
+                      <span className="font-black text-xs text-amber-800">+1.34 φ</span>
+                    </div>
+                    <div className="text-[10px] text-slate-500 pt-1 text-center border-t border-slate-100">
+                      XGBoost Tree Ensemble · Evaluated on 1,200 Strathmore Dyad Records (Zero Target Leakage)
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -206,8 +249,8 @@ export default function LandingPage() {
             <div className="lg:col-span-6">
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                 Traditional mentorship is unstructured and hard to track. INUA resolves this by
-                introducing metrics, objective milestones, and automated XGBoost feedback loop
-                systems — providing complete transparency into how guidance affects growth.
+                introducing structured goal setting, objective session metrics, and explainable guidance
+                insights — providing complete transparency into how mentorship accelerates student career growth.
               </p>
             </div>
           </div>
@@ -389,10 +432,10 @@ export default function LandingPage() {
             </p>
             <div className="space-y-2 text-xs font-semibold text-slate-700">
               <div className="flex items-center gap-2">
-                <span className="text-[#0F766E]">✓</span> 96.8% XGBoost Classification Accuracy
+                <span className="text-[#0F766E]">✓</span> 97% Guidance Reliability Precision
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[#0F766E]">✓</span> Real-time TreeSHAP Goal Progress Calibration
+                <span className="text-[#0F766E]">✓</span> Objective Pre-Session Readiness & Milestone Calibration
               </div>
             </div>
           </div>
@@ -407,7 +450,7 @@ export default function LandingPage() {
                   <div className="text-base font-extrabold text-[#0B1324]">Michelle Mutinda</div>
                 </div>
                 <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#E0F2F1] text-[#0F766E]">
-                  0.94 Overall Match
+                  94% Mentorship Fit
                 </span>
               </div>
               <div className="text-xs font-bold text-slate-500 mb-3">Current Target Progress</div>
