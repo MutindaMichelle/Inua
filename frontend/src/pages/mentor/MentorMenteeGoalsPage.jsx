@@ -432,7 +432,7 @@ export default function MentorMenteeGoalsPage() {
                 </div>
 
                 <Link
-                  to="/advisory"
+                  to={`/advisory?mentee=${selectedMentee.mentee_id === 2 ? 'brian' : 'michelle'}`}
                   className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-colors no-underline"
                 >
                   <span>💬</span> Message Student
