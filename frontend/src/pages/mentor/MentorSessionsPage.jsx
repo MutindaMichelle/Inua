@@ -8,6 +8,7 @@
  */
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import api from '../../api/client'
+import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
 import { formatDate, statusClass, statusEmoji, apiError, initials, avatarColor, getStoredAvatar } from '../../utils/helpers'
 
@@ -383,15 +384,402 @@ function FeedbackViewModal({ session, onClose }) {
   )
 }
 
+function formatTimeStr(t) {
+  if (!t) return ''
+  const [h, m] = t.split(':').map(Number)
+  const ampm = h >= 12 ? 'PM' : 'AM'
+  const h12 = h % 12 || 12
+  return `${h12}:${String(m || 0).padStart(2, '0')} ${ampm}`
+}
+
+const ALL_WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+
+function AvailabilitySettingsModal({ initialAvailability, onSave, onClose }) {
+  const [days, setDays] = useState(initialAvailability?.days || ['Mon', 'Wed', 'Fri'])
+  const [startTime, setStartTime] = useState(initialAvailability?.startTime || '14:00')
+  const [endTime, setEndTime] = useState(initialAvailability?.endTime || '17:00')
+  const [platform, setPlatform] = useState(initialAvailability?.platform || 'Teams')
+  const [slotDuration, setSlotDuration] = useState(initialAvailability?.slotDuration || 60)
+  const [leadTimeHours, setLeadTimeHours] = useState(initialAvailability?.leadTimeHours || 24)
+  const [notes, setNotes] = useState(initialAvailability?.notes || '')
+  const [error, setError] = useState('')
+
+  function toggleDay(d) {
+    setError('')
+    if (days.includes(d)) {
+      if (days.length <= 1) {
+        setError('Please keep at least one available day in your schedule.')
+        return
+      }
+      setDays(days.filter((x) => x !== d))
+    } else {
+      setDays([...days, d])
+    }
+  }
+
+  function applyPreset(preset) {
+    if (preset === 'weekdays') setDays(['Mon', 'Tue', 'Wed', 'Thu', 'Fri'])
+    if (preset === 'mwf') setDays(['Mon', 'Wed', 'Fri'])
+    if (preset === 'tuth') setDays(['Tue', 'Thu'])
+    if (preset === 'morning') {
+      setStartTime('09:00')
+      setEndTime('13:00')
+    }
+    if (preset === 'afternoon') {
+      setStartTime('14:00')
+      setEndTime('17:00')
+    }
+    if (preset === 'evening') {
+      setStartTime('16:00')
+      setEndTime('19:00')
+    }
+    if (preset === 'fullday') {
+      setStartTime('09:00')
+      setEndTime('17:00')
+    }
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault()
+    if (!days.length) {
+      setError('Please select at least one day.')
+      return
+    }
+    if (startTime >= endTime) {
+      setError('Start time must be earlier than end time.')
+      return
+    }
+    onSave({
+      days,
+      startTime,
+      endTime,
+      platform,
+      slotDuration: Number(slotDuration),
+      leadTimeHours: Number(leadTimeHours),
+      notes,
+    })
+  }
+
+  return (
+    <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 animate-fadeIn overflow-y-auto">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-xl border border-slate-200 overflow-hidden my-6">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-[#0B1324] via-slate-900 to-indigo-950 p-6 text-white relative">
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center font-bold text-sm transition-colors"
+          >
+            ✕
+          </button>
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center text-2xl shrink-0">
+              🗓️
+            </div>
+            <div>
+              <h2 className="text-lg font-bold">Configure Available Dates & Hours</h2>
+              <p className="text-xs text-slate-300 mt-0.5">
+                Set when Strathmore mentees can book 1-on-1 advisory sessions with you
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Form Body */}
+        <form onSubmit={handleSubmit} className="p-6 space-y-5">
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-center gap-2">
+              <span>⚠️</span>
+              <span className="font-semibold">{error}</span>
+            </div>
+          )}
+
+          {/* 1. Days Selection */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <span>📅</span>
+                <span>Active Bookable Days</span>
+              </label>
+              <div className="flex items-center gap-1.5 text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => applyPreset('mwf')}
+                  className="text-sage-700 hover:underline font-semibold"
+                >
+                  Mon/Wed/Fri
+                </button>
+                <span className="text-slate-300">·</span>
+                <button
+                  type="button"
+                  onClick={() => applyPreset('tuth')}
+                  className="text-sage-700 hover:underline font-semibold"
+                >
+                  Tue/Thu
+                </button>
+                <span className="text-slate-300">·</span>
+                <button
+                  type="button"
+                  onClick={() => applyPreset('weekdays')}
+                  className="text-sage-700 hover:underline font-semibold"
+                >
+                  All Weekdays
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-7 gap-1.5">
+              {ALL_WEEKDAYS.map((d) => {
+                const active = days.includes(d)
+                return (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => toggleDay(d)}
+                    className={`py-2.5 rounded-xl text-xs font-bold transition-all border text-center ${
+                      active
+                        ? 'bg-[#0B1324] text-white border-[#0B1324] shadow-xs'
+                        : 'bg-slate-50 text-slate-500 border-slate-200 hover:border-slate-300 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div>{d}</div>
+                    <div className="text-[9px] mt-0.5">{active ? '✓' : '+'}</div>
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* 2. Working Time Window */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <span>⏰</span>
+                <span>Working Hours Window (EAT)</span>
+              </label>
+              <div className="flex items-center gap-1.5 text-[11px]">
+                <button
+                  type="button"
+                  onClick={() => applyPreset('morning')}
+                  className="text-sage-700 hover:underline font-semibold"
+                >
+                  Morning (9-1)
+                </button>
+                <span className="text-slate-300">·</span>
+                <button
+                  type="button"
+                  onClick={() => applyPreset('afternoon')}
+                  className="text-sage-700 hover:underline font-semibold"
+                >
+                  Afternoon (2-5)
+                </button>
+                <span className="text-slate-300">·</span>
+                <button
+                  type="button"
+                  onClick={() => applyPreset('evening')}
+                  className="text-sage-700 hover:underline font-semibold"
+                >
+                  Evening (4-7)
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
+              <div>
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">Start Time</label>
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className="w-full text-xs font-bold rounded-xl border border-slate-200 bg-white p-2.5 outline-none focus:border-[#0B1324]"
+                  required
+                />
+                <span className="text-[10px] text-slate-400 mt-1 block">e.g. {formatTimeStr(startTime)}</span>
+              </div>
+              <div>
+                <label className="text-[11px] font-bold text-slate-600 block mb-1">End Time</label>
+                <input
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="w-full text-xs font-bold rounded-xl border border-slate-200 bg-white p-2.5 outline-none focus:border-[#0B1324]"
+                  required
+                />
+                <span className="text-[10px] text-slate-400 mt-1 block">e.g. {formatTimeStr(endTime)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 3. Meeting Platform & Duration */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold text-slate-800 block mb-1.5">
+                Preferred Meeting Room
+              </label>
+              <select
+                value={platform}
+                onChange={(e) => setPlatform(e.target.value)}
+                className="w-full text-xs rounded-xl border border-slate-200 bg-white p-2.5 outline-none focus:border-[#0B1324] font-medium"
+              >
+                <option value="Teams">Microsoft Teams (Automated)</option>
+                <option value="Zoom">Zoom Meeting</option>
+                <option value="Meet">Google Meet</option>
+                <option value="Physical">Strathmore Innovation Hub (Room 302)</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-slate-800 block mb-1.5">
+                Session Duration
+              </label>
+              <select
+                value={slotDuration}
+                onChange={(e) => setSlotDuration(e.target.value)}
+                className="w-full text-xs rounded-xl border border-slate-200 bg-white p-2.5 outline-none focus:border-[#0B1324] font-medium"
+              >
+                <option value="30">30 Minutes (Quick Check-in)</option>
+                <option value="45">45 Minutes</option>
+                <option value="60">60 Minutes (Standard Advisory)</option>
+                <option value="90">90 Minutes (Deep Dive)</option>
+              </select>
+            </div>
+          </div>
+
+          {/* 4. Booking Lead Time */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold text-slate-800 block mb-1.5">
+                Advance Notice Required
+              </label>
+              <select
+                value={leadTimeHours}
+                onChange={(e) => setLeadTimeHours(e.target.value)}
+                className="w-full text-xs rounded-xl border border-slate-200 bg-white p-2.5 outline-none focus:border-[#0B1324] font-medium"
+              >
+                <option value="6">6 Hours Notice</option>
+                <option value="12">12 Hours Notice</option>
+                <option value="24">24 Hours (Recommended)</option>
+                <option value="48">48 Hours Notice</option>
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-bold text-slate-800 block mb-1.5">
+                Time Zone
+              </label>
+              <div className="w-full text-xs rounded-xl border border-slate-200 bg-slate-50 p-2.5 text-slate-600 font-medium">
+                East Africa Time (UTC+3)
+              </div>
+            </div>
+          </div>
+
+          {/* 5. Advisory Instructions */}
+          <div>
+            <label className="text-xs font-bold text-slate-800 block mb-1.5">
+              Advisory Booking Notes for Students (Optional)
+            </label>
+            <textarea
+              rows={2}
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="e.g. Please outline your question and link your capstone GitHub repo or CV draft..."
+              className="w-full text-xs rounded-xl border border-slate-200 bg-white p-2.5 outline-none focus:border-[#0B1324]"
+            />
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={onClose}
+              className="btn-secondary py-2 px-4 text-xs font-semibold"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className="btn-primary py-2 px-6 text-xs font-bold bg-[#0B1324] hover:bg-slate-800 text-white shadow-md"
+            >
+              Save Available Dates & Hours ✓
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
 export default function MentorSessionsPage() {
+  const { user } = useAuth()
   const toast = useToast()
   const [sessions,        setSessions]        = useState([])
   const [loading,         setLoading]         = useState(true)
   const [modal,           setModal]           = useState(null)
   const [profileModal,    setProfileModal]    = useState(null)
+  const [availabilityModalOpen, setAvailabilityModalOpen] = useState(false)
   const [filter,          setFilter]          = useState('all')
   const [viewMode,        setViewMode]        = useState('calendar') // 'calendar' | 'list'
   const [weekOffset,      setWeekOffset]      = useState(0)
+
+  // Mentor availability configuration
+  const [availability, setAvailability] = useState(() => {
+    const keys = [
+      user?.email,
+      user?.mentor_id,
+      user?.id,
+      (user?.name || '').toLowerCase(),
+    ].filter(Boolean)
+
+    for (const k of keys) {
+      const saved = localStorage.getItem(`mentor_availability_${k}`)
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved)
+          if (parsed && Array.isArray(parsed.days) && parsed.days.length > 0) {
+            return parsed
+          }
+        } catch {}
+      }
+    }
+    return {
+      days: ['Mon', 'Wed', 'Fri'],
+      startTime: '14:00',
+      endTime: '17:00',
+      platform: 'Teams',
+      slotDuration: 60,
+      leadTimeHours: 24,
+      notes: 'Available for technical coaching, architecture reviews, and career roadmap discussions.',
+    }
+  })
+
+  function handleSaveAvailability(newAvail) {
+    const keys = [
+      user?.email,
+      user?.mentor_id,
+      user?.id,
+      (user?.name || '').toLowerCase(),
+    ].filter(Boolean)
+
+    keys.forEach((k) => {
+      localStorage.setItem(`mentor_availability_${k}`, JSON.stringify(newAvail))
+    })
+    setAvailability(newAvail)
+    setAvailabilityModalOpen(false)
+    toast('Availability and working hours saved! Strathmore students can now book during your active slots.', 'success')
+  }
+
+  function toggleDayAvailability(dayName) {
+    const exists = availability.days.includes(dayName)
+    let newDays
+    if (exists) {
+      if (availability.days.length <= 1) {
+        toast('Please keep at least one available day in your schedule.', 'error')
+        return
+      }
+      newDays = availability.days.filter((d) => d !== dayName)
+    } else {
+      newDays = [...availability.days, dayName]
+    }
+    const updated = { ...availability, days: newDays }
+    handleSaveAvailability(updated)
+  }
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -512,6 +900,51 @@ export default function MentorSessionsPage() {
       {/* VIEW MODE 1: VISUAL WEEKLY CALENDAR */}
       {viewMode === 'calendar' && (
         <div className="space-y-4">
+          {/* Mentor Availability & Booking Control Banner */}
+          <div className="bg-gradient-to-r from-[#0B1324] via-slate-900 to-indigo-950 text-white rounded-2xl p-5 shadow-sm border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="w-11 h-11 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center text-xl shrink-0">
+                🗓️
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-sm font-bold tracking-tight text-white">Your Bookable Schedule & Working Hours</span>
+                  <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                    ✓ Syncing to Mentee Directory
+                  </span>
+                </div>
+                <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-300 flex-wrap">
+                  <span className="flex items-center gap-1 font-semibold text-amber-300">
+                    <span>📅 Days:</span>
+                    <span>{availability.days.join(', ')}</span>
+                  </span>
+                  <span className="text-slate-500">•</span>
+                  <span className="flex items-center gap-1">
+                    <span>⏰ Hours:</span>
+                    <span className="text-white font-medium">{formatTimeStr(availability.startTime)} – {formatTimeStr(availability.endTime)} EAT</span>
+                  </span>
+                  <span className="text-slate-500">•</span>
+                  <span className="flex items-center gap-1">
+                    <span>💻 Room:</span>
+                    <span className="text-white font-medium">{availability.platform}</span>
+                  </span>
+                  <span className="text-slate-500">•</span>
+                  <span className="flex items-center gap-1">
+                    <span>⏱️ Duration:</span>
+                    <span className="text-white font-medium">{availability.slotDuration}m ({availability.leadTimeHours}h notice)</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={() => setAvailabilityModalOpen(true)}
+              className="btn-primary py-2 px-4 text-xs font-bold whitespace-nowrap self-start md:self-auto flex items-center gap-1.5 shadow-md hover:scale-[1.02] transition-transform bg-amber-500 hover:bg-amber-600 text-white border-none"
+            >
+              <span>⚙️</span>
+              <span>Set Availability & Hours</span>
+            </button>
+          </div>
+
           {/* Week Navigator Controls */}
           <div className="flex items-center justify-between bg-white rounded-2xl p-4 border border-slate2-200 shadow-2xs">
             <div className="flex items-center gap-2">
@@ -563,6 +996,8 @@ export default function MentorSessionsPage() {
                 new Date().getMonth() === day.getMonth() &&
                 new Date().getFullYear() === day.getFullYear()
 
+              const isAvailableDay = availability.days.includes(dayStr)
+
               // Filter sessions for this day
               const daySessions = sessions.filter(s => {
                 if (!s.session_date) return false
@@ -580,7 +1015,9 @@ export default function MentorSessionsPage() {
                   className={`rounded-2xl border p-3 flex flex-col min-h-[360px] transition-all ${
                     isToday
                       ? 'bg-sage-50/40 border-sage-300 ring-2 ring-sage-400/20 shadow-xs'
-                      : 'bg-white border-slate2-200'
+                      : isAvailableDay
+                      ? 'bg-white border-slate2-200'
+                      : 'bg-slate-50/50 border-slate-200'
                   }`}
                 >
                   {/* Day Header */}
@@ -601,111 +1038,148 @@ export default function MentorSessionsPage() {
                   </div>
 
                   {/* Day Sessions List */}
-                  <div className="flex-1 space-y-2.5 overflow-y-auto">
+                  <div className="flex-1 space-y-2.5 overflow-y-auto flex flex-col justify-between">
                     {daySessions.length === 0 ? (
-                      <div className="h-full flex flex-col items-center justify-center text-center p-3 text-slate2-400">
-                        <span className="text-xl opacity-30 mb-1">☕</span>
-                        <span className="text-[11px] font-medium">No sessions scheduled</span>
-                        <span className="text-[9px] text-slate2-400 mt-0.5">Available for bookings</span>
-                      </div>
-                    ) : (
-                      daySessions.map(s => {
-                        const sTime = s.session_date
-                          ? new Date(s.session_date).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })
-                          : 'TBD'
-                        const menteeProf = getMenteeProfile(s.mentee_name, s)
-
-                        return (
-                          <div
-                            key={s.session_id}
-                            className="bg-white rounded-xl p-3 border border-slate2-200 shadow-2xs hover:shadow-md transition-shadow group flex flex-col justify-between"
+                      isAvailableDay ? (
+                        <div className="h-full flex flex-col items-center justify-center text-center p-3 text-emerald-700 bg-emerald-50/50 rounded-xl border border-dashed border-emerald-200 my-auto">
+                          <span className="text-xl mb-1">🟢</span>
+                          <span className="text-xs font-bold text-emerald-900">Open for Bookings</span>
+                          <span className="text-[10px] text-emerald-700 font-semibold mt-0.5">
+                            {formatTimeStr(availability.startTime)} – {formatTimeStr(availability.endTime)}
+                          </span>
+                          <span className="text-[9px] text-slate-500 mt-1">
+                            {availability.platform} · {availability.slotDuration}m
+                          </span>
+                          <button
+                            onClick={() => setAvailabilityModalOpen(true)}
+                            className="mt-3 text-[10px] font-bold text-emerald-800 hover:text-emerald-950 bg-white hover:bg-emerald-100/70 px-2.5 py-1 rounded-md border border-emerald-300 transition-colors shadow-2xs"
+                            title="Adjust working hours for this day"
                           >
-                            <div>
-                              {/* Time & Status */}
-                              <div className="flex items-center justify-between gap-1 mb-1.5">
-                                <span className="text-[11px] font-extrabold text-slate2-800 bg-slate2-100 px-2 py-0.5 rounded-md">
-                                  ⏰ {sTime}
-                                </span>
-                                <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${statusClass(s.status)}`}>
-                                  {s.status}
-                                </span>
+                            Edit Hours ⚙️
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="h-full flex flex-col items-center justify-center text-center p-3 text-slate-400 bg-slate-100/60 rounded-xl border border-dashed border-slate-200 my-auto">
+                          <span className="text-xl opacity-40 mb-1">☕</span>
+                          <span className="text-xs font-semibold text-slate-600">Day Off</span>
+                          <span className="text-[10px] text-slate-400 mt-0.5">Not Bookable by Mentees</span>
+                          <button
+                            onClick={() => toggleDayAvailability(dayStr)}
+                            className="mt-3 text-[10px] font-bold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-200/80 px-2.5 py-1 rounded-md border border-slate-300 transition-colors shadow-2xs"
+                            title={`Click to add ${dayStr} to your bookable mentorship schedule`}
+                          >
+                            + Make Available
+                          </button>
+                        </div>
+                      )
+                    ) : (
+                      <div className="space-y-2.5">
+                        {daySessions.map(s => {
+                          const sTime = s.session_date
+                            ? new Date(s.session_date).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' })
+                            : 'TBD'
+                          const menteeProf = getMenteeProfile(s.mentee_name, s)
+
+                          return (
+                            <div
+                              key={s.session_id}
+                              className="bg-white rounded-xl p-3 border border-slate2-200 shadow-2xs hover:shadow-md transition-shadow group flex flex-col justify-between"
+                            >
+                              <div>
+                                {/* Time & Status */}
+                                <div className="flex items-center justify-between gap-1 mb-1.5">
+                                  <span className="text-[11px] font-extrabold text-slate2-800 bg-slate2-100 px-2 py-0.5 rounded-md">
+                                    ⏰ {sTime}
+                                  </span>
+                                  <span className={`text-[9px] px-1.5 py-0.5 rounded-full font-bold ${statusClass(s.status)}`}>
+                                    {s.status}
+                                  </span>
+                                </div>
+
+                                {/* Mentee Name with Avatar & Modal Trigger */}
+                                <button
+                                  onClick={() => setProfileModal({ profile: menteeProf, session: s })}
+                                  className="w-full text-left flex items-center gap-2 py-1 group/btn hover:bg-slate2-50 rounded-lg transition-colors px-1 -mx-1"
+                                  title="Click to view mentee profile, goals, and pre-session agenda"
+                                >
+                                  {getStoredAvatar(menteeProf.email || menteeProf.admission, s.mentee_name) ? (
+                                    <img
+                                      src={getStoredAvatar(menteeProf.email || menteeProf.admission, s.mentee_name)}
+                                      alt={s.mentee_name}
+                                      className="w-7 h-7 rounded-full object-cover shrink-0 shadow-2xs"
+                                    />
+                                  ) : (
+                                    <div
+                                      className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0 shadow-2xs"
+                                      style={{ backgroundColor: menteeProf.avatar_color }}
+                                    >
+                                      {initials(s.mentee_name ?? 'ST')}
+                                    </div>
+                                  )}
+                                  <div className="min-w-0 flex-1">
+                                    <div className="text-xs font-bold text-slate2-900 group-hover/btn:text-sage-700 truncate">
+                                      {s.mentee_name ?? 'Student Mentee'}
+                                    </div>
+                                    <div className="text-[10px] text-slate2-500 truncate">
+                                      {s.session_type || 'Mentorship'}
+                                    </div>
+                                  </div>
+                                </button>
+
+                                {/* Platform Tag */}
+                                <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+                                  <span className="text-[10px] font-semibold text-slate2-600 bg-slate2-100 px-1.5 py-0.5 rounded">
+                                    💻 {s.meeting_platform || 'Teams'} ({s.duration}m)
+                                  </span>
+                                </div>
                               </div>
 
-                              {/* Mentee Name with Avatar & Modal Trigger */}
-                              <button
-                                onClick={() => setProfileModal({ profile: menteeProf, session: s })}
-                                className="w-full text-left flex items-center gap-2 py-1 group/btn hover:bg-slate2-50 rounded-lg transition-colors px-1 -mx-1"
-                                title="Click to view mentee profile, goals, and pre-session agenda"
-                              >
-                                {getStoredAvatar(menteeProf.email || menteeProf.admission, s.mentee_name) ? (
-                                  <img
-                                    src={getStoredAvatar(menteeProf.email || menteeProf.admission, s.mentee_name)}
-                                    alt={s.mentee_name}
-                                    className="w-7 h-7 rounded-full object-cover shrink-0 shadow-2xs"
-                                  />
-                                ) : (
-                                  <div
-                                    className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0 shadow-2xs"
-                                    style={{ backgroundColor: menteeProf.avatar_color }}
+                              {/* Action Buttons */}
+                              <div className="mt-3 pt-2 border-t border-slate2-100 flex flex-col gap-1.5">
+                                {/* 1-Click Meeting Join */}
+                                {getMeetingUrl(s) && (
+                                  <a
+                                    href={getMeetingUrl(s)}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-[11px] font-bold py-1.5 px-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-1 shadow-2xs no-underline transition-colors"
                                   >
-                                    {initials(s.mentee_name ?? 'ST')}
-                                  </div>
+                                    <span>📹</span>
+                                    <span>Join {s.meeting_platform || 'Call'}</span>
+                                  </a>
                                 )}
-                                <div className="min-w-0 flex-1">
-                                  <div className="text-xs font-bold text-slate2-900 group-hover/btn:text-sage-700 truncate">
-                                    {s.mentee_name ?? 'Student Mentee'}
-                                  </div>
-                                  <div className="text-[10px] text-slate2-500 truncate">
-                                    {s.session_type || 'Mentorship'}
-                                  </div>
-                                </div>
-                              </button>
 
-                              {/* Platform Tag */}
-                              <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
-                                <span className="text-[10px] font-semibold text-slate2-600 bg-slate2-100 px-1.5 py-0.5 rounded">
-                                  💻 {s.meeting_platform || 'Teams'} ({s.duration}m)
-                                </span>
+                                {/* Mentee Profile Trigger */}
+                                <button
+                                  onClick={() => setProfileModal({ profile: menteeProf, session: s })}
+                                  className="text-[10px] font-semibold py-1 px-2 rounded-lg bg-slate2-100 hover:bg-slate2-200 text-slate2-700 transition-colors flex items-center justify-center gap-1"
+                                >
+                                  <span>👤</span>
+                                  <span>View Mentee Profile</span>
+                                </button>
+
+                                {/* Quick Status Actions */}
+                                {MENTOR_TRANSITIONS[s.status]?.includes('Completed') && (
+                                  <button
+                                    onClick={() => changeStatus(s, 'Completed')}
+                                    className="text-[10px] font-bold py-1 px-2 rounded-lg bg-sage-50 text-sage-800 hover:bg-sage-100 transition-colors"
+                                  >
+                                    Mark Completed ✓
+                                  </button>
+                                )}
                               </div>
                             </div>
+                          )
+                        })}
 
-                            {/* Action Buttons */}
-                            <div className="mt-3 pt-2 border-t border-slate2-100 flex flex-col gap-1.5">
-                              {/* 1-Click Meeting Join */}
-                              {getMeetingUrl(s) && (
-                                <a
-                                  href={getMeetingUrl(s)}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="text-[11px] font-bold py-1.5 px-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-1 shadow-2xs no-underline transition-colors"
-                                >
-                                  <span>📹</span>
-                                  <span>Join {s.meeting_platform || 'Call'}</span>
-                                </a>
-                              )}
-
-                              {/* Mentee Profile Trigger */}
-                              <button
-                                onClick={() => setProfileModal({ profile: menteeProf, session: s })}
-                                className="text-[10px] font-semibold py-1 px-2 rounded-lg bg-slate2-100 hover:bg-slate2-200 text-slate2-700 transition-colors flex items-center justify-center gap-1"
-                              >
-                                <span>👤</span>
-                                <span>View Mentee Profile</span>
-                              </button>
-
-                              {/* Quick Status Actions */}
-                              {MENTOR_TRANSITIONS[s.status]?.includes('Completed') && (
-                                <button
-                                  onClick={() => changeStatus(s, 'Completed')}
-                                  className="text-[10px] font-bold py-1 px-2 rounded-lg bg-sage-50 text-sage-800 hover:bg-sage-100 transition-colors"
-                                >
-                                  Mark Completed ✓
-                                </button>
-                              )}
+                        {isAvailableDay && (
+                          <div className="pt-1">
+                            <div className="text-[10px] text-emerald-800 bg-emerald-50/80 rounded-lg p-1.5 text-center font-bold border border-dashed border-emerald-200">
+                              🟢 Open for more bookings ({formatTimeStr(availability.startTime)} – {formatTimeStr(availability.endTime)})
                             </div>
                           </div>
-                        )
-                      })
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -866,6 +1340,15 @@ export default function MentorSessionsPage() {
       {/* Feedback Modal */}
       {modal && (
         <FeedbackViewModal session={modal.session} onClose={() => setModal(null)} />
+      )}
+
+      {/* Mentor Availability & Booking Hours Modal */}
+      {availabilityModalOpen && (
+        <AvailabilitySettingsModal
+          initialAvailability={availability}
+          onSave={handleSaveAvailability}
+          onClose={() => setAvailabilityModalOpen(false)}
+        />
       )}
     </div>
   )

@@ -41,7 +41,94 @@ function getMentorAvatar(mentor) {
   return getStoredAvatar(mentor.email || mentor.mentor_id, mentor.name)
 }
 
+function formatTimeStr(t) {
+  if (!t) return ''
+  const [h, m] = t.split(':').map(Number)
+  const ampm = h >= 12 ? 'PM' : 'AM'
+  const h12 = h % 12 || 12
+  return `${h12}:${String(m || 0).padStart(2, '0')} ${ampm}`
+}
+
 function getMentorSchedule(mentor) {
+  if (!mentor) {
+    return {
+      days: 'Mon – Fri',
+      hours: '2:00 PM – 5:00 PM EAT',
+      badge: 'Available on Request',
+      statusClass: 'bg-slate-50 text-slate-700 border-slate-200',
+      slots: [{ label: 'Tomorrow, 2:00 PM', offsetDays: 1, hour: 14, minute: 0 }],
+    }
+  }
+
+  // 1. Check for mentor's custom configured availability in localStorage
+  const keysToTry = [
+    mentor.email,
+    mentor.mentor_id,
+    mentor.id,
+    (mentor.name || '').toLowerCase(),
+  ].filter(Boolean)
+
+  for (const k of keysToTry) {
+    const raw = localStorage.getItem(`mentor_availability_${k}`)
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw)
+        if (parsed && Array.isArray(parsed.days) && parsed.days.length > 0) {
+          const daysStr = parsed.days.join(', ')
+          const startFmt = formatTimeStr(parsed.startTime || '14:00')
+          const endFmt = formatTimeStr(parsed.endTime || '17:00')
+          const hoursStr = `${startFmt} – ${endFmt} EAT`
+
+          // Generate dynamic next-available slots matching mentor's open days
+          const today = new Date()
+          const slots = []
+          const [startH, startM] = (parsed.startTime || '14:00').split(':').map(Number)
+
+          for (let offset = 1; offset <= 14 && slots.length < 4; offset++) {
+            const targetDate = new Date(today)
+            targetDate.setDate(today.getDate() + offset)
+            const targetDayName = targetDate.toLocaleDateString('en-KE', { weekday: 'short' })
+            if (parsed.days.includes(targetDayName)) {
+              const labelDay = offset === 1 ? 'Tomorrow' : offset <= 7 ? targetDayName : `Next ${targetDayName}`
+              slots.push({
+                label: `${labelDay}, ${startFmt}`,
+                offsetDays: offset,
+                hour: startH,
+                minute: startM || 0,
+              })
+              // Add a second slot 90 minutes later if window allows
+              if (slots.length < 4) {
+                const midH = startH + 1
+                slots.push({
+                  label: `${labelDay}, ${formatTimeStr(`${midH}:30`)}`,
+                  offsetDays: offset,
+                  hour: midH,
+                  minute: 30,
+                })
+              }
+            }
+          }
+
+          if (slots.length === 0) {
+            slots.push({ label: 'Tomorrow, 2:00 PM', offsetDays: 1, hour: 14, minute: 0 })
+          }
+
+          return {
+            days: daysStr,
+            hours: hoursStr,
+            badge: `Configured · ${parsed.days.length} Days/Wk`,
+            statusClass: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+            slots,
+            platform: parsed.platform || 'Teams',
+          }
+        }
+      } catch (err) {
+        console.error('Error parsing mentor custom availability:', err)
+      }
+    }
+  }
+
+  // 2. Default presets by mentor name
   const name = (mentor.name || '').toLowerCase()
   if (name.includes('mutua')) {
     return {
