@@ -4,11 +4,11 @@
  * mentor availability schedules with quick-select slots,
  * and automated video meeting link generation (Teams, Zoom, Meet).
  */
-import React, { useEffect, useState, useRef } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../../api/client'
 import { useToast } from '../../context/ToastContext'
-import { initials, apiError, formatDate, getStoredAvatar, saveStoredAvatar } from '../../utils/helpers'
+import { initials, apiError, formatDate, getStoredAvatar } from '../../utils/helpers'
 
 const SESSION_TYPES = [
   'Career Guidance',
@@ -35,20 +35,6 @@ const TRACK_FILTERS = [
   'Backend',
   'Cybersecurity',
 ]
-
-// Professional curated portrait photography (African technology and business leaders)
-const DEFAULT_AVATARS = {
-  mutua: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80',
-  mwangi: 'https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=400&auto=format&fit=crop&q=80',
-  grace: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80',
-  ochieng: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80',
-  wambui: 'https://images.unsplash.com/photo-1580894732483-34e40243e36e?w=400&auto=format&fit=crop&q=80',
-  sarah: 'https://images.unsplash.com/photo-1580894732483-34e40243e36e?w=400&auto=format&fit=crop&q=80',
-  ndungu: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&auto=format&fit=crop&q=80',
-  samuel: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&auto=format&fit=crop&q=80',
-  amina: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&auto=format&fit=crop&q=80',
-  hassan: 'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&auto=format&fit=crop&q=80',
-}
 
 function getMentorAvatar(mentor) {
   if (!mentor) return null
@@ -480,8 +466,6 @@ export default function MentorsPage() {
   const [search, setSearch] = useState('')
   const [track, setTrack] = useState('All Tracks')
   const [selected, setSelected] = useState(null)
-  const fileInputRef = useRef(null)
-  const [activeUploadMentorId, setActiveUploadMentorId] = useState(null)
   const toast = useToast()
 
   async function load() {
@@ -506,29 +490,6 @@ export default function MentorsPage() {
     load()
   }, [])
 
-  function triggerPhotoUpload(mentorId) {
-    setActiveUploadMentorId(mentorId)
-    if (fileInputRef.current) {
-      fileInputRef.current.click()
-    }
-  }
-
-  function handleFileChange(e) {
-    const file = e.target.files?.[0]
-    if (!file || !activeUploadMentorId) return
-
-    const reader = new FileReader()
-    reader.onload = (event) => {
-      const dataUrl = event.target?.result
-      if (dataUrl) {
-        saveStoredAvatar(activeUploadMentorId, dataUrl)
-        toast('Profile picture updated successfully! 📸', 'success')
-        load() // refresh
-      }
-    }
-    reader.readAsDataURL(file)
-  }
-
   const completedSessions = sessions.filter((s) => s.status === 'Completed')
   const upcomingSessions = sessions.filter((s) => s.status === 'Scheduled' || s.status === 'Pending')
   const totalMinutes = completedSessions.reduce((acc, s) => acc + (s.duration || 60), 0)
@@ -551,15 +512,6 @@ export default function MentorsPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-12">
-      {/* Hidden File Input for Avatar Uploads */}
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileChange}
-        accept="image/*"
-        className="hidden"
-      />
-
       {/* ═══ TOP 3 KPI SUMMARY CARDS ═══ */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs">
@@ -697,15 +649,6 @@ export default function MentorsPage() {
                             {initials(m.name)}
                           </div>
                         )}
-                        {/* Hover button to change/upload picture */}
-                        <button
-                          type="button"
-                          onClick={() => triggerPhotoUpload(m.mentor_id)}
-                          title="Upload new profile picture"
-                          className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full bg-white text-slate-700 shadow-md border border-slate-200 flex items-center justify-center text-[10px] hover:bg-amber-500 hover:text-white transition-colors"
-                        >
-                          📷
-                        </button>
                       </div>
 
                       <div className="text-right">

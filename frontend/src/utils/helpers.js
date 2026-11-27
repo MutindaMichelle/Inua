@@ -66,45 +66,74 @@ export function apiError(err) {
 
 // ==========================================
 // CENTRALIZED PROFILE PHOTO & AVATAR SYSTEM
+// Authentic high-resolution portraits of Black African tech leaders, faculty, and scholars
 // ==========================================
 
 export const DEFAULT_AVATARS = {
-  // Mentors (Industry Leaders & Advisors)
+  // Mentors (Kenyan & African Industry Leaders & Faculty Advisors)
+  mutua:   'https://images.pexels.com/photos/12179672/pexels-photo-12179672.jpeg?auto=compress&cs=tinysrgb&w=400',
+  joseph:  'https://images.pexels.com/photos/12179672/pexels-photo-12179672.jpeg?auto=compress&cs=tinysrgb&w=400',
+
+  ndungu:  'https://images.pexels.com/photos/7109089/pexels-photo-7109089.jpeg?auto=compress&cs=tinysrgb&w=400',
+  samuel:  'https://images.pexels.com/photos/7109089/pexels-photo-7109089.jpeg?auto=compress&cs=tinysrgb&w=400',
+
   mwangi:  'https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=400&auto=format&fit=crop&q=80',
   david:   'https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=400&auto=format&fit=crop&q=80',
-  ochieng: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80',
-  grace:   'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80',
-  ndungu:  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&auto=format&fit=crop&q=80',
-  samuel:  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&auto=format&fit=crop&q=80',
-  wambui:  'https://images.unsplash.com/photo-1580894732483-34e40243e36e?w=400&auto=format&fit=crop&q=80',
-  sarah:   'https://images.unsplash.com/photo-1580894732483-34e40243e36e?w=400&auto=format&fit=crop&q=80',
-  amina:   'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&auto=format&fit=crop&q=80',
-  hassan:  'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=400&auto=format&fit=crop&q=80',
-  mutua:   'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80',
+
+  ochieng: 'https://images.pexels.com/photos/30938726/pexels-photo-30938726.jpeg?auto=compress&cs=tinysrgb&w=400',
+  grace:   'https://images.pexels.com/photos/30938726/pexels-photo-30938726.jpeg?auto=compress&cs=tinysrgb&w=400',
+
+  waweru:  'https://images.pexels.com/photos/11396279/pexels-photo-11396279.jpeg?auto=compress&cs=tinysrgb&w=400',
+  angela:  'https://images.pexels.com/photos/11396279/pexels-photo-11396279.jpeg?auto=compress&cs=tinysrgb&w=400',
+
+  wambui:  'https://images.pexels.com/photos/8872443/pexels-photo-8872443.jpeg?auto=compress&cs=tinysrgb&w=400',
+  sarah:   'https://images.pexels.com/photos/8872443/pexels-photo-8872443.jpeg?auto=compress&cs=tinysrgb&w=400',
+
+  amina:   'https://images.pexels.com/photos/8052215/pexels-photo-8052215.jpeg?auto=compress&cs=tinysrgb&w=400',
+  hassan:  'https://images.pexels.com/photos/8052215/pexels-photo-8052215.jpeg?auto=compress&cs=tinysrgb&w=400',
 
   // Mentees (Strathmore Scholars & Students)
-  michelle: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
-  mutinda:  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
-  brian:    'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&auto=format&fit=crop&q=80',
-  kiprop:   'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&auto=format&fit=crop&q=80',
-  faith:    'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&auto=format&fit=crop&q=80',
-  wanjiku:  'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&auto=format&fit=crop&q=80',
+  michelle: 'https://images.pexels.com/photos/8052215/pexels-photo-8052215.jpeg?auto=compress&cs=tinysrgb&w=400',
+  mutinda:  'https://images.pexels.com/photos/8052215/pexels-photo-8052215.jpeg?auto=compress&cs=tinysrgb&w=400',
+
+  brian:    'https://images.pexels.com/photos/31528817/pexels-photo-31528817.jpeg?auto=compress&cs=tinysrgb&w=400',
+  kiprop:   'https://images.pexels.com/photos/31528817/pexels-photo-31528817.jpeg?auto=compress&cs=tinysrgb&w=400',
+  kevin:    'https://images.pexels.com/photos/31528817/pexels-photo-31528817.jpeg?auto=compress&cs=tinysrgb&w=400',
+
+  faith:    'https://images.pexels.com/photos/8872443/pexels-photo-8872443.jpeg?auto=compress&cs=tinysrgb&w=400',
+  wanjiku:  'https://images.pexels.com/photos/8872443/pexels-photo-8872443.jpeg?auto=compress&cs=tinysrgb&w=400',
 }
 
 export const PRESET_AVATARS = [
-  { label: 'Executive Male 1',   url: 'https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=400&auto=format&fit=crop&q=80' },
-  { label: 'Executive Female 1', url: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80' },
-  { label: 'Executive Male 2',   url: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&auto=format&fit=crop&q=80' },
-  { label: 'Executive Female 2', url: 'https://images.unsplash.com/photo-1580894732483-34e40243e36e?w=400&auto=format&fit=crop&q=80' },
-  { label: 'Scholar Female 1',   url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80' },
-  { label: 'Scholar Male 1',     url: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400&auto=format&fit=crop&q=80' },
-  { label: 'Scholar Female 2',   url: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400&auto=format&fit=crop&q=80' },
-  { label: 'Scholar Male 2',     url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80' },
+  { label: 'Executive Male 1 (Dr. Mutua)',    url: 'https://images.pexels.com/photos/12179672/pexels-photo-12179672.jpeg?auto=compress&cs=tinysrgb&w=400' },
+  { label: 'Executive Male 2 (Eng. Ndungu)',  url: 'https://images.pexels.com/photos/7109089/pexels-photo-7109089.jpeg?auto=compress&cs=tinysrgb&w=400' },
+  { label: 'Executive Male 3 (David Mwangi)', url: 'https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=400&auto=format&fit=crop&q=80' },
+  { label: 'Executive Female 1 (Dr. Grace)',  url: 'https://images.pexels.com/photos/30938726/pexels-photo-30938726.jpeg?auto=compress&cs=tinysrgb&w=400' },
+  { label: 'Executive Female 2 (Dr. Angela)', url: 'https://images.pexels.com/photos/11396279/pexels-photo-11396279.jpeg?auto=compress&cs=tinysrgb&w=400' },
+  { label: 'Executive Female 3 (Sarah Wambui)', url: 'https://images.pexels.com/photos/8872443/pexels-photo-8872443.jpeg?auto=compress&cs=tinysrgb&w=400' },
+  { label: 'Scholar Female (Michelle)',       url: 'https://images.pexels.com/photos/8052215/pexels-photo-8052215.jpeg?auto=compress&cs=tinysrgb&w=400' },
+  { label: 'Scholar Male (Brian Kiprop)',     url: 'https://images.pexels.com/photos/31528817/pexels-photo-31528817.jpeg?auto=compress&cs=tinysrgb&w=400' },
 ]
+
+const DEPRECATED_URL_TOKENS = [
+  '1500648767791',
+  '1573496359142',
+  '1580894732483',
+  '1507003211169',
+  '1534528741775',
+  '1539571696357',
+  '1517841905240',
+  '1531746020798',
+]
+
+function isDeprecated(val) {
+  if (!val || typeof val !== 'string') return false
+  return DEPRECATED_URL_TOKENS.some((tok) => val.includes(tok))
+}
 
 /**
  * Retrieves the stored avatar for a user or mentor by checking:
- * 1. Explicit localStorage by identifier/email
+ * 1. Explicit localStorage by identifier/email (purging stale deprecated links)
  * 2. Explicit localStorage by mentor ID
  * 3. Default curated portfolio mapping by name/email
  */
@@ -115,16 +144,34 @@ export function getStoredAvatar(identifier, name = '') {
   if (identifier) {
     const rawId = String(identifier).trim().toLowerCase()
     const byEmail = localStorage.getItem(`inua_avatar_${rawId}`)
-    if (byEmail) return byEmail
+    if (byEmail) {
+      if (isDeprecated(byEmail)) {
+        localStorage.removeItem(`inua_avatar_${rawId}`)
+      } else {
+        return byEmail
+      }
+    }
     const byMentorId = localStorage.getItem(`mentor_avatar_${rawId}`)
-    if (byMentorId) return byMentorId
+    if (byMentorId) {
+      if (isDeprecated(byMentorId)) {
+        localStorage.removeItem(`mentor_avatar_${rawId}`)
+      } else {
+        return byMentorId
+      }
+    }
   }
 
   // 2. Check by name key in localStorage
   if (name) {
     const cleanName = name.trim().toLowerCase()
     const byName = localStorage.getItem(`inua_avatar_${cleanName}`)
-    if (byName) return byName
+    if (byName) {
+      if (isDeprecated(byName)) {
+        localStorage.removeItem(`inua_avatar_${cleanName}`)
+      } else {
+        return byName
+      }
+    }
   }
 
   // 3. Fallback to default curated portraits by keyword in identifier or name
