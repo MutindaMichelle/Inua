@@ -2,11 +2,18 @@
  * INUA Profile Management Page — Mentee & Mentor profile view, credential proof management, and status banner.
  * Author: Michelle Mutinda (Adm 154727) — BICS Year 4, Strathmore University
  */
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import api from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
-import { apiError, initials } from '../utils/helpers'
+import {
+  apiError,
+  initials,
+  getStoredAvatar,
+  saveStoredAvatar,
+  removeStoredAvatar,
+  PRESET_AVATARS,
+} from '../utils/helpers'
 
 const CAREER_STAGES = ['Year1', 'Year2', 'Year3', 'Year4', 'Graduate', 'EarlyCareer']
 const CAREER_INTERESTS = [
@@ -46,6 +53,9 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState(null)
+  const [showPresets, setShowPresets] = useState(false)
+  const fileInputRef = useRef(null)
 
   const [form, setForm] = useState({
     name: '',
@@ -81,6 +91,8 @@ export default function ProfilePage() {
           credential_reference: p.credential_reference || '',
           credential_document_url: p.credential_document_url || '',
         })
+        const initialPic = getStoredAvatar(data.email || user?.email, data.name || user?.name)
+        setAvatarUrl(initialPic)
       } catch (err) {
         setError(apiError(err))
       } finally {
@@ -88,7 +100,52 @@ export default function ProfilePage() {
       }
     }
     fetchProfile()
-  }, [])
+  }, [user])
+
+  function handleFileUpload(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) {
+      toast('Photo file must be under 2MB', 'error')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataUrl = reader.result
+      setAvatarUrl(dataUrl)
+      const email = profileData?.email || user?.email
+      const name = form.name || user?.name
+      saveStoredAvatar(email, dataUrl, name)
+      if (user?.role === 'mentor' && profileData?.profile?.mentor_id) {
+        saveStoredAvatar(profileData.profile.mentor_id, dataUrl, name)
+      }
+      toast('Profile photo updated successfully!', 'success')
+    }
+    reader.readAsDataURL(file)
+  }
+
+  function handleSelectPreset(presetUrl) {
+    setAvatarUrl(presetUrl)
+    const email = profileData?.email || user?.email
+    const name = form.name || user?.name
+    saveStoredAvatar(email, presetUrl, name)
+    if (user?.role === 'mentor' && profileData?.profile?.mentor_id) {
+      saveStoredAvatar(profileData.profile.mentor_id, presetUrl, name)
+    }
+    setShowPresets(false)
+    toast('Profile photo updated with verified portrait!', 'success')
+  }
+
+  function handleRemovePhoto() {
+    setAvatarUrl(null)
+    const email = profileData?.email || user?.email
+    const name = form.name || user?.name
+    removeStoredAvatar(email, name)
+    if (user?.role === 'mentor' && profileData?.profile?.mentor_id) {
+      removeStoredAvatar(profileData.profile.mentor_id, name)
+    }
+    toast('Profile photo removed (showing initials)', 'info')
+  }
 
   function setField(k, v) {
     setForm((prev) => ({ ...prev, [k]: v }))
@@ -194,17 +251,120 @@ export default function ProfilePage() {
         </div>
       )}
 
-      <div className="card p-6 mb-6 flex items-center gap-4">
-        <div className="w-14 h-14 rounded-2xl bg-[#0B1324] text-white flex items-center justify-center font-extrabold text-lg">
-          {initials(form.name || user?.name)}
+      {/* Profile Header & Photo Management Card */}
+      <div className="card p-6 mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            {/* Avatar display with click-to-upload */}
+            <div className="relative group">
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={form.name || 'User'}
+                  className="w-16 h-16 rounded-2xl object-cover ring-2 ring-amber-400/80 shadow-md cursor-pointer hover:opacity-90 transition-opacity"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Click to upload custom photo"
+                />
+              ) : (
+                <div
+                  className="w-16 h-16 rounded-2xl bg-[#0B1324] text-white flex items-center justify-center font-extrabold text-xl shadow-md cursor-pointer hover:bg-slate-800 transition-colors"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Click to upload custom photo"
+                >
+                  {initials(form.name || user?.name)}
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="absolute -bottom-1.5 -right-1.5 w-6 h-6 rounded-full bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center text-[11px] shadow-sm transition-transform group-hover:scale-110"
+                title="Upload photo"
+              >
+                📷
+              </button>
+            </div>
+
+            <div>
+              <div className="text-lg font-extrabold text-slate-900">{form.name || user?.name}</div>
+              <div className="text-xs text-slate-500">{profileData?.email || user?.email}</div>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase bg-amber-100 text-amber-800">
+                  {role}
+                </span>
+                <span className="text-[11px] text-slate-400">
+                  {avatarUrl ? '✓ Photo Verified' : 'Standard Avatar'}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept="image/*"
+              className="hidden"
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="btn-secondary py-1.5 px-3 text-xs font-bold flex items-center gap-1.5"
+            >
+              <span>📷</span>
+              <span>Upload Photo</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowPresets(!showPresets)}
+              className="py-1.5 px-3 text-xs font-bold rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition-colors flex items-center gap-1.5"
+            >
+              <span>🎭</span>
+              <span>{showPresets ? 'Hide Presets' : 'Choose Preset'}</span>
+            </button>
+            {avatarUrl && (
+              <button
+                type="button"
+                onClick={handleRemovePhoto}
+                className="py-1.5 px-2.5 text-xs font-semibold rounded-xl text-red-600 hover:bg-red-50 transition-colors"
+                title="Remove custom photo"
+              >
+                ✕ Reset
+              </button>
+            )}
+          </div>
         </div>
-        <div>
-          <div className="text-lg font-extrabold text-slate-900">{form.name || user?.name}</div>
-          <div className="text-xs text-slate-500">{profileData?.email || user?.email}</div>
-          <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase bg-amber-100 text-amber-800">
-            {role}
-          </span>
-        </div>
+
+        {/* Collapsible Presets Drawer */}
+        {showPresets && (
+          <div className="mt-4 pt-4 border-t border-slate-100 animate-fadeIn">
+            <div className="text-xs font-bold text-slate-700 mb-2 flex items-center justify-between">
+              <span>Verified Executive & Scholar Portraits (Click to Apply):</span>
+              <span className="text-[10px] text-slate-400 font-normal">HD Unsplash Curated</span>
+            </div>
+            <div className="grid grid-cols-4 sm:grid-cols-8 gap-2.5">
+              {PRESET_AVATARS.map((p, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleSelectPreset(p.url)}
+                  className={`group relative rounded-xl overflow-hidden border-2 transition-all p-0.5 ${
+                    avatarUrl === p.url
+                      ? 'border-amber-500 ring-2 ring-amber-400/30'
+                      : 'border-slate-200 hover:border-amber-400'
+                  }`}
+                  title={p.label}
+                >
+                  <img src={p.url} alt={p.label} className="w-full h-12 object-cover rounded-lg" />
+                  <div className="text-[9px] text-slate-600 text-center truncate mt-0.5 font-medium px-0.5">
+                    {p.label.split(' ')[0]}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       <form onSubmit={handleSave} className="card p-6 flex flex-col gap-5">

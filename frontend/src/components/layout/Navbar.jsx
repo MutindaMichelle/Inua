@@ -7,7 +7,7 @@ import React from 'react'
 import { NavLink, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useToast } from '../../context/ToastContext'
-import { initials } from '../../utils/helpers'
+import { initials, getStoredAvatar } from '../../utils/helpers'
 import InuaLogo from '../common/InuaLogo'
 
 const PAGE_DETAILS = {
@@ -73,6 +73,19 @@ export default function Navbar({ children }) {
   const toast = useToast()
   const navigate = useNavigate()
   const location = useLocation()
+
+  const [avatarUrl, setAvatarUrl] = React.useState(() =>
+    getStoredAvatar(user?.email || user?.id, user?.name)
+  )
+
+  React.useEffect(() => {
+    function syncAvatar() {
+      setAvatarUrl(getStoredAvatar(user?.email || user?.id, user?.name))
+    }
+    syncAvatar()
+    window.addEventListener('inua_avatar_updated', syncAvatar)
+    return () => window.removeEventListener('inua_avatar_updated', syncAvatar)
+  }, [user])
 
   function handleLogout() {
     logout()
@@ -355,9 +368,17 @@ export default function Navbar({ children }) {
         <div className="p-4 border-t border-slate-800/80 bg-[#070B14]">
           {user && (
             <div className="flex items-center gap-3 mb-3 px-1">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-600 to-amber-400 flex items-center justify-center text-xs font-bold text-white shadow-sm shrink-0">
-                {initials(user.name)}
-              </div>
+              {avatarUrl ? (
+                <img
+                  src={avatarUrl}
+                  alt={user.name}
+                  className="w-9 h-9 rounded-xl object-cover ring-1 ring-amber-400/80 shadow-xs shrink-0"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-amber-600 to-amber-400 flex items-center justify-center text-xs font-bold text-white shadow-sm shrink-0">
+                  {initials(user.name)}
+                </div>
+              )}
               <div className="min-w-0 flex-1">
                 <div className="text-xs font-bold text-white truncate">{user.name}</div>
                 <div className="text-[10px] text-slate-400 truncate flex items-center gap-1">

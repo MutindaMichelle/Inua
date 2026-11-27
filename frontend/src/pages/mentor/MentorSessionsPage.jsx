@@ -9,7 +9,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
 import api from '../../api/client'
 import { useToast } from '../../context/ToastContext'
-import { formatDate, statusClass, statusEmoji, apiError, initials, avatarColor } from '../../utils/helpers'
+import { formatDate, statusClass, statusEmoji, apiError, initials, avatarColor, getStoredAvatar } from '../../utils/helpers'
 
 const MENTOR_TRANSITIONS = {
   Pending:     ['Scheduled', 'Cancelled'],
@@ -188,12 +188,20 @@ function MenteeProfileModal({ profile, session, onClose }) {
             ✕
           </button>
           <div className="flex items-center gap-4">
-            <div
-              className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-extrabold text-2xl shadow-lg border-2 border-white/20"
-              style={{ backgroundColor: profile.avatar_color }}
-            >
-              {initials(profile.name)}
-            </div>
+            {getStoredAvatar(profile.email || profile.admission, profile.name) ? (
+              <img
+                src={getStoredAvatar(profile.email || profile.admission, profile.name)}
+                alt={profile.name}
+                className="w-16 h-16 rounded-2xl object-cover shadow-lg border-2 border-white/20"
+              />
+            ) : (
+              <div
+                className="w-16 h-16 rounded-2xl flex items-center justify-center text-white font-extrabold text-2xl shadow-lg border-2 border-white/20"
+                style={{ backgroundColor: profile.avatar_color }}
+              >
+                {initials(profile.name)}
+              </div>
+            )}
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-bold tracking-tight">{profile.name}</h2>
@@ -629,12 +637,20 @@ export default function MentorSessionsPage() {
                                 className="w-full text-left flex items-center gap-2 py-1 group/btn hover:bg-slate2-50 rounded-lg transition-colors px-1 -mx-1"
                                 title="Click to view mentee profile, goals, and pre-session agenda"
                               >
-                                <div
-                                  className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0 shadow-2xs"
-                                  style={{ backgroundColor: menteeProf.avatar_color }}
-                                >
-                                  {initials(s.mentee_name ?? 'ST')}
-                                </div>
+                                {getStoredAvatar(menteeProf.email || menteeProf.admission, s.mentee_name) ? (
+                                  <img
+                                    src={getStoredAvatar(menteeProf.email || menteeProf.admission, s.mentee_name)}
+                                    alt={s.mentee_name}
+                                    className="w-7 h-7 rounded-full object-cover shrink-0 shadow-2xs"
+                                  />
+                                ) : (
+                                  <div
+                                    className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold shrink-0 shadow-2xs"
+                                    style={{ backgroundColor: menteeProf.avatar_color }}
+                                  >
+                                    {initials(s.mentee_name ?? 'ST')}
+                                  </div>
+                                )}
                                 <div className="min-w-0 flex-1">
                                   <div className="text-xs font-bold text-slate2-900 group-hover/btn:text-sage-700 truncate">
                                     {s.mentee_name ?? 'Student Mentee'}
@@ -735,14 +751,24 @@ export default function MentorSessionsPage() {
                   <div key={s.session_id} className="session-row">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => setProfileModal({ profile: menteeProf, session: s })}
-                          className="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 hover:scale-105 transition-transform"
-                          style={{ backgroundColor: menteeProf.avatar_color }}
-                          title="Click to view student profile"
-                        >
-                          {initials(s.mentee_name ?? 'ST')}
-                        </button>
+                        {getStoredAvatar(menteeProf.email || menteeProf.admission, s.mentee_name) ? (
+                          <img
+                            src={getStoredAvatar(menteeProf.email || menteeProf.admission, s.mentee_name)}
+                            alt={s.mentee_name}
+                            onClick={() => setProfileModal({ profile: menteeProf, session: s })}
+                            className="w-10 h-10 rounded-full object-cover shrink-0 hover:scale-105 transition-transform cursor-pointer shadow-2xs"
+                            title="Click to view student profile"
+                          />
+                        ) : (
+                          <button
+                            onClick={() => setProfileModal({ profile: menteeProf, session: s })}
+                            className="w-10 h-10 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 hover:scale-105 transition-transform"
+                            style={{ backgroundColor: menteeProf.avatar_color }}
+                            title="Click to view student profile"
+                          >
+                            {initials(s.mentee_name ?? 'ST')}
+                          </button>
+                        )}
                         <div>
                           <div className="flex items-center gap-2 flex-wrap">
                             <span className={`badge ${statusClass(s.status)}`}>

@@ -8,7 +8,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import api from '../../api/client'
 import { useToast } from '../../context/ToastContext'
-import { initials, apiError, formatDate } from '../../utils/helpers'
+import { initials, apiError, formatDate, getStoredAvatar, saveStoredAvatar } from '../../utils/helpers'
 
 const SESSION_TYPES = [
   'Career Guidance',
@@ -52,14 +52,7 @@ const DEFAULT_AVATARS = {
 
 function getMentorAvatar(mentor) {
   if (!mentor) return null
-  const local = localStorage.getItem(`mentor_avatar_${mentor.mentor_id}`)
-  if (local) return local
-
-  const name = (mentor.name || '').toLowerCase()
-  for (const [key, url] of Object.entries(DEFAULT_AVATARS)) {
-    if (name.includes(key)) return url
-  }
-  return null
+  return getStoredAvatar(mentor.email || mentor.mentor_id, mentor.name)
 }
 
 function getMentorSchedule(mentor) {
@@ -528,7 +521,7 @@ export default function MentorsPage() {
     reader.onload = (event) => {
       const dataUrl = event.target?.result
       if (dataUrl) {
-        localStorage.setItem(`mentor_avatar_${activeUploadMentorId}`, dataUrl)
+        saveStoredAvatar(activeUploadMentorId, dataUrl)
         toast('Profile picture updated successfully! 📸', 'success')
         load() // refresh
       }

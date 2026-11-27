@@ -1,12 +1,12 @@
 /**
  * INUA Register Page — split-screen layout with Mentor Credential Proof submission.
  */
-import React, { useState } from 'react'
+import React, { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import api from '../api/client'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
-import { apiError } from '../utils/helpers'
+import { apiError, initials, PRESET_AVATARS, saveStoredAvatar } from '../utils/helpers'
 import InuaLogo from '../components/common/InuaLogo'
 
 const FIELDS_OF_STUDY = [
@@ -32,6 +32,25 @@ export default function RegisterPage() {
   const [role, setRole] = useState('mentee')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [avatarUrl, setAvatarUrl] = useState(null)
+  const [showPresets, setShowPresets] = useState(false)
+  const fileInputRef = useRef(null)
+
+  function handleAvatarFile(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) {
+      toast('Photo file must be under 2MB', 'error')
+      return
+    }
+    const reader = new FileReader()
+    reader.onload = () => {
+      setAvatarUrl(reader.result)
+      toast('Profile photo selected! It will be saved with your account.', 'success')
+    }
+    reader.readAsDataURL(file)
+  }
+
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -74,6 +93,9 @@ export default function RegisterPage() {
         payload.credential_document_url = form.credential_document_url || undefined
       }
       const { data } = await api.post('/auth/register', payload)
+      if (avatarUrl) {
+        saveStoredAvatar(form.email, avatarUrl, form.name)
+      }
       if (data?.access_token && data?.user) {
         login(data.access_token, data.user)
       } else {
@@ -193,6 +215,107 @@ export default function RegisterPage() {
                   required
                 />
               </div>
+            </div>
+
+            {/* Profile Photo & Avatar Field */}
+            <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3.5">
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-bold text-slate-800">
+                  Profile Photo (Optional)
+                </label>
+                <span className="text-[10px] text-slate-500 font-medium">
+                  {role === 'mentor' ? 'Verified Expert Headshot' : 'Student Scholar Portrait'}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div
+                  className="relative group cursor-pointer shrink-0"
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Click to select image file"
+                >
+                  {avatarUrl ? (
+                    <img
+                      src={avatarUrl}
+                      alt="Avatar Preview"
+                      className="w-12 h-12 rounded-xl object-cover ring-2 ring-amber-400 shadow-2xs"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 rounded-xl bg-[#0B1324] text-white flex items-center justify-center font-bold text-sm shadow-2xs">
+                      {initials(form.name || 'U')}
+                    </div>
+                  )}
+                  <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px] shadow-xs">
+                    📷
+                  </span>
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleAvatarFile}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 transition-colors shadow-2xs"
+                    >
+                      Upload Photo
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowPresets(!showPresets)}
+                      className="px-2.5 py-1 text-xs font-semibold rounded-lg bg-slate-200/70 hover:bg-slate-200 text-slate-700 transition-colors"
+                    >
+                      {showPresets ? 'Hide Presets' : 'Choose Preset'}
+                    </button>
+                    {avatarUrl && (
+                      <button
+                        type="button"
+                        onClick={() => setAvatarUrl(null)}
+                        className="text-[11px] text-red-600 hover:underline"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-1 truncate">
+                    {avatarUrl ? '✓ Photo selected for your account' : 'Upload custom headshot or pick an executive preset'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Presets Grid */}
+              {showPresets && (
+                <div className="mt-3 pt-2.5 border-t border-slate-200/60 animate-fadeIn">
+                  <div className="text-[11px] font-bold text-slate-700 mb-1.5">
+                    Click to select a professional portrait:
+                  </div>
+                  <div className="grid grid-cols-4 sm:grid-cols-8 gap-1.5">
+                    {PRESET_AVATARS.map((p, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setAvatarUrl(p.url)
+                          setShowPresets(false)
+                          toast('Preset portrait selected!', 'success')
+                        }}
+                        className={`rounded-lg overflow-hidden border transition-all p-0.5 ${
+                          avatarUrl === p.url ? 'border-amber-500 ring-2 ring-amber-400' : 'border-slate-200 hover:border-amber-400'
+                        }`}
+                        title={p.label}
+                      >
+                        <img src={p.url} alt={p.label} className="w-full h-9 object-cover rounded" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {role === 'mentee' ? (
