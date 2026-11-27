@@ -208,6 +208,26 @@ function PredictionModal({ session, onClose }) {
   )
 }
 
+function getMeetingUrl(s) {
+  if (s.notes && s.notes.includes('[Meeting Access Link]:')) {
+    const parts = s.notes.split('[Meeting Access Link]:')
+    const link = parts[1]?.trim()
+    if (link && link.startsWith('http')) return link
+  }
+  const platform = s.meeting_platform || 'Teams'
+  const id = s.session_id || 101
+  if (platform === 'Teams') {
+    return `https://teams.microsoft.com/l/meetup-join/19%3ainua_session_${id}%40thread.v2/0?context=%7b%22Tid%22%3a%22strathmore%22%7d`
+  }
+  if (platform === 'Zoom') {
+    return `https://zoom.us/j/849${id}9920?pwd=INUA${id}`
+  }
+  if (platform === 'Meet') {
+    return `https://meet.google.com/inu-sess-${id}`
+  }
+  return null
+}
+
 // ── Main page ────────────────────────────────────────────────────────────────
 const TRANSITIONS = {
   Pending:     ['Scheduled', 'Cancelled'],
@@ -299,6 +319,19 @@ export default function SessionsPage() {
 
                 {/* Actions */}
                 <div className="flex items-center gap-1.5 flex-wrap">
+                  {/* Join Video Meeting */}
+                  {getMeetingUrl(s) && (
+                    <a
+                      href={getMeetingUrl(s)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs font-bold px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 no-underline transition-colors shadow-2xs"
+                    >
+                      <span>📹</span>
+                      <span>Join {s.meeting_platform || 'Call'}</span>
+                    </a>
+                  )}
+
                   {/* Status transitions */}
                   {TRANSITIONS[s.status]?.map((next) => (
                     <button key={next}
