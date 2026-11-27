@@ -58,8 +58,8 @@ export default function MentorQualityPage() {
           } else {
             const { data } = await api.get('/mentors/quality-profiles')
             const profiles = Array.isArray(data) ? data : data.profiles ?? []
-            const mine = profiles.find((p) => p.email === user?.email || p.name === user?.name) ?? profiles[0]
-            setProfile(mine ?? null)
+            const mine = profiles.find((p) => p.email === user?.email || p.name === user?.name) || null
+            setProfile(mine)
           }
         }
       } catch (err) {
